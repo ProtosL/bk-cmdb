@@ -278,6 +278,8 @@ const (
 
 	// CCErrEventSubscribePingFailed failed to ping the filed
 	CCErrEventSubscribePingFailed = 1103004
+	// CCErrEventSubscribePingFailed failed to telnet the filed
+	CCErrEventSubscribeTelnetFailed = 1103005
 
 	// host 1104XXX
 	CCErrHostModuleRelationAddFailed = 1104000
@@ -353,6 +355,7 @@ const (
 	CCErrHostAddRelationFail      = 1110026
 	CCErrHostMoveResourcePoolFail = 1110027
 	CCErrHostEditRelationPoolFail = 1110028
+	CCErrAddHostToModule          = 1110029
 
 	CC_Err_Comm_HOST_CREATE_FAIL          = 4300
 	CC_Err_Comm_HOST_CREATE_FAIL_STR      = "create host fail"
