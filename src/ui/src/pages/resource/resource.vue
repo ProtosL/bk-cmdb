@@ -75,7 +75,7 @@
                 </bk-tabpanel>
             </bk-tab>
         </v-sideslider>
-        <v-delete-history>
+        <v-delete-history
             :isShow.sync="filing.isShow"
             :objId="'host'"
             :objTableHeader="index.table.header"
