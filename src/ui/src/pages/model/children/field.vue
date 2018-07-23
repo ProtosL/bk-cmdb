@@ -552,8 +552,8 @@
                                 </div>
     
                                 <!-- 数字 -->
+                                <h3>{{$t('ModelManagement["选项"]')}}</h3>
                                 <div class="mt20 clearfix" v-show="newFieldInfo.propertyType === 'int'">
-                                    <h3>{{$t('ModelManagement["选项"]')}}</h3>
                                     <div class="form-common-item mr0">
                                         <label class="form-common-label">{{$t('ModelManagement["类型"]')}}</label>
                                         <div class="form-common-content interior-width-control">
@@ -608,7 +608,6 @@
                                 </div>
                                 <!-- 长字符 -->
                                 <div class="mt20 clearfix" v-show="newFieldInfo.propertyType === 'longchar'">
-                                    <h3>{{$t('ModelManagement["选项"]')}}</h3>
                                     <div class="form-common-item mr0">
                                         <label class="form-common-label">{{$t('ModelManagement["类型"]')}}</label>
                                         <div class="form-common-content interior-width-control">
@@ -655,7 +654,6 @@
                                 </div>
                                 <!-- 短字符 -->
                                 <div class="mt20 clearfix" v-show="newFieldInfo.propertyType === 'singlechar'">
-                                    <h3>{{$t('ModelManagement["选项"]')}}</h3>
                                     <div class="form-common-item mr0">
                                         <label class="form-common-label">{{$t('ModelManagement["类型"]')}}</label>
                                         <div class="form-common-content interior-width-control">
@@ -701,8 +699,7 @@
                                     </div>
                                 </div>
                                 <!-- 枚举 -->
-                                <div class="mt20 clearfix" v-if="newFieldInfo.propertyType === 'enum'">
-                                    <h3>{{$t('ModelManagement["选项"]')}}</h3>
+                                <div class="mt20 clearfix form-option" v-if="newFieldInfo.propertyType === 'enum'">
                                     <div class="form-common-item mr0">
                                         <label class="form-common-label">{{$t('ModelManagement["类型"]')}}</label>
                                         <div class="form-common-content interior-width-control">
@@ -729,7 +726,7 @@
                                         </div>
                                     </div>
                                     <div v-pre class="clearfix"></div>
-                                    <div v-if="newFieldInfo.propertyType === 'enum'">
+                                    <div class="form-enum-box clearfix" v-if="newFieldInfo.propertyType === 'enum'">
                                         <div class="form-enum-wrapper" v-for="(field, fieldIndex) in newFieldInfo.option.list">
                                             <span class="span-enum-radio" @click="newFieldInfo.option.defaultIndex = fieldIndex" title="设置为默认值" :class="{'active': fieldIndex === newFieldInfo.option.defaultIndex}"></span>
                                             <div class="enum-id">
@@ -775,7 +772,6 @@
                                 </div>
                                 <!-- 日期 -->
                                 <div class="mt20 clearfix" v-show="newFieldInfo.propertyType === 'date'">
-                                    <h3>{{$t('ModelManagement["选项"]')}}</h3>
                                     <div class="form-common-item mr0">
                                         <label class="form-common-label">{{$t('ModelManagement["类型"]')}}</label>
                                         <div class="form-common-content interior-width-control">
@@ -810,7 +806,6 @@
                                 </div>
                                 <!-- 时间 -->
                                 <div class="mt20 clearfix" v-show="newFieldInfo.propertyType === 'time'">
-                                    <h3>{{$t('ModelManagement["选项"]')}}</h3>
                                     <div class="form-common-item mr0">
                                         <label class="form-common-label">{{$t('ModelManagement["类型"]')}}</label>
                                         <div class="form-common-content interior-width-control">
@@ -845,7 +840,6 @@
                                 </div>
                                 <!-- 单关联 -->
                                 <div class="mt20 clearfix" v-show="newFieldInfo.propertyType === 'singleasst'">
-                                    <h3>{{$t('ModelManagement["选项"]')}}</h3>
                                     <div class="form-common-item mr0">
                                         <label class="form-common-label">{{$t('ModelManagement["类型"]')}}</label>
                                         <div class="form-common-content interior-width-control">
@@ -896,7 +890,6 @@
                                 </div>
                                 <!-- 多关联 -->
                                 <div class="mt20 clearfix" v-show="newFieldInfo.propertyType === 'multiasst'">
-                                    <h3>{{$t('ModelManagement["选项"]')}}</h3>
                                     <div class="form-common-item mr0">
                                         <label class="form-common-label">{{$t('ModelManagement["类型"]')}}</label>
                                         <div class="form-common-content interior-width-control">
@@ -947,7 +940,6 @@
                                 </div>
                                 <!-- 用户 -->
                                 <div class="mt20 clearfix" v-show="newFieldInfo.propertyType === 'objuser'">
-                                    <h3>{{$t('ModelManagement["选项"]')}}</h3>
                                     <div class="form-common-item mr0">
                                         <label class="form-common-label">{{$t('ModelManagement["类型"]')}}</label>
                                         <div class="form-common-content interior-width-control">
@@ -982,7 +974,6 @@
                                 </div>
                                 <!-- 时区 -->
                                 <div class="mt20 clearfix" v-show="newFieldInfo.propertyType === 'timezone'">
-                                    <h3>{{$t('ModelManagement["选项"]')}}</h3>
                                     <div class="form-common-item mr0">
                                         <label class="form-common-label">{{$t('ModelManagement["类型"]')}}</label>
                                         <div class="form-common-content interior-width-control">
@@ -1017,7 +1008,6 @@
                                 </div>
                                 <!-- bool -->
                                 <div class="mt20 clearfix" v-show="newFieldInfo.propertyType === 'bool'">
-                                    <h3>{{$t('ModelManagement["选项"]')}}</h3>
                                     <div class="form-common-item mr0">
                                         <label class="form-common-label">{{$t('ModelManagement["类型"]')}}</label>
                                         <div class="form-common-content interior-width-control">
@@ -1044,16 +1034,16 @@
                                         </div>
                                     </div>
                                 </div>
+                                <!-- 保存取消按钮 -->
+                                <div class="button-wraper">
+                                    <bk-button type="primary" class="save-btn main-btn mr10" :loading="$loading('saveNew')" @click="saveNewField">
+                                        {{$t('Common["保存"]')}}
+                                    </bk-button>
+                                    <bk-button type="default" class="cancel-btn vice-btn" @click="closeAddFieldBox">
+                                        {{$t('Common["取消"]')}}
+                                    </bk-button>
+                                </div>
                             </form>
-                            <!-- 保存取消按钮 -->
-                            <div class="button-wraper">
-                                <bk-button type="primary" class="save-btn main-btn mr10" :loading="$loading('saveNew')" @click="saveNewField">
-                                    {{$t('Common["保存"]')}}
-                                </bk-button>
-                                <bk-button type="default" class="cancel-btn vice-btn" @click="closeAddFieldBox">
-                                    {{$t('Common["取消"]')}}
-                                </bk-button>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -2372,6 +2362,7 @@
             .border-control{
                 padding:0 40px 0 40px ;
                 min-height: 400px;
+                height: calc(100% - 30px);
             }
             .content-replace{
                 display:none;
@@ -2387,6 +2378,12 @@
             .form-common{
                 width: 661px;
                 margin-top: 20px;
+                height: calc(100% - 20px);
+                .form-option{
+                    overflow: auto;
+                    max-height: calc(100% - 224px);
+                    @include scrollbar;
+                }
                 .form-common-item{
                     .form-common-label{
                         width: 75px;
