@@ -522,7 +522,7 @@
                                             >
                                         </div>
                                     </div>
-                                    <div class="form-common-item tr">
+                                    <div class="form-common-item tr pr">
                                         <label class="form-common-label">{{$t('ModelManagement["英文名"]')}}<span class=""> * </span></label>
                                         <div class="form-common-content interior-width-control tl">
                                             <input type="text" class="from-input" name="" value="" v-model.trim="newFieldInfo.propertyId"
