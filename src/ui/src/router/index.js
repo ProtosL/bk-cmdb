@@ -26,6 +26,7 @@ const pageAuditing = () => import(/* webpackChunkName: "page-auditing" */ '@/pag
 const pageOrganization = () => import(/* webpackChunkName: "page-organization" */ '@/pages/organization/object')
 const pageTopology = () => import(/* webpackChunkName: "page-topology" */ '@/pages/topology/topology')
 const pageCustomQuery = () => import(/* webpackChunkName: "page-customQuery" */ '@/pages/customQuery/customQuery')
+const pageProcessConfig = () => import(/* webpackChunkName: "page-process" */ '@/pages/processConfig/config')
 
 var routerVue = new Vue({
     store: store,
@@ -108,6 +109,9 @@ var router = new Router({
         meta: {
             setBkBizId: true
         }
+    }, {
+        path: '/processConfig',
+        component: pageProcessConfig
     }, {
         path: '*',
         redirect: '/404'
