@@ -1,8 +1,8 @@
 <template>
-    <div class="config-wrapper">
+    <div class="config-wrapper" v-if="!configDetail.isShow">
         <div class="config-filter">
             <bk-button type="primary">
-                {{$t('ProcessConfig["进程配置文件"]')}}
+                {{$t('ProcessConfig["进程配置模版"]')}}
             </bk-button>
             <div class="search-wrapper fr">
                 <bk-select class="left-select fl" :selected.sync="filter.selected" ref="filterSelector" @on-selected="setFilterType">
@@ -22,14 +22,29 @@
                 :list="table.list" 
                 :pagination.sync="table.pagination"
                 :defaultSort="table.defaultSort"
-                :wrapperMinusHeight="150">
+                :wrapperMinusHeight="150"
+                @handlePageChange="setCurrentPage"
+                @handleSizeChange="setCurrentSize"
+                @handleSortChange="setCurrentSort">
+                <template slot="operation" slot-scope="{ item }">
+                    <i class="icon-cc-edit mr20" @click.stop="editEvent(item)"></i>
+                    <i class="icon-cc-del" @click.stop="delConfirm(item)"></i>
+                </template>
             </v-table>
         </div>
+        <v-create-dialog
+            :isShow="createDialog.isShow"
+        ></v-create-dialog>
     </div>
+    <v-config-detail
+        v-else
+    ></v-config-detail>
 </template>
 
 <script>
     import vTable from '@/components/table/table'
+    import vCreateDialog from './children/create'
+    import vConfigDetail from './children/configDetail'
     export default {
         data () {
             return {
@@ -57,18 +72,38 @@
                         size: 10,
                         current: 1
                     },
-                    defaultSort: '-bk_inst_id',
+                    defaultSort: '-disc',
                     sort: ''
+                },
+                createDialog: {
+                    isShow: false
+                },
+                configDetail: {
+                    isShow: true
                 }
             }
         },
         methods: {
             setFilterType () {
 
+            },
+            setCurrentPage (current) {
+                this.table.pagination.current = current
+                // this.getTableList()
+            },
+            setCurrentSize (size) {
+                this.table.pagination.size = size
+                this.setCurrentPage(1)
+            },
+            setCurrentSort (sort) {
+                this.table.sort = sort
+                this.setCurrentPage(1)
             }
         },
         components: {
-            vTable
+            vTable,
+            vCreateDialog,
+            vConfigDetail
         }
     }
 </script>
