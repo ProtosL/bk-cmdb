@@ -983,3 +983,78 @@ body .bk-message.primary .bk-message-icon {
         color: #0978e2;
     }
 }
+
+// 进程配置管理 start
+$configDetailBorderColor: #dde4eb;
+.config-detail-wrapper {
+    .color-danger {
+        color: #ff5656;
+    }
+    .detail-tab .bk-tab2-head .bk-tab2-nav>.tab2-nav-item {
+        padding: 0 12px;
+    }
+    .editor-wrapper .editor-tab {
+        border-color: $configDetailBorderColor;
+        .bk-tab2-head {
+            height: 44px;
+            line-height: 44px;
+            border-color: $configDetailBorderColor;
+            .bk-tab2-nav {
+                .tab2-nav-item {
+                    min-width: 142px;
+                    text-align: center;
+                    &:last-child {
+                        border-right: 1px solid $configDetailBorderColor;
+                    }
+                }
+                >li.active {
+                    border-color: $configDetailBorderColor;
+                }
+            }
+        }
+        .bk-tab2-content {
+            margin-top: 10px;
+            height: calc(100% - 54px);
+            >section.active {
+                height: 100%;
+            }
+        }
+        .bk-tab2-action {
+            display: block;
+        }
+    }
+    .highlight-select {
+        .bk-select-wrapper {
+            .bk-select-input {
+                line-height: 24px;
+                height: 26px;
+                vertical-align: bottom;
+            }
+            .bk-select-icon {
+                top: 7px;
+            }
+        }
+        .bk-select-list {
+            top: 30px;
+            .bk-select-list-item {
+                height: 32px;
+                line-height: 32px;
+                padding: 0 12px;
+            }
+        }
+    }
+    .form-btn-group {
+        border-top: 1px solid #e5e5e5;
+        padding-right: 20px;
+        margin: 50px 0 0;
+        text-align: center;
+        font-size: 0;
+        background: #fafafa;
+        height: 60px;
+        line-height: 60px;
+        button.form-btn{
+            margin-left: 10px;
+        }
+    }
+}
+// 进程配置管理 end

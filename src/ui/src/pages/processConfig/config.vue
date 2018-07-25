@@ -32,9 +32,9 @@
                 </template>
             </v-table>
         </div>
-        <v-create-dialog
-            :isShow="createDialog.isShow"
-        ></v-create-dialog>
+        <v-create-form
+            :isShow="createForm.isShow"
+        ></v-create-form>
     </div>
     <v-config-detail
         v-else
@@ -43,7 +43,7 @@
 
 <script>
     import vTable from '@/components/table/table'
-    import vCreateDialog from './children/create'
+    import vCreateForm from './children/createForm'
     import vConfigDetail from './children/configDetail'
     export default {
         data () {
@@ -57,14 +57,14 @@
                 }],
                 table: {
                     header: [{
-                        id: 'disc',
+                        id: 'desc',
                         name: '文件描述'
                     }, {
                         id: 'operation',
                         name: '操作'
                     }],
                     list: [{
-                        disc: 'aaa'
+                        desc: 'aaa'
                     }],
                     chooseId: [],
                     pagination: {
@@ -72,7 +72,7 @@
                         size: 10,
                         current: 1
                     },
-                    defaultSort: '-disc',
+                    defaultSort: '-desc',
                     sort: ''
                 },
                 createDialog: {
@@ -102,7 +102,7 @@
         },
         components: {
             vTable,
-            vCreateDialog,
+            vCreateForm,
             vConfigDetail
         }
     }

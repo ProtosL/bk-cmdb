@@ -108,7 +108,7 @@ class TableLayout {
                     attr: head.attr || {},
                     type: head.type || 'text',
                     width: head.width,
-                    minWidth: 100,
+                    minWidth: this.colMinWidth,
                     realWidth: typeof head.width === 'number' ? head.width : 100,
                     flex: typeof head.width !== 'number',
                     sortable: table.sortable && (head.hasOwnProperty('sortable') ? head.sortable : true),

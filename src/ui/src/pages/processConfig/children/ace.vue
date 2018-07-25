@@ -1,5 +1,5 @@
 <template>
-    <div class="ace-wrapper" :style="{height: `${aceConfig.height}px`, width: `${aceConfig.width}px`}"></div>
+    <div class="ace-wrapper"></div>
 </template>
 
 <script>
@@ -66,5 +66,6 @@
 <style lang="scss" scoped>
     .ace-wrapper {
         width: 100%;
+        height: 100%;
     }
 </style>

@@ -322,7 +322,7 @@
             border-bottom-left-radius: 0;
         }
         &:hover{
-            background-color: #6b7baa;
+            background-color: #3c96ff;
         }
     }
 }

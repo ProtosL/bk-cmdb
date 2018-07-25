@@ -7,7 +7,7 @@
         :width="460" 
         :padding="0">
         <div class="form-content" slot="content">
-            <p class="form-title">{{$t('ProcessConfig["新建进程配置文件模版"]')}}</p>
+            <p class="form-title">{{$t('ProcessConfig["上线"]')}}aaa</p>
             <div class="content-group clearfix">
                 <label for="desc">
                     {{$t('ProcessConfig["文件描述"]')}}
@@ -30,7 +30,7 @@
         props: {
             isShow: {
                 type: Boolean,
-                required: true
+                default: false
             }
         },
         data () {
@@ -62,28 +62,12 @@
             margin: 50px auto 0;
             line-height: 36px;
             text-align: center;
-            .color-danger {
-                color: #FF5656;
-            }
             label {
                 display: inline-block;
             }
             input {
                 display: inline-block;
                 width: 266px;
-                margin-left: 10px;
-            }
-        }
-        .form-btn-group {
-            border-top: 1px solid #e5e5e5;
-            padding-right: 20px;
-            margin: 50px 0 0;
-            text-align: center;
-            font-size: 0;
-            background: #fafafa;
-            height: 60px;
-            line-height: 60px;
-            button.form-btn{
                 margin-left: 10px;
             }
         }

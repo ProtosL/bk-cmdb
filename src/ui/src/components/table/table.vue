@@ -130,6 +130,10 @@
                 type: Boolean,
                 default: false
             },
+            colMinWidth: {      // 列最小宽度
+                type: Number,
+                default: 100
+            },
             rowHoverColor: {
                 type: [String, Boolean],
                 default: '#f1f7ff'
@@ -175,7 +179,8 @@
         },
         data () {
             const layout = new TableLayout({
-                table: this
+                table: this,
+                colMinWidth: this.colMinWidth
             })
             return {
                 layout,
