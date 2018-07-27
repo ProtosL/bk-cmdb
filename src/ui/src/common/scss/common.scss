@@ -986,6 +986,7 @@ body .bk-message.primary .bk-message-icon {
 
 // 进程配置管理 start
 $configDetailBorderColor: #dde4eb;
+.config-wrapper,
 .config-detail-wrapper {
     .color-danger {
         color: #ff5656;
@@ -1023,7 +1024,8 @@ $configDetailBorderColor: #dde4eb;
             display: block;
         }
     }
-    .highlight-select {
+    .highlight-select,
+    .server-select {
         .bk-select-wrapper {
             .bk-select-input {
                 line-height: 24px;
@@ -1055,6 +1057,22 @@ $configDetailBorderColor: #dde4eb;
         button.form-btn{
             margin-left: 10px;
         }
+    }
+    .preview-mask {
+        .bk-loading-box, .bk-loading {
+            background-color: rgba(255, 255, 255, 0);
+        }
+    }
+}
+@keyframes tooltip-animation {
+    0% {
+        top: 48px;
+    }
+    50% {
+        top: 52px;
+    }
+    100% {
+        top: 48px;
     }
 }
 // 进程配置管理 end

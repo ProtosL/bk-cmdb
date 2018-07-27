@@ -24,6 +24,7 @@ import usercustom from './modules/usercustom'
 import navigation from './modules/navigation'
 import object from './modules/object'
 import association from './modules/association'
+import processConfig from './modules/processConfig'
 Vue.use(Vuex)
 
 export default new Vuex.Store({
@@ -37,6 +38,7 @@ export default new Vuex.Store({
         usercustom,
         navigation,
         object,
-        association
+        association,
+        processConfig
     }
 })

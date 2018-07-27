@@ -457,7 +457,7 @@
                     if (res.result) {
                         this.setUserProperties(res.data)
                     } else {
-                        this.$alertMsg(res.data['bk_error_msg'])
+                        this.$alertMsg(res['bk_error_msg'])
                     }
                 } catch (e) {
                     this.$alertMsg(e.message || e.data['bk_error_msg'] || e.statusText)

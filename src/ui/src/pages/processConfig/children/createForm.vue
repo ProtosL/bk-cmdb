@@ -1,3 +1,13 @@
+/*
+ * Tencent is pleased to support the open source community by making 蓝鲸 available.
+ * Copyright (C) 2017-2018 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
+ */
+ 
 <template>
     <bk-dialog
         :is-show.sync="isShow" 
@@ -13,7 +23,7 @@
                     {{$t('ProcessConfig["文件描述"]')}}
                     <span class="color-danger">*</span>
                 </label>
-                <input id="desc" type="text" class="bk-form-input" placeholder="请输入">
+                <input id="desc" type="text" class="bk-form-input" placeholder="请输入" v-model="templateName">
             </div>
             <div class="form-btn-group clearfix">
                 <div class="fr">
@@ -28,21 +38,43 @@
 <script>
     export default {
         props: {
-            isShow: {
-                type: Boolean,
+            bkBizId: {
                 required: true
             }
         },
         data () {
             return {
-
+                templateName: '',
+                isShow: true
             }
         },
         methods: {
-            submitForm () {
+            async submitForm () {
+                try {
+                    const res = await this.$store.dispatch('processConfig/createProcessConfigTemplate', {
+                        bkBizId: this.bkBizId, params: {template: this.templateName}
+                    })
+                    if (res.result) {
+                        this.$emit('submitForm')
+                    } else {
+                        this.$alertMsg(res['bk_error_msg'])
+                    }
+                } catch (e) {
+                    this.$alertMsg(e.message || e.data['bk_error_msg'] || e.statusText)
+                }
             },
             closeForm () {
-
+                this.isShow = false
+                setTimeout(() => {
+                    this.$emit('closeForm')
+                }, 300)
+            }
+        },
+        directives: {
+            focus: {
+                inserted: function (el) {
+                    el.focus()
+                }
             }
         }
     }

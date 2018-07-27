@@ -1,3 +1,13 @@
+/*
+ * Tencent is pleased to support the open source community by making 蓝鲸 available.
+ * Copyright (C) 2017-2018 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
+ */
+ 
 <template>
     <v-table
         class="history-table"
@@ -7,18 +17,14 @@
         :defaultSort="table.defaultSort"
         :wrapperMinusHeight="150"
         :sortable="false"
-        :colMinWidth="50"
         @handlePageChange="setCurrentPage"
         @handleSizeChange="setCurrentSize"
         @handleSortChange="setCurrentSort">
-        <template v-for="{id, name} in table.header" :slot="id" slot-scope="{ item }">
-            <template v-if="id !== 'operation'">
-                {{item[id]}}
-            </template>
-            <template v-else>
+        <div class="aaa">
+            <template slot="operation" slot-scope="{ item }">
                 <a href="javascript:;" class="operation-btn">对比</a>
             </template>
-        </template>
+            </div>
     </v-table>
 </template>
 
@@ -30,16 +36,20 @@
                 table: {
                     header: [{
                         id: 'desc',
-                        name: '描述'
+                        name: '描述',
+                        width: 79
                     }, {
                         id: 'time',
-                        name: '操作时间'
+                        name: '操作时间',
+                        width: 79
                     }, {
                         id: 'user',
-                        name: '操作人'
+                        name: '操作人',
+                        width: 79
                     }, {
                         id: 'operation',
-                        name: '操作'
+                        name: '操作',
+                        width: 79
                     }],
                     list: [{
                         desc: '简单文件',

@@ -1,19 +1,36 @@
+/*
+ * Tencent is pleased to support the open source community by making 蓝鲸 available.
+ * Copyright (C) 2017-2018 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
+ */
+
 <template>
     <div class="config-wrapper" v-if="!configDetail.isShow">
         <div class="config-filter">
-            <bk-button type="primary">
-                {{$t('ProcessConfig["进程配置模版"]')}}
+            <v-application-selector class="filter-selector fl"
+                :filterable="true" 
+                :selected.sync="filter.bkBizId">
+            </v-application-selector>
+            <bk-button type="primary" @click="createConfig">
+                {{$t('ProcessConfig["新建进程配置模版"]')}}
             </bk-button>
             <div class="search-wrapper fr">
                 <bk-select class="left-select fl" :selected.sync="filter.selected" ref="filterSelector" @on-selected="setFilterType">
                     <bk-select-option
-                        v-for="(option, index) of filterList"
+                        v-for="(option, index) of filter.list"
                         :key="option.id"
                         :value="option.id"
                         :label="option.name">
                     </bk-select-option>
                 </bk-select>
-                <input type="text" class="bk-form-input search-text" :placeholder="$t('ProcessConfig[\'搜索文件描述、文件名称\']')">
+                <input type="text" class="bk-form-input search-text" :placeholder="$t('ProcessConfig[\'根据文件描述、文件名称搜索\']')" v-model="filter.searchText">
+                <bk-button class="search" type="primary">
+                    搜索
+                </bk-button>
             </div>
         </div>
         <div class="table-contain">
@@ -27,13 +44,16 @@
                 @handleSizeChange="setCurrentSize"
                 @handleSortChange="setCurrentSort">
                 <template slot="operation" slot-scope="{ item }">
-                    <i class="icon-cc-edit mr20" @click.stop="editEvent(item)"></i>
-                    <i class="icon-cc-del" @click.stop="delConfirm(item)"></i>
+                    <span class="operation-btn mr20" @click.stop="editTemplate(item)">编辑</span>
+                    <span class="operation-btn" @click.stop="delConfirm(item)">删除</span>
                 </template>
             </v-table>
         </div>
         <v-create-form
-            :isShow="createForm.isShow"
+            v-if="createForm.isShow"
+            :bkBizId="filter.bkBizId"
+            @submitForm="getTableList"
+            @closeForm="createForm.isShow = false"
         ></v-create-form>
     </div>
     <v-config-detail
@@ -42,6 +62,7 @@
 </template>
 
 <script>
+    import vApplicationSelector from '@/components/common/selector/application'
     import vTable from '@/components/table/table'
     import vCreateForm from './children/createForm'
     import vConfigDetail from './children/configDetail'
@@ -49,19 +70,40 @@
         data () {
             return {
                 filter: {
-                    selected: ''
+                    selected: '',
+                    bkBizId: '',
+                    searchText: '',
+                    list: [{
+                        id: 1,
+                        name: '所有分组'
+                    }]
                 },
-                filterList: [{
-                    id: 1,
-                    name: '所有分组'
-                }],
                 table: {
                     header: [{
-                        id: 'desc',
+                        id: 'template_name',
                         name: '文件描述'
                     }, {
+                        id: 'file_name',
+                        name: '文件名称'
+                    }, {
+                        id: 'path',
+                        name: '绝对路径'
+                    }, {
+                        id: 'desc',
+                        name: '所属用户'
+                    }, {
+                        id: 'right',
+                        name: '文件权限'
+                    }, {
+                        id: 'group',
+                        name: '文件分组'
+                    }, {
+                        id: 'desc',
+                        name: '输出格式'
+                    }, {
                         id: 'operation',
-                        name: '操作'
+                        name: '操作',
+                        sortable: false
                     }],
                     list: [{
                         desc: 'aaa'
@@ -75,21 +117,54 @@
                     defaultSort: '-desc',
                     sort: ''
                 },
-                createDialog: {
+                createForm: {
                     isShow: false
                 },
                 configDetail: {
-                    isShow: true
+                    isShow: false
                 }
             }
         },
         methods: {
+            createConfig () {
+                this.createForm.isShow = true
+            },
             setFilterType () {
 
             },
+            editTemplate () {
+                this.configDetail.isShow = true
+            },
+            async getTableList () {
+                try {
+                    let params = {
+                        field: [
+
+                        ],
+                        page: {
+                            start: 0,
+                            limit: 10,
+                            sort: 'bk_set_name'
+                        },
+                        condition: {
+                        }
+                    }
+                    const res = await this.$store.dispatch('processConfig/searchProcessConfigTemplate', {
+                        bkBizId: this.bkBizId,
+                        params: params
+                    })
+                    if (res.result) {
+                        this.table.list = res.data
+                    } else {
+                        this.$alertMsg(res['bk_error_msg'])
+                    }
+                } catch (e) {
+                    this.$alertMsg(e.message || e.data['bk_error_msg'] || e.statusText)
+                }
+            },
             setCurrentPage (current) {
                 this.table.pagination.current = current
-                // this.getTableList()
+                this.getTableList()
             },
             setCurrentSize (size) {
                 this.table.pagination.size = size
@@ -103,7 +178,8 @@
         components: {
             vTable,
             vCreateForm,
-            vConfigDetail
+            vConfigDetail,
+            vApplicationSelector
         }
     }
 </script>
@@ -112,19 +188,23 @@
     .config-wrapper {
         .config-filter {
             padding: 20px 20px 0;
+            .filter-selector {
+                margin-right: 10px;
+                width: 140px;
+            }
         }
         .search-wrapper {
+            font-size: 0px;
             .left-select {
                 position: relative;
                 width: 115px;
-                margin-right: -1px;
-                border-radius: 2px 0 0 2px;
                 z-index: 2;
+                margin-right: 30px;
             }
             .bk-form-input {
                 position: relative;
                 width: 280px;
-                border-radius: 0 2px 2px 0;
+                margin-right: 10px;
                 &:focus {
                     z-index: 2;
                 }
@@ -132,6 +212,12 @@
         }
         .table-contain {
             padding: 20px;
+            .operation-btn {
+                color: #3c96ff;
+                &:hover {
+                    color: #0082ff;
+                }
+            }
         }
     }
 </style>
