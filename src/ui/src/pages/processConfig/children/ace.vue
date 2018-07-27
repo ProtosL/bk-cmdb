@@ -20,7 +20,7 @@
                 value: '',
                 width: 500,
                 height: 300,
-                lang: 'sqlserver',
+                mode: 'sqlserver',
                 theme: 'monokai',
                 readOnly: false,
                 fullScreen: true,
@@ -44,6 +44,11 @@
             return {
                 aceConfig: {...new DefaultConfig(), ...this.config},
                 $ace: null
+            }
+        },
+        watch: {
+            'config.lang' () {
+
             }
         },
         mounted () {

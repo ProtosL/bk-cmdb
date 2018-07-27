@@ -15,11 +15,13 @@
             <bk-tab class="editor-tab" type="fill" :active-name.sync="editorTab.active">
                 <template slot="setting">
                     <div class="setting-wrapper">
-                        <!-- <div class="question-icon-box">
+                        <div class="question-icon-box">
                             <i class="icon-cc-question" v-if="editorTab.active === 'name'"></i>
-                            <div class="first-entry-mask"></div>
-                            <div class="tooltip">点此查看进程配置文件示例</div>
-                        </div> -->
+                            <template v-if="false">
+                                <div class="first-entry-mask"></div>
+                                <div class="tooltip">点此查看进程配置文件示例</div>
+                            </template>
+                        </div>
                         <span class="title">高亮风格</span>
                         <bk-select class="highlight-select" :selected.sync="highlight.selected" @on-selected="setHighlight">
                             <bk-select-option
@@ -36,7 +38,9 @@
                     <div class="editor-box" :class="{'has-readonly': true}">
                         <div class="editor-content">
                             <p class="editor-title">自动保存草稿 21:28:45</p>
-                            <ace class="ace-editor" :config="config">
+                            <ace class="ace-editor" 
+                                :config="config"
+                                @init="aceEditInit">
                             </ace>
                         </div>
                         <div class="editor-content readonly">
@@ -44,7 +48,9 @@
                                 示例文件（只读）
                                 <i class="bk-icon icon-close"></i>
                             </p>
-                            <ace class="ace-editor" :config="config">
+                            <ace class="ace-editor" 
+                            :config="config"
+                            @init="aceReadInit">
                             </ace>
                         </div>
                     </div>
@@ -86,12 +92,24 @@
                         'yaml',
                         'json'
                     ]
-                }
+                },
+                $aceEdit: null,
+                $aceRead: null
             }
         },
         methods: {
-            setHighlight () {
-
+            setHighlight (mode) {
+                console.log(mode)
+                this.$aceEdit.session.setMode(`ace/mode/${mode.value}`)
+                if (this.$aceRead) {
+                    this.$aceRead.session.setMode(`ace/mode/${mode.value}`)
+                }
+            },
+            aceReadInit ($ace) {
+                this.$aceRead = $ace
+            },
+            aceEditInit ($ace) {
+                this.$aceEdit = $ace
             }
         },
         components: {
@@ -154,7 +172,7 @@
                     color: #737987;
                     font-size: 14px;
                     line-height: 20px;
-                    animation: tooltip-animation 1.8s infinite;
+                    animation: tooltip-animation 1.8s infinite cubic-bezier(0.61, 0.84, 0.83, 0.99);
                     &:before {
                         position: absolute;
                         content: "";
