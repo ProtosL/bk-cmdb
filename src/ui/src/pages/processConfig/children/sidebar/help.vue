@@ -31,7 +31,7 @@
                     {{item[id]}}
                 </template>
                 <template v-else>
-                    <a href="javascript:;" class="operation-btn">复制</a>
+                    <a href="javascript:;" class="operation-btn copy" :data-clipboard-text="`\${${item.name}}`">复制</a>
                 </template>
             </template>
         </v-table>
@@ -40,9 +40,11 @@
 
 <script>
     import vTable from '@/components/table/table'
+    import Clipboard from 'clipboard'
     export default {
         data () {
             return {
+                clipboard: {},
                 table: {
                     header: [{
                         id: 'name',
@@ -85,6 +87,18 @@
                 this.table.sort = sort
                 this.setCurrentPage(1)
             }
+        },
+        mounted () {
+            this.clipboard = new Clipboard('.copy')
+            this.clipboard.on('success', () => {
+                this.$alertMsg(this.$t('Common["复制成功"]'), 'success')
+            })
+            this.clipboard.on('error', () => {
+                this.$alertMsg(this.$t('Common["复制失败"]'))
+            })
+        },
+        destroyed () {
+            this.clipboard.destroy()
         },
         components: {
             vTable

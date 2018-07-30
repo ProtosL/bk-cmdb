@@ -53,6 +53,30 @@ const actions = {
      */
     editProcessConfigTemplate ({ commit, state, dispatch, rootState }, { bkBizId, templateId, params }) {
         return $axios.post(`proc/template/${rootState.common.bkSupplierAccount}/${bkBizId}/${templateId}`, params)
+    },
+    /**
+     * 删除进程配置文件模板
+     * @param {Function} commit store commit mutation hander
+     * @param {Object} state store state
+     * @param {String} dispatch store dispatch action hander
+     * @param {Number} bkBizId 业务id
+     * @param {Number} templateId 模版文件id
+     * @return {Promise} promise 对象
+     */
+    deleteProcessConfigTemplate ({ commit, state, dispatch, rootState }, { bkBizId, templateId }) {
+        return $axios.post(`proc/${rootState.common.bkSupplierAccount}/${bkBizId}/${templateId}`)
+    },
+    /**
+     * 获取进程配置文件模板详情
+     * @param {Function} commit store commit mutation hander
+     * @param {Object} state store state
+     * @param {String} dispatch store dispatch action hander
+     * @param {Number} bkBizId 业务id
+     * @param {Number} templateId 模版文件id
+     * @return {Promise} promise 对象
+     */
+    getProcessConfigTemplateDetail ({ commit, state, dispatch, rootState }, { bkBizId, templateId }) {
+        return $axios.post(`proc/template${rootState.common.bkSupplierAccount}/${bkBizId}/${templateId}`)
     }
 }
 

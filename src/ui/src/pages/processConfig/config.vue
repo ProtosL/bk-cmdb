@@ -58,6 +58,7 @@
     </div>
     <v-config-detail
         v-else
+        @cancel="configDetail.isShow = false"
     ></v-config-detail>
 </template>
 

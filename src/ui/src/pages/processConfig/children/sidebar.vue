@@ -14,13 +14,13 @@
         <div class="tab-wrapper" v-if="this.isOpen">
             <bk-tab class="detail-tab" :active-name.sync="tab.active">
                 <bk-tabpanel name="info" :title="$t('ProcessConfig[\'基本信息\']')">
-                    <v-info></v-info>
+                    <v-info v-if="tab.active==='info'"></v-info>
                 </bk-tabpanel>
                 <bk-tabpanel name="history" :title="$t('ProcessConfig[\'历史记录\']')">
-                    <v-history></v-history>
+                    <v-history v-if="tab.active==='history'"></v-history>
                 </bk-tabpanel>
                 <bk-tabpanel name="help" :title="$t('ProcessConfig[\'帮助\']')">
-                    <v-help></v-help>
+                    <v-help v-if="tab.active==='help'"></v-help>
                 </bk-tabpanel>
             </bk-tab>
         </div>

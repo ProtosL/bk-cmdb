@@ -80,14 +80,9 @@
 
 <script>
     export default {
-        props: {
-            isShow: {
-                type: Boolean,
-                default: false
-            }
-        },
         data () {
             return {
+                isShow: true,
                 output: {
                     list: [
                         'UTF-8'
@@ -103,7 +98,10 @@
             submitForm () {
             },
             closeForm () {
-
+                this.isShow = false
+                setTimeout(() => {
+                    this.$emit('closeForm')
+                }, 300)
             }
         }
     }
