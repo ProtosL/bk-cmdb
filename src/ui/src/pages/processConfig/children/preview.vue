@@ -58,11 +58,12 @@
         }
         .preview-title {
             padding-left: 20px;
-            line-height: 42px;
+            line-height: 41px;
             height: 42px;
             font-size: 14px;
             color: #c3cdd7;
             background: #333c48;
+            border-bottom: 1px solid #737987;
             .server-select {
                 display: inline-block;
                 margin-left: 10px;

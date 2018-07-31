@@ -9,20 +9,22 @@
  */
 
 <template lang="html">
-    <v-table class="module-table"
-        :header="table.header"
-        :list="table.list"
-        :loading="table.isLoading"
-        :width="754"
-        :wrapperMinusHeight="150"
-        :sortable="false">
-        <template slot="is_bind" slot-scope="{ item }">
-            <bk-button :type="item['is_bind'] ? 'primary' : 'default'" :loading="$loading(`${item['bk_module_name']}Bind`)" @click="changeBinding(item)" 
-                :class="item['is_bind'] ? 'main-btn' : 'vice-btn'">
-                {{item['is_bind'] ? $t("ProcessManagement['已绑定']") : $t("ProcessManagement['未绑定']")}}
-            </bk-button>
-        </template>
-    </v-table>
+    <div class="module-table-wrapper">
+        <v-table class="module-table"
+            :header="table.header"
+            :list="table.list"
+            :loading="table.isLoading"
+            :width="754"
+            :wrapperMinusHeight="150"
+            :sortable="false">
+            <template slot="is_bind" slot-scope="{ item }">
+                <bk-button :type="item['is_bind'] ? 'primary' : 'default'" :loading="$loading(`${item['bk_module_name']}Bind`)" @click="changeBinding(item)" 
+                    :class="item['is_bind'] ? 'main-btn' : 'vice-btn'">
+                    {{item['is_bind'] ? $t("ProcessManagement['已绑定']") : $t("ProcessManagement['未绑定']")}}
+                </bk-button>
+            </template>
+        </v-table>
+    </div>
 </template>
 
 <script>
@@ -127,9 +129,11 @@
     }
 </script>
 <style lang="scss" scoped>
+    .module-table-wrapper {
+        padding-top: 20px;
+    }
     .module-table{
         height: calc(100% - 20px);
-        margin: 20px 0 0 0;
         .btn{
             width: 52px;
             height: 25px;

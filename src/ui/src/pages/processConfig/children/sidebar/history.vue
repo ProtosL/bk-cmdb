@@ -20,11 +20,9 @@
         @handlePageChange="setCurrentPage"
         @handleSizeChange="setCurrentSize"
         @handleSortChange="setCurrentSort">
-        <div class="aaa">
-            <template slot="operation" slot-scope="{ item }">
-                <a href="javascript:;" class="operation-btn">对比</a>
-            </template>
-            </div>
+        <template slot="operation" slot-scope="{ item }">
+            <a href="javascript:;" class="operation-btn">对比</a>
+        </template>
     </v-table>
 </template>
 
@@ -52,6 +50,14 @@
                         width: 79
                     }],
                     list: [{
+                        desc: '简单文件',
+                        time: '2018-07-06 18:16:03',
+                        user: 'bencemo'
+                    }, {
+                        desc: '简单文件',
+                        time: '2018-07-06 18:16:03',
+                        user: 'bencemo'
+                    }, {
                         desc: '简单文件',
                         time: '2018-07-06 18:16:03',
                         user: 'bencemo'

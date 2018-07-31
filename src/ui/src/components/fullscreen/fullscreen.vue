@@ -47,32 +47,42 @@
                 } else if (document.webkitExitFullscreen) {
                     document.webkitExitFullscreen()
                 }
+            },
+            fullscreenChange () {
+                this.$emit('fullscreenChange', !!document.fullscreenElement)
+            },
+            mozFullscreenChange () {
+                this.$emit('fullscreenChange', !!document.mozFullscreenElement)
+            },
+            msFullscreenChange () {
+                this.$emit('fullscreenChange', !!document.msFullscreenElement)
+            },
+            webkitFullscreenChange () {
+                this.$emit('fullscreenChange', !!document.webkitFullscreenElement)
             }
         },
         mounted () {
             if (document.fullscreenEnabled) {
-                document.addEventListener('fullscreenchange', e => this.$emit('fullscreenChange', !!this.fullscreenElement))
+                document.addEventListener('fullscreenchange', this.fullscreenChange)
             } else if (document.mozFullscreenEnabled) {
-                document.addEventListener('mozfullscreenchange', e => this.$emit('fullscreenChange', !!this.mozFullscreenElement))
+                document.addEventListener('mozfullscreenchange', this.mozFullscreenChange)
             } else if (document.msFullscreenEnabled) {
-                document.addEventListener('msfullscreenchange', e => this.$emit('fullscreenChange', !!this.msFullscreenElement))
+                document.addEventListener('msfullscreenchange', this.msFullscreenChange)
             } else if (document.webkitFullscreenEnabled) {
-                document.addEventListener('webkitfullscreenchange', e => {
-                    this.$emit('fullscreenChange', !!document.webkitFullscreenElement)
-                })
+                document.addEventListener('webkitfullscreenchange', this.webkitFullscreenChange)
             } else {
                 this.fullscreenEnabled = false
             }
         },
         destroyed () {
             if (document.fullscreenEnabled) {
-                document.removeEventListener('fullscreenchange')
+                document.removeEventListener('fullscreenchange', this.fullscreenChange)
             } else if (document.mozFullscreenEnabled) {
-                document.removeEventListener('mozfullscreenchange')
+                document.removeEventListener('mozfullscreenchange', this.mozFullscreenChange)
             } else if (document.msFullscreenEnabled) {
-                document.removeEventListener('msfullscreenchange')
+                document.removeEventListener('msfullscreenchange', this.msFullscreenChange)
             } else if (document.webkitFullscreenEnabled) {
-                document.removeEventListener('webkitfullscreenchange')
+                document.removeEventListener('webkitfullscreenchange', this.webkitFullscreenChange)
             }
         }
     }
