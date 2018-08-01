@@ -19,7 +19,7 @@
                 {{$t('ProcessConfig["新建进程配置模版"]')}}
             </bk-button>
             <div class="search-wrapper fr">
-                <bk-select class="left-select fl" :selected.sync="filter.selected" ref="filterSelector" @on-selected="setFilterType">
+                <bk-select class="left-select fl" :selected.sync="filter.selected" ref="filterSelector">
                     <bk-select-option
                         v-for="(option, index) of filter.list"
                         :key="option.id"
@@ -28,7 +28,7 @@
                     </bk-select-option>
                 </bk-select>
                 <input type="text" class="bk-form-input search-text" :placeholder="$t('ProcessConfig[\'根据文件描述、文件名称搜索\']')" v-model="filter.searchText">
-                <bk-button class="search" type="primary">
+                <bk-button class="search" type="primary" @click="search">
                     搜索
                 </bk-button>
             </div>
@@ -52,7 +52,7 @@
         <v-create-form
             v-if="createForm.isShow"
             :bkBizId="filter.bkBizId"
-            @submitForm="getTableList"
+            @submitForm="submitForm"
             @closeForm="createForm.isShow = false"
         ></v-create-form>
     </div>
@@ -74,9 +74,33 @@
                     selected: '',
                     bkBizId: '',
                     searchText: '',
+                    params: {
+
+                    },
                     list: [{
-                        id: 1,
+                        id: '',
                         name: '所有分组'
+                    }, {
+                        id: 'template_name',
+                        name: '文件描述'
+                    }, {
+                        id: 'file_name',
+                        name: '文件名称'
+                    }, {
+                        id: 'path',
+                        name: '绝对路径'
+                    }, {
+                        id: 'user',
+                        name: '所属用户'
+                    }, {
+                        id: 'right',
+                        name: '文件权限'
+                    }, {
+                        id: 'group',
+                        name: '文件分组'
+                    }, {
+                        id: 'format',
+                        name: '输出格式'
                     }]
                 },
                 table: {
@@ -90,7 +114,7 @@
                         id: 'path',
                         name: '绝对路径'
                     }, {
-                        id: 'desc',
+                        id: 'user',
                         name: '所属用户'
                     }, {
                         id: 'right',
@@ -99,7 +123,7 @@
                         id: 'group',
                         name: '文件分组'
                     }, {
-                        id: 'desc',
+                        id: 'format',
                         name: '输出格式'
                     }, {
                         id: 'operation',
@@ -126,12 +150,40 @@
                 }
             }
         },
+        watch: {
+            'filter.bkBizId' () {
+                this.setCurrentPage(1)
+            }
+        },
         methods: {
+            search () {
+                let {
+                    searchText,
+                    bkBizId,
+                    selected
+                } = this.filter
+                let params = {}
+                if (searchText.length) {
+                    if (selected === '') {
+                        params['template_name'] = searchText
+                        params['file_name'] = searchText
+                        params['path'] = searchText
+                        params['user'] = searchText
+                        params['right'] = searchText
+                        params['group'] = searchText
+                        params['format'] = searchText
+                    } else {
+                        params[selected] = searchText
+                    }
+                }
+                this.filter.params = params
+                this.setCurrentPage(1)
+            },
+            submitForm () {
+                this.configDetail.isShow = true
+            },
             createConfig () {
                 this.createForm.isShow = true
-            },
-            setFilterType () {
-
             },
             editTemplate () {
                 this.configDetail.isShow = true
@@ -139,19 +191,14 @@
             async getTableList () {
                 try {
                     let params = {
-                        field: [
-
-                        ],
                         page: {
-                            start: 0,
-                            limit: 10,
-                            sort: 'bk_set_name'
+                            start: (this.table.pagination.current - 1) * this.table.pagination.size,
+                            limit: this.table.pagination.size
                         },
-                        condition: {
-                        }
+                        condition: this.filter.params
                     }
                     const res = await this.$store.dispatch('processConfig/searchProcessConfigTemplate', {
-                        bkBizId: this.bkBizId,
+                        bkBizId: this.filter.bkBizId,
                         params: params
                     })
                     if (res.result) {

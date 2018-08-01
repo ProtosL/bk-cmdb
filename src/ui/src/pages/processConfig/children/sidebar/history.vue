@@ -9,21 +9,25 @@
  */
  
 <template>
-    <v-table
-        class="history-table"
-        :header="table.header" 
-        :list="table.list" 
-        :pagination.sync="table.pagination"
-        :defaultSort="table.defaultSort"
-        :wrapperMinusHeight="150"
-        :sortable="false"
-        @handlePageChange="setCurrentPage"
-        @handleSizeChange="setCurrentSize"
-        @handleSortChange="setCurrentSort">
-        <template slot="operation" slot-scope="{ item }">
-            <a href="javascript:;" class="operation-btn">对比</a>
-        </template>
-    </v-table>
+    <div class="history-table-wrapper">
+        <v-table
+            v-tooltip="{show: table.tipIndex !== -1, classes: ['tooltip-history', `tooltip-position-${table.tipIndex}`], content: tooltipContent}"
+            class="history-table"
+            :header="table.header" 
+            :list="table.list" 
+            :pagination.sync="table.pagination"
+            :defaultSort="table.defaultSort"
+            :wrapperMinusHeight="150"
+            :sortable="false"
+            @handlRowMouseover="handlRowMouseover"
+            @handlePageChange="setCurrentPage"
+            @handleSizeChange="setCurrentSize"
+            @handleSortChange="setCurrentSort">
+            <template slot="operation" slot-scope="{ item }">
+                <a href="javascript:;" class="operation-btn">对比</a>
+            </template>
+        </v-table>
+    </div>
 </template>
 
 <script>
@@ -50,7 +54,15 @@
                         width: 79
                     }],
                     list: [{
-                        desc: '简单文件',
+                        desc: '简',
+                        time: '2018-07-06 18:16:03',
+                        user: 'bencemo'
+                    }, {
+                        desc: '简单',
+                        time: '2018-07-06 18:16:03',
+                        user: 'bencemo'
+                    }, {
+                        desc: '简单文',
                         time: '2018-07-06 18:16:03',
                         user: 'bencemo'
                     }, {
@@ -60,7 +72,27 @@
                     }, {
                         desc: '简单文件',
                         time: '2018-07-06 18:16:03',
-                        user: 'bencemo'
+                        user: 'b'
+                    }, {
+                        desc: '简单文件',
+                        time: '2018-07-06 18:16:03',
+                        user: 'be'
+                    }, {
+                        desc: '简单文件',
+                        time: '2018-07-06 18:16:03',
+                        user: 'ben'
+                    }, {
+                        desc: '简单文件',
+                        time: '2018-07-06 18:16:03',
+                        user: 'benc'
+                    }, {
+                        desc: '简单文件',
+                        time: '2018-07-06 18:16:03',
+                        user: 'bence'
+                    }, {
+                        desc: '简单文件',
+                        time: '2018-07-06 18:16:03',
+                        user: 'bencem'
                     }],
                     chooseId: [],
                     pagination: {
@@ -69,11 +101,30 @@
                         current: 1
                     },
                     defaultSort: '-desc',
-                    sort: ''
+                    sort: '',
+                    tipIndex: -1
                 }
             }
         },
+        computed: {
+            tooltipContent () {
+                let {
+                    list,
+                    tipIndex
+                } = this.table
+                if (tipIndex === -1) {
+                    return ''
+                }
+                return `${list[tipIndex].desc} ${list[tipIndex].user} ${list[tipIndex].time}`
+            }
+        },
         methods: {
+            getTableList () {
+                
+            },
+            handlRowMouseover (item, index) {
+                this.table.tipIndex = index
+            },
             setCurrentPage (current) {
                 this.table.pagination.current = current
                 // this.getTableList()
@@ -106,4 +157,8 @@
             }
         }
     }
+</style>
+
+<style lang="scss">
+    
 </style>

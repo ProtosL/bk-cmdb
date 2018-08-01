@@ -45,16 +45,23 @@
                         {{$t('ProcessConfig["文件权限"]')}}
                         <span class="color-danger">*</span>
                     </label>
-                    <input id="desc" type="text" class="bk-form-input" placeholder="请输入">
+                    <bk-select class="output-select" :selected.sync="format.selected" @on-selected="setOutput">
+                        <bk-select-option
+                            v-for="(option, index) of output.list"
+                            :key="option"
+                            :value="option"
+                            :label="option">
+                        </bk-select-option>
+                    </bk-select>
                 </li>
                 <li>
                     <label for="desc">
                         {{$t('ProcessConfig["输出格式"]')}}
                         <span class="color-danger">*</span>
                     </label>
-                    <bk-select class="output-select" :selected.sync="output.selected" @on-selected="setOutput">
+                    <bk-select class="select-box" :selected.sync="format.selected" @on-selected="setOutput">
                         <bk-select-option
-                            v-for="(option, index) of output.list"
+                            v-for="(option, index) of format.list"
                             :key="option"
                             :value="option"
                             :label="option">

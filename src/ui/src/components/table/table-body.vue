@@ -94,6 +94,7 @@
                 if (rowHoverColor) {
                     event.currentTarget.style.backgroundColor = rowHoverColor
                 }
+                this.table.$emit('handlRowMouseover', item, rowIndex)
             },
             handleRowMouseout (event, item, rowIndex) {
                 const rowHoverColor = this.table.rowHoverColor

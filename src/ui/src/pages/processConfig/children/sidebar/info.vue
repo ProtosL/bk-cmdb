@@ -28,7 +28,7 @@
             </label>
             <input class="info-content" type="text" v-if="editTitle==='file_name'">
             <span class="info-content" v-else>
-                TemplateName
+                
                 <i class="icon-cc-edit" @click="editTitle='file_name'"></i>
             </span>
         </li>
@@ -39,7 +39,7 @@
             </label>
             <input class="info-content" type="text" v-if="editTitle==='path'">
             <span class="info-content" v-else>
-                TemplateName
+                
                 <i class="icon-cc-edit" @click="editTitle='path'"></i>
             </span>
         </li>
@@ -50,7 +50,7 @@
             </label>
             <input class="info-content" type="text" v-if="editTitle==='user'">
             <span class="info-content" v-else>
-                TemplateName
+                
                 <i class="icon-cc-edit" @click="editTitle='user'"></i>
             </span>
         </li>
@@ -61,7 +61,7 @@
             </label>
             <input class="info-content" type="text" v-if="editTitle==='right'">
             <span class="info-content" v-else>
-                TemplateName
+                
                 <i class="icon-cc-edit" @click="editTitle='right'"></i>
             </span>
         </li>
@@ -79,18 +79,17 @@
                 </bk-select-option>
             </bk-select>
             <span class="info-content" v-else>
-                TemplateName
+                
                 <i class="icon-cc-edit" @click="editTitle='output'"></i>
             </span>
         </li>
         <li>
             <label for="">
                 <span class="title">{{$t('ProcessConfig["文件分组"]')}}</span>
-                <span class="color-danger">*</span>
             </label>
             <input class="info-content" type="text" v-if="editTitle==='group'">
             <span class="info-content" v-else>
-                TemplateName
+                
                 <i class="icon-cc-edit" @click="editTitle='group'"></i>
             </span>
         </li>
@@ -101,15 +100,36 @@
     export default {
         data () {
             return {
+                attribute: [],
                 editTitle: '',
                 info: {
-                    template_name: '',
                     file_name: '',
-                    selected: '',
-                    outputList: [
-                        'UTF-8'
-                    ]
+                    template_name: '',
+                    formatSelected: '',
+                    rightSelected: '',
+                    formatList: [],
+                    rightList: []
                 }
+            }
+        },
+        async created () {
+            try {
+                const res = await this.$store.dispatch('object/getAttribute', {objId: 'config_template'})
+                if (res.result) {
+                    this.attribute = res.data
+                    let formatAttr = this.attribute.find(({bk_property_id: bkPropertyId}) => bkPropertyId === 'format')
+                    let rightAttr = this.attribute.find(({bk_property_id: bkPropertyId}) => bkPropertyId === 'format')
+                    if (formatAttr) {
+                        this.info.formatList = formatAttr.option
+                    }
+                    if (rightAttr) {
+                        this.info.formatList = rightAttr.option
+                    }
+                } else {
+                    this.$alert(res.data['bk_error_msg'])
+                }
+            } catch (e) {
+                this.$alertMsg(e.message || e.data['bk_error_msg'] || e.statusText)
             }
         }
     }

@@ -23,7 +23,7 @@
                     {{$t('ProcessConfig["文件描述"]')}}
                     <span class="color-danger">*</span>
                 </label>
-                <input id="desc" type="text" class="bk-form-input" placeholder="请输入" v-model="templateName">
+                <input id="desc" type="text" class="bk-form-input" placeholder="请输入" v-model="templateName" v-focus>
             </div>
             <div class="form-btn-group clearfix">
                 <div class="fr">

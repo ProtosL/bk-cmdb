@@ -673,6 +673,45 @@ body .bk-message.primary .bk-message-icon {
     display: block !important;
     z-index: 10000;
 
+    &.tooltip-history {
+        &.tooltip-position {
+            &-0 {
+                top: -402px !important;
+            }
+            &-1 {
+                top: -362px !important;
+            }
+            &-2 {
+                top: -322px !important;
+            }
+            &-3 {
+                top: -282px !important;
+            }
+            &-4 {
+                top: -242px !important;
+            }
+            &-5 {
+                top: -202px !important;
+            }
+            &-6 {
+                top: -162px !important;
+            }
+            &-7 {
+                top: -122px !important;
+            }
+            &-8 {
+                top: -82px !important;
+            }
+            &-9 {
+                top: -42px !important;
+            }
+        }
+        .tooltip-inner {
+            max-width: 300px;
+            word-wrap: break-word;
+        }
+    }
+
     &.topo-tip {
         .tooltip-inner {
             max-width: 300px;

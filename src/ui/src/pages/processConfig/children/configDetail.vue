@@ -16,7 +16,6 @@
                 :isFullscreen.sync="editorTab.isFullScreen"
                 ref="fullscreen"
                 @fullscreenChange="fullscreenChange">
-                <!-- <bk-tab class="editor-tab" :class="{'full-screen': editorTab.isFullScreen}" type="fill" :active-name.sync="editorTab.active"> -->
                 <bk-tab class="editor-tab" type="fill" :active-name.sync="editorTab.active">
                     <template slot="setting">
                         <div class="setting-wrapper">
@@ -90,6 +89,7 @@
     export default {
         data () {
             return {
+                attribute: [],
                 config: {
                     mode: ''
                 },
@@ -111,7 +111,8 @@
                     ]
                 },
                 $aceEdit: null,
-                $aceSample: null
+                $aceSample: null,
+                timer: null
             }
         },
         methods: {
@@ -140,20 +141,41 @@
                 this.onLineForm.isShow = true
             },
             saveDraft () {
-                
+                clearTimeout(this.timer)
+                this.updateConfig()
+                this.autoSave()
+            },
+            async updateConfig () {
+                try {
+                    let params = {}
+                    const res = await this.$store.dispatch('processConfig/editConfigTemplateVersion', {
+                        bkBizId: this.bkBizId,
+                        templateId: 1,
+                        versionId: 1,
+                        params: params
+                    })
+                    if (!res.result) {
+                        this.$alertMsg(res.data['bk_error_msg'])
+                    }
+                } catch (e) {
+                    this.$alertMsg(e.message || e.data['bk_error_msg'] || e.statusText)
+                }
             },
             cancel () {
                 this.$emit('cancel')
+            },
+            autoSave () {
+                this.timer = setTimeout(() => {
+                    this.updateConfig()
+                    this.autoSave()
+                }, 60000)
             }
         },
         mounted () {
-            // document.addEventListener('fullscreenchange', e => {
-            //     if (document.webkitFullscreenElement) {
-            //         this.editorTab.isFullScreen = true
-            //     } else {
-            //         this.editorTab.isFullScreen = false
-            //     }
-            // })
+            this.autoSave()
+        },
+        destroyed () {
+            clearTimeout(this.timer)
         },
         components: {
             ace,
@@ -174,11 +196,6 @@
             .fullscreen {
                 height: calc(100% - 80px);
                 margin: 20px 20px 0;
-                // &:-webkit-full-screen {
-                //     width: 100%;
-                //     height: 100%;
-                //     margin: 0;
-                // }
             }
         }
         .editor-tab {
