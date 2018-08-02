@@ -11,9 +11,19 @@
 import { $Axios, $axios } from '@/api/axios'
 
 const state = {
+    formData: {
+        template_name: '',
+        file_name: '',
+        path: '',
+        user: '',
+        right: '',
+        group: '',
+        format: ''
+    }
 }
 
 const getters = {
+    formData: state => state.formData
 }
 
 const actions = {
@@ -95,6 +105,13 @@ const actions = {
 }
 
 const mutations = {
+    setFormData (state, formData) {
+        for (let key in formData) {
+            if (state.formData[key] !== void 0) {
+                state.formData[key] = formData[key]
+            }
+        }
+    }
 }
 
 export default {

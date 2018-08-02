@@ -45,12 +45,12 @@
                         {{$t('ProcessConfig["文件权限"]')}}
                         <span class="color-danger">*</span>
                     </label>
-                    <bk-select class="output-select" :selected.sync="format.selected" @on-selected="setOutput">
+                    <bk-select class="select-box" :selected.sync="info.right" @on-selected="setOutput">
                         <bk-select-option
-                            v-for="(option, index) of output.list"
-                            :key="option"
-                            :value="option"
-                            :label="option">
+                            v-for="(option, index) of info.rightList"
+                            :key="option.id"
+                            :value="option.id"
+                            :label="option.name">
                         </bk-select-option>
                     </bk-select>
                 </li>
@@ -59,12 +59,12 @@
                         {{$t('ProcessConfig["输出格式"]')}}
                         <span class="color-danger">*</span>
                     </label>
-                    <bk-select class="select-box" :selected.sync="format.selected" @on-selected="setOutput">
+                    <bk-select class="select-box" :selected.sync="info.format" @on-selected="setOutput">
                         <bk-select-option
-                            v-for="(option, index) of format.list"
-                            :key="option"
-                            :value="option"
-                            :label="option">
+                            v-for="(option, index) of info.formatList"
+                            :key="option.id"
+                            :value="option.id"
+                            :label="option.name">
                         </bk-select-option>
                     </bk-select>
                 </li>
@@ -86,17 +86,26 @@
 </template>
 
 <script>
+    import { mapGetters } from 'vuex'
     export default {
         data () {
             return {
                 isShow: true,
-                output: {
-                    list: [
-                        'UTF-8'
-                    ],
-                    selected: ''
+                info: {
+                    file_name: '',
+                    template_name: '',
+                    path: '',
+                    user: '',
+                    format: '',
+                    right: '',
+                    group: '',
+                    formatList: [],
+                    rightList: []
                 }
             }
+        },
+        computed: {
+            ...mapGetters('processConfig', ['formData'])
         },
         methods: {
             setOutput () {
@@ -109,7 +118,33 @@
                 setTimeout(() => {
                     this.$emit('closeForm')
                 }, 300)
+            },
+            async getAttribute () {
+                try {
+                    const res = await this.$store.dispatch('object/getAttribute', {objId: 'config_template'})
+                    if (res.result) {
+                        this.attribute = res.data;
+                        ['format', 'right'].map(attr => {
+                            let property = this.attribute.find(({bk_property_id: bkPropertyId}) => bkPropertyId === attr)
+                            if (property) {
+                                this.info[`${attr}List`] = property.option
+                                let defaultValue = property.option.find(({is_default: isDefault}) => isDefault)
+                                if (defaultValue) {
+                                    this.info[attr] = this.info[attr] === '' ? defaultValue.id : this.info[attr]
+                                }
+                            }
+                        })
+                    } else {
+                        this.$alert(res.data['bk_error_msg'])
+                    }
+                } catch (e) {
+                    this.$alertMsg(e.message || e.data['bk_error_msg'] || e.statusText)
+                }
             }
+        },
+        created () {
+            this.getAttribute()
+            this.getFormData()
         }
     }
 </script>
@@ -135,7 +170,7 @@
                     margin-left: 30px;
                 }
                 input,
-                .output-select {
+                .select-box {
                     margin-top: 5px;
                     width: 220px;
                 }

@@ -58,6 +58,7 @@
     </div>
     <v-config-detail
         v-else
+        :bkBizId="filter.bkBizId"
         @cancel="configDetail.isShow = false"
     ></v-config-detail>
 </template>
@@ -131,7 +132,7 @@
                         sortable: false
                     }],
                     list: [{
-                        desc: 'aaa'
+                        template_name: 'aaa'
                     }],
                     chooseId: [],
                     pagination: {
@@ -185,7 +186,8 @@
             createConfig () {
                 this.createForm.isShow = true
             },
-            editTemplate () {
+            editTemplate (item) {
+                this.$store.commit('processConfig/setFormData', item)
                 this.configDetail.isShow = true
             },
             async getTableList () {

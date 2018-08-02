@@ -15,10 +15,14 @@
                 <span class="title">{{$t('ProcessConfig["文件描述"]')}}</span>
                 <span class="color-danger">*</span>
             </label>
-            <input class="info-content" type="text" v-if="editTitle==='template_name'">
+            <input class="info-content" type="text"
+                v-focus 
+                v-model="info.template_name" 
+                v-if="curEditContent==='template_name'"
+                @blur="updateFormData('template_name', info.template_name)">
             <span class="info-content" v-else>
-                TemplateName
-                <i class="icon-cc-edit" @click="editTitle='template_name'"></i>
+                {{info.template_name | isEmpty}}
+                <i class="icon-cc-edit" @click="editContent('template_name')"></i>
             </span>
         </li>
         <li>
@@ -26,10 +30,14 @@
                 <span class="title">{{$t('ProcessConfig["文件名称"]')}}</span>
                 <span class="color-danger">*</span>
             </label>
-            <input class="info-content" type="text" v-if="editTitle==='file_name'">
+            <input class="info-content" type="text" 
+            v-focus 
+            v-model="info.file_name"
+            v-if="curEditContent==='file_name'" 
+            @blur="updateFormData('file_name', info.file_name)">
             <span class="info-content" v-else>
-                
-                <i class="icon-cc-edit" @click="editTitle='file_name'"></i>
+                {{info.file_name | isEmpty}}
+                <i class="icon-cc-edit" @click="editContent('file_name')"></i>
             </span>
         </li>
         <li>
@@ -37,10 +45,14 @@
                 <span class="title">{{$t('ProcessConfig["绝对路径"]')}}</span>
                 <span class="color-danger">*</span>
             </label>
-            <input class="info-content" type="text" v-if="editTitle==='path'">
+            <input class="info-content" type="text" 
+            v-focus 
+            v-model="info.path"
+            v-if="curEditContent==='path'" 
+            @blur="updateFormData('path', info.path)">
             <span class="info-content" v-else>
-                
-                <i class="icon-cc-edit" @click="editTitle='path'"></i>
+                {{info.path | isEmpty}}
+                <i class="icon-cc-edit" @click="editContent('path')"></i>
             </span>
         </li>
         <li>
@@ -48,10 +60,14 @@
                 <span class="title">{{$t('ProcessConfig["所属用户"]')}}</span>
                 <span class="color-danger">*</span>
             </label>
-            <input class="info-content" type="text" v-if="editTitle==='user'">
+            <input class="info-content" type="text" 
+            v-focus 
+            v-model="info.user"
+            v-if="curEditContent==='user'" 
+            @blur="updateFormData('user', info.user)">
             <span class="info-content" v-else>
-                
-                <i class="icon-cc-edit" @click="editTitle='user'"></i>
+                {{info.user | isEmpty}}
+                <i class="icon-cc-edit" @click="editContent('user')"></i>
             </span>
         </li>
         <li>
@@ -59,10 +75,17 @@
                 <span class="title">{{$t('ProcessConfig["文件权限"]')}}</span>
                 <span class="color-danger">*</span>
             </label>
-            <input class="info-content" type="text" v-if="editTitle==='right'">
+            <bk-select v-if="curEditContent==='right'" class="highlight-select" :selected.sync="info.right">
+                <bk-select-option
+                    v-for="(option, index) of info.rightList"
+                    :key="option.id"
+                    :value="option.id"
+                    :label="option.name">
+                </bk-select-option>
+            </bk-select>
             <span class="info-content" v-else>
-                
-                <i class="icon-cc-edit" @click="editTitle='right'"></i>
+                {{info.right | isEmpty}}
+                <i class="icon-cc-edit" @click="editContent('right')"></i>
             </span>
         </li>
         <li>
@@ -70,67 +93,123 @@
                 <span class="title">{{$t('ProcessConfig["输出格式"]')}}</span>
                 <span class="color-danger">*</span>
             </label>
-            <bk-select v-if="editTitle==='output'" class="highlight-select" :selected.sync="info.outputList" @on-selected="setOutput">
+            <bk-select v-if="curEditContent==='format'" class="highlight-select" :selected.sync="info.format">
                 <bk-select-option
-                    v-for="(option, index) of info.output"
-                    :key="option"
-                    :value="option"
-                    :label="option">
+                    v-for="(option, index) of info.formatList"
+                    :key="option.id"
+                    :value="option.id"
+                    :label="option.name">
                 </bk-select-option>
             </bk-select>
             <span class="info-content" v-else>
-                
-                <i class="icon-cc-edit" @click="editTitle='output'"></i>
+                {{info.format | isEmpty}}
+                <i class="icon-cc-edit" @click="editContent('format')"></i>
             </span>
         </li>
         <li>
             <label for="">
                 <span class="title">{{$t('ProcessConfig["文件分组"]')}}</span>
             </label>
-            <input class="info-content" type="text" v-if="editTitle==='group'">
+            <input class="info-content" type="text" v-if="curEditContent==='group'" v-focus @blur="updateFormData('group', info.group)">
             <span class="info-content" v-else>
-                
-                <i class="icon-cc-edit" @click="editTitle='group'"></i>
+                {{info.group | isEmpty}}
+                <i class="icon-cc-edit" @click="editContent('group')"></i>
             </span>
         </li>
     </ul>
 </template>
 
 <script>
+    import { mapGetters } from 'vuex'
     export default {
         data () {
             return {
                 attribute: [],
-                editTitle: '',
+                curEditContent: '',
                 info: {
                     file_name: '',
                     template_name: '',
-                    formatSelected: '',
-                    rightSelected: '',
+                    path: '',
+                    user: '',
+                    format: '',
+                    right: '',
+                    group: '',
                     formatList: [],
                     rightList: []
                 }
             }
         },
-        async created () {
-            try {
-                const res = await this.$store.dispatch('object/getAttribute', {objId: 'config_template'})
-                if (res.result) {
-                    this.attribute = res.data
-                    let formatAttr = this.attribute.find(({bk_property_id: bkPropertyId}) => bkPropertyId === 'format')
-                    let rightAttr = this.attribute.find(({bk_property_id: bkPropertyId}) => bkPropertyId === 'format')
-                    if (formatAttr) {
-                        this.info.formatList = formatAttr.option
-                    }
-                    if (rightAttr) {
-                        this.info.formatList = rightAttr.option
-                    }
-                } else {
-                    this.$alert(res.data['bk_error_msg'])
+        computed: {
+            ...mapGetters('processConfig', ['formData'])
+        },
+        filters: {
+            isEmpty (data) {
+                if (!data.length) {
+                    return '--'
                 }
-            } catch (e) {
-                this.$alertMsg(e.message || e.data['bk_error_msg'] || e.statusText)
+                return data
             }
+        },
+        methods: {
+            editContent (key) {
+                this.curEditContent = key
+                this.info[key] = this.formData[key]
+            },
+            async updateFormData (key, value) {
+                try {
+                    const res = await this.$store.dispatch('processConfig/editProcessConfigTemplate', {
+                        bkBizId: 1,
+                        templateId: 1,
+                        params: {key: value}
+                    })
+                    if (res.result) {
+                        this.curEditContent = ''
+                        this.$store.commit('processConfig/setFormData', {key: value})
+                    } else {
+                        this.$alertMsg(res.data['bk_error_msg'])
+                    }
+                } catch (e) {
+                    this.$alertMsg(e.message || e.data['bk_error_msg'] || e.statusText)
+                }
+            },
+            getFormData () {
+                for (let key in this.formData) {
+                    this.info[key] = this.formData[key]
+                }
+            },
+            async getAttribute () {
+                try {
+                    const res = await this.$store.dispatch('object/getAttribute', {objId: 'config_template'})
+                    if (res.result) {
+                        this.attribute = res.data;
+                        ['format', 'right'].map(attr => {
+                            let property = this.attribute.find(({bk_property_id: bkPropertyId}) => bkPropertyId === attr)
+                            if (property) {
+                                this.info[`${attr}List`] = property.option
+                                let defaultValue = property.option.find(({is_default: isDefault}) => isDefault)
+                                if (defaultValue) {
+                                    this.info[attr] = this.info[attr] === '' ? defaultValue.id : this.info[attr]
+                                }
+                            }
+                        })
+                    } else {
+                        this.$alert(res.data['bk_error_msg'])
+                    }
+                } catch (e) {
+                    this.$alertMsg(e.message || e.data['bk_error_msg'] || e.statusText)
+                }
+            }
+        },
+        directives: {
+            focus: {
+                inserted: function (el) {
+                    el.focus()
+                }
+            }
+        },
+        created () {
+            this.getFormData()
+            this.getAttribute()
         }
     }
 </script>
@@ -143,6 +222,11 @@
             line-height: 34px;
             font-size: 14px;
             color: #737987;
+            &:hover {
+                .info-content .icon-cc-edit {
+                    display: inline-block;
+                }
+            }
             label {
                 float: left;
                 width: 84px;
@@ -168,11 +252,6 @@
                 .icon-cc-edit {
                     display: none;
                     cursor: pointer;
-                }
-                &:hover {
-                    .icon-cc-edit {
-                        display: inline-block;
-                    }
                 }
             }
             .highlight-select {

@@ -55,8 +55,8 @@
                         bkBizId: this.bkBizId, params: {template: this.templateName}
                     })
                     if (res.result) {
+                        this.$store.commit('processConfig/setFormData', {template_name: this.templateName})
                         this.$emit('submitForm')
-                    } else {
                         this.$alertMsg(res['bk_error_msg'])
                     }
                 } catch (e) {
