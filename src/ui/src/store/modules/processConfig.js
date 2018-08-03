@@ -106,6 +106,7 @@ const actions = {
 
 const mutations = {
     setFormData (state, formData) {
+        console.log(formData)
         for (let key in formData) {
             if (state.formData[key] !== void 0) {
                 state.formData[key] = formData[key]

@@ -24,21 +24,21 @@
                         {{$t('ProcessConfig["文件名称"]')}}
                         <span class="color-danger">*</span>
                     </label>
-                    <input id="desc" type="text" class="bk-form-input" placeholder="请输入">
+                    <input id="desc" type="text" v-model="info.file_name" class="bk-form-input" placeholder="请输入">
                 </li>
                 <li>
                     <label for="desc">
                         {{$t('ProcessConfig["绝对路径"]')}}
                         <span class="color-danger">*</span>
                     </label>
-                    <input id="desc" type="text" class="bk-form-input" placeholder="请输入">
+                    <input id="desc" type="text" v-model="info.path" class="bk-form-input" placeholder="请输入">
                 </li>
                 <li>
                     <label for="desc">
                         {{$t('ProcessConfig["所属用户"]')}}
                         <span class="color-danger">*</span>
                     </label>
-                    <input id="desc" type="text" class="bk-form-input" placeholder="请输入">
+                    <input id="desc" type="text" v-model="info.user" class="bk-form-input" placeholder="请输入">
                 </li>
                 <li>
                     <label for="desc">
@@ -72,7 +72,7 @@
                     <label for="desc">
                         {{$t('ProcessConfig["文件分组"]')}}
                     </label>
-                    <input id="desc" type="text" class="bk-form-input" placeholder="请输入">
+                    <input id="desc" type="text" v-model="info.group" class="bk-form-input" placeholder="请输入">
                 </li>
             </ul>
             <div class="form-btn-group clearfix">
@@ -118,6 +118,11 @@
                 setTimeout(() => {
                     this.$emit('closeForm')
                 }, 300)
+            },
+            getFormData () {
+                for (let key in this.formData) {
+                    this.info[key] = this.formData[key]
+                }
             },
             async getAttribute () {
                 try {

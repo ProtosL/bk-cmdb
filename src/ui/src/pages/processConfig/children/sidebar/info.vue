@@ -21,7 +21,7 @@
                 v-if="curEditContent==='template_name'"
                 @blur="updateFormData('template_name', info.template_name)">
             <span class="info-content" v-else>
-                {{info.template_name | isEmpty}}
+                {{formData.template_name | isEmpty}}
                 <i class="icon-cc-edit" @click="editContent('template_name')"></i>
             </span>
         </li>
@@ -36,7 +36,7 @@
             v-if="curEditContent==='file_name'" 
             @blur="updateFormData('file_name', info.file_name)">
             <span class="info-content" v-else>
-                {{info.file_name | isEmpty}}
+                {{formData.file_name | isEmpty}}
                 <i class="icon-cc-edit" @click="editContent('file_name')"></i>
             </span>
         </li>
@@ -51,7 +51,7 @@
             v-if="curEditContent==='path'" 
             @blur="updateFormData('path', info.path)">
             <span class="info-content" v-else>
-                {{info.path | isEmpty}}
+                {{formData.path | isEmpty}}
                 <i class="icon-cc-edit" @click="editContent('path')"></i>
             </span>
         </li>
@@ -66,7 +66,7 @@
             v-if="curEditContent==='user'" 
             @blur="updateFormData('user', info.user)">
             <span class="info-content" v-else>
-                {{info.user | isEmpty}}
+                {{formData.user | isEmpty}}
                 <i class="icon-cc-edit" @click="editContent('user')"></i>
             </span>
         </li>
@@ -84,7 +84,7 @@
                 </bk-select-option>
             </bk-select>
             <span class="info-content" v-else>
-                {{info.right | isEmpty}}
+                {{formData.right | isEmpty}}
                 <i class="icon-cc-edit" @click="editContent('right')"></i>
             </span>
         </li>
@@ -102,7 +102,7 @@
                 </bk-select-option>
             </bk-select>
             <span class="info-content" v-else>
-                {{info.format | isEmpty}}
+                {{formData.format | isEmpty}}
                 <i class="icon-cc-edit" @click="editContent('format')"></i>
             </span>
         </li>
@@ -112,7 +112,7 @@
             </label>
             <input class="info-content" type="text" v-if="curEditContent==='group'" v-focus @blur="updateFormData('group', info.group)">
             <span class="info-content" v-else>
-                {{info.group | isEmpty}}
+                {{formData.group | isEmpty}}
                 <i class="icon-cc-edit" @click="editContent('group')"></i>
             </span>
         </li>
@@ -189,6 +189,11 @@
                                 let defaultValue = property.option.find(({is_default: isDefault}) => isDefault)
                                 if (defaultValue) {
                                     this.info[attr] = this.info[attr] === '' ? defaultValue.id : this.info[attr]
+                                    if (!this.formData[attr]) {
+                                        let params = {}
+                                        params[attr] = this.info[attr]
+                                        this.$store.commit('processConfig/setFormData', params)
+                                    }
                                 }
                             }
                         })
