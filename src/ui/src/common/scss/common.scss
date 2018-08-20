@@ -47,7 +47,13 @@ a {
 .cp {
     cursor: pointer!important;
 }
-
+.dropdown-btn.checkbox {
+    padding: 0 16px;
+    text-align: left;
+    .checkbox-btn {
+        margin-right: 5px;
+    }
+}
 .bk-dropdown-menu .bk-dropdown-list>li a:hover {
     background: #f5f5f5;
 }
@@ -154,9 +160,9 @@ textarea {
 .bk-dialog-btn-confirm {
     // border: 1px solid #6b7baa;
 }
-
-.bk-dialog-body {
+.bk-dialog-style .bk-dialog-body {
     word-wrap: break-word;
+    padding: 15px 40px;
 }
 .bk-dialog-btn.bk-dialog-btn-cancel {
     &:hover {
@@ -1115,3 +1121,17 @@ $configDetailBorderColor: #dde4eb;
     }
 }
 // 进程配置管理 end
+.checkbox-btn {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    background-image: url(./common/images/bk_check.png);
+    background-position: 0 -95px;
+    vertical-align: middle;
+    &.checked {
+        background-position: 0 -122px;
+    }
+    &.checked-all {
+        background-position: -33px -95px;
+    }
+}

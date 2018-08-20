@@ -13,15 +13,16 @@
 package auth
 
 import (
-	"configcenter/src/common"
-	"configcenter/src/common/blog"
-	"configcenter/src/common/util"
-	"configcenter/src/web_server/application/middleware/types"
 	"encoding/json"
 	"strings"
 
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
+
+	"configcenter/src/common"
+	"configcenter/src/common/blog"
+	"configcenter/src/common/util"
+	"configcenter/src/web_server/application/middleware/types"
 )
 
 type publicAuth struct {
@@ -109,7 +110,9 @@ func (m *publicAuth) ValidResAccess(pathArr []string, c *gin.Context) bool {
 	if types.SearchPatternRegexp.MatchString(pathStr) {
 		return true
 	}
-
+	if strings.Contains(pathStr, types.BK_INST_ASSOCIATION_TOPO_SEARCH) {
+		return true
+	}
 	//valid resource config
 	if types.ResPatternRegexp.MatchString(pathStr) {
 		blog.Debug("valid resource config: %v", pathStr)
