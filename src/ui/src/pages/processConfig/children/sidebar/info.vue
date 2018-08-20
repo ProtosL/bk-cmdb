@@ -140,7 +140,8 @@
             }
         },
         computed: {
-            ...mapGetters('processConfig', ['formData'])
+            ...mapGetters('processConfig', ['formData']),
+            ...mapGetters(['bkBizId'])
         },
         filters: {
             isEmpty (data) {
@@ -157,10 +158,12 @@
             },
             async updateFormData (key, value) {
                 try {
-                    const res = await this.$store.dispatch('processConfig/editProcessConfigTemplate', {
-                        bkBizId: 1,
+                    let params = {}
+                    params[key] = value
+                    const res = await this.$store.dispatch('processConfig/editConfigTemplate', {
+                        bkBizId: this.bkBizId,
                         templateId: 1,
-                        params: {key: value}
+                        params
                     })
                     if (res.result) {
                         this.curEditContent = ''

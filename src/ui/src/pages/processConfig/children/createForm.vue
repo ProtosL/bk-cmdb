@@ -51,16 +51,26 @@
         methods: {
             async submitForm () {
                 try {
-                    const res = await this.$store.dispatch('processConfig/createProcessConfigTemplate', {
-                        bkBizId: this.bkBizId, params: {template: this.templateName}
+                    let params = {
+                        template_name: this.templateName,
+                        file_name: '',
+                        path: '',
+                        user: '',
+                        format: 'utf8',
+                        right: '644',
+                        group: ''
+                    }
+                    const res = await this.$store.dispatch('processConfig/createConfigTemplate', {
+                        bkBizId: this.bkBizId, params
                     })
                     if (res.result) {
                         this.$store.commit('processConfig/setFormData', {template_name: this.templateName})
                         this.$emit('submitForm')
+                    } else {
                         this.$alertMsg(res['bk_error_msg'])
                     }
                 } catch (e) {
-                    this.$alertMsg(e.message || e.data['bk_error_msg'] || e.statusText)
+                    this.$alertMsg(e.data['bk_error_msg'] || e.message || e.statusText)
                 }
             },
             closeForm () {

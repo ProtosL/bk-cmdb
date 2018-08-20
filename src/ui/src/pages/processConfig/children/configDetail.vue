@@ -86,6 +86,7 @@
     import vOnlineForm from './onlineForm'
     import vPreview from './preview'
     import vFullscreen from '@/components/fullscreen/fullscreen'
+    import { mapGetters, mapActions } from 'vuex'
     export default {
         data () {
             return {
@@ -115,7 +116,17 @@
                 timer: null
             }
         },
+        computed: {
+            ...mapGetters(['bkBizId']),
+            ...mapGetters('processConfig', [
+                'formData'
+            ])
+        },
         methods: {
+            ...mapActions('processConfig', [
+                'editConfigTemplateVersion',
+                'getConfigTemplateVersion'
+            ]),
             toggleFullScreen () {
                 this.editorTab.isFullScreen = !this.editorTab.isFullScreen
                 if (this.editorTab.isFullScreen) {
@@ -148,9 +159,9 @@
             async updateConfig () {
                 try {
                     let params = {}
-                    const res = await this.$store.dispatch('processConfig/editConfigTemplateVersion', {
+                    const res = await this.editConfigTemplateVersion({
                         bkBizId: this.bkBizId,
-                        templateId: 1,
+                        templateId: this.formData['template_id'],
                         versionId: 1,
                         params: params
                     })
@@ -160,6 +171,9 @@
                 } catch (e) {
                     this.$alertMsg(e.message || e.data['bk_error_msg'] || e.statusText)
                 }
+            },
+            getTemplateVersion () {
+                this.getConfigTemplateVersion({bkBizId: this.bkBizId, templateId: this.formData['template_id'], params: {status: 'draft'}})
             },
             cancel () {
                 this.$emit('cancel')
@@ -172,6 +186,7 @@
             }
         },
         mounted () {
+            this.getTemplateVersion()
             this.autoSave()
         },
         destroyed () {

@@ -18,7 +18,8 @@ const state = {
         user: '',
         right: '',
         group: '',
-        format: ''
+        format: '',
+        template_id: ''
     }
 }
 
@@ -36,8 +37,8 @@ const actions = {
      * @param {Object} params 参数
      * @return {Promise} promise 对象
      */
-    createProcessConfigTemplate ({ commit, state, dispatch, rootState }, { bkBizId, params }) {
-        return $axios.post(`proc/template/${rootState.common.bkSupplierAccount}/${bkBizId}`, params)
+    createConfigTemplate ({ commit, state, dispatch, rootState }, { bkBizId, params }) {
+        return $axios.post(`template/${rootState.common.bkSupplierAccount}/${bkBizId}`, params)
     },
     /**
      * 编辑进程配置文件模板
@@ -49,8 +50,8 @@ const actions = {
      * @param {Object} params 参数
      * @return {Promise} promise 对象
      */
-    editProcessConfigTemplate ({ commit, state, dispatch, rootState }, { bkBizId, templateId, params }) {
-        return $axios.put(`proc/template/${rootState.common.bkSupplierAccount}/${bkBizId}/${templateId}`, params)
+    editConfigTemplate ({ commit, state, dispatch, rootState }, { bkBizId, templateId, params }) {
+        return $axios.put(`template/${rootState.common.bkSupplierAccount}/${bkBizId}/${templateId}`, params)
     },
     /**
      * 查询进程配置文件模板
@@ -61,8 +62,8 @@ const actions = {
      * @param {Object} params 参数
      * @return {Promise} promise 对象
      */
-    searchProcessConfigTemplate ({ commit, state, dispatch, rootState }, { bkBizId, params }) {
-        return $axios.post(`proc/template/search/${rootState.common.bkSupplierAccount}/${bkBizId}`, params)
+    searchConfigTemplate ({ commit, state, dispatch, rootState }, { bkBizId, params }) {
+        return $axios.post(`template/search/${rootState.common.bkSupplierAccount}/${bkBizId}`, params)
     },
     /**
      * 删除进程配置文件模板
@@ -73,8 +74,8 @@ const actions = {
      * @param {Number} templateId 模版文件id
      * @return {Promise} promise 对象
      */
-    deleteProcessConfigTemplate ({ commit, state, dispatch, rootState }, { bkBizId, templateId }) {
-        return $axios.delete(`proc/${rootState.common.bkSupplierAccount}/${bkBizId}/${templateId}`)
+    deleteConfigTemplate ({ commit, state, dispatch, rootState }, { bkBizId, templateId }) {
+        return $axios.delete(`template/${rootState.common.bkSupplierAccount}/${bkBizId}/${templateId}`)
     },
     /**
      * 获取进程配置文件版本
@@ -85,8 +86,8 @@ const actions = {
      * @param {Number} templateId 模版文件id
      * @return {Promise} promise 对象
      */
-    getProcessConfigTemplateVersion ({ commit, state, dispatch, rootState }, { bkBizId, templateId }) {
-        return $axios.get(`proc/template/version/${rootState.common.bkSupplierAccount}/${bkBizId}/${templateId}`)
+    getConfigTemplateVersion ({ commit, state, dispatch, rootState }, { bkBizId, templateId, params }) {
+        return $axios.post(`template/version/${rootState.common.bkSupplierAccount}/${bkBizId}/${templateId}`, params)
     },
     /**
      * 编辑配置文件版本信息
@@ -100,13 +101,76 @@ const actions = {
      * @return {Promise} promise 对象
      */
     editConfigTemplateVersion ({ commit, state, dispatch, rootState }, { bkBizId, templateId, versionId, params }) {
-        return $axios.put(`proc/template/version/${rootState.common.bkSupplierAccount}/${bkBizId}/${templateId}/${versionId}`, params)
+        return $axios.put(`template/version/${rootState.common.bkSupplierAccount}/${bkBizId}/${templateId}/${versionId}`, params)
+    },
+    /**
+     * 获取进程绑定配置文件
+     * @param {Function} commit store commit mutation hander
+     * @param {Object} state store state
+     * @param {String} dispatch store dispatch action hander
+     * @param {Number} bkBizId 业务id
+     * @param {Number} bkProcessId 进程id
+     * @return {Promise} promise 对象
+     */
+    getProcessBindTemplate ({ commit, state, dispatch, rootState }, { bkBizId, bkProcessId }) {
+        return $axios.get(`proc/template/${rootState.common.bkSupplierAccount}/${bkBizId}/${bkProcessId}`)
+    },
+    /**
+     * 绑定配置文件到进程
+     * @param {Function} commit store commit mutation hander
+     * @param {Object} state store state
+     * @param {String} dispatch store dispatch action hander
+     * @param {Number} bkBizId 业务id
+     * @param {Number} bkProcessId 进程id
+     * @param {Number} templateId 模版文件id
+     * @return {Promise} promise 对象
+     */
+    bindProcessConfigTemplate ({ commit, state, dispatch, rootState }, { bkBizId, bkProcessId, templateId }) {
+        return $axios.put(`proc/template/${rootState.common.bkSupplierAccount}/${bkBizId}/${bkProcessId}/${templateId}`)
+    },
+    /**
+     * 解绑进程配置文件
+     * @param {Function} commit store commit mutation hander
+     * @param {Object} state store state
+     * @param {String} dispatch store dispatch action hander
+     * @param {Number} bkBizId 业务id
+     * @param {Number} bkProcessId 进程id
+     * @param {Number} templateId 模版文件id
+     * @return {Promise} promise 对象
+     */
+    deleteProcessConfigTemplate ({ commit, state, dispatch, rootState }, { bkBizId, bkProcessId, templateId }) {
+        return $axios.delete(`proc/template/${rootState.common.bkSupplierAccount}/${bkBizId}/${bkProcessId}/${templateId}`)
+    },
+    /**
+     * 获取进程实例
+     * @param {Function} commit store commit mutation hander
+     * @param {Object} state store state
+     * @param {String} dispatch store dispatch action hander
+     * @param {Number} bkBizId 业务id
+     * @param {Number} bkProcessId 进程id
+     * @param {Number} templateId 模版文件id
+     * @return {Promise} promise 对象
+     */
+    getProcessInst ({ commit, state, dispatch, rootState }, { bkBizId }) {
+        return $axios.get(`proc/inst/${rootState.common.bkSupplierAccount}/${bkBizId}`)
+    },
+    /**
+     * 预览配置生成
+     * @param {Function} commit store commit mutation hander
+     * @param {Object} state store state
+     * @param {String} dispatch store dispatch action hander
+     * @param {Number} bkBizId 业务id
+     * @param {Number} bkProcessId 进程id
+     * @param {Number} templateId 模版文件id
+     * @return {Promise} promise 对象
+     */
+    previewProcessConfigTemplate ({ commit, state, dispatch, rootState }, { bkBizId, templateId, params }) {
+        return $axios.get(`proc/template/${rootState.common.bkSupplierAccount}/${bkBizId}/${templateId}`, params)
     }
 }
 
 const mutations = {
     setFormData (state, formData) {
-        console.log(formData)
         for (let key in formData) {
             if (state.formData[key] !== void 0) {
                 state.formData[key] = formData[key]

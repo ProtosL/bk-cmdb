@@ -24,21 +24,33 @@
                         {{$t('ProcessConfig["文件名称"]')}}
                         <span class="color-danger">*</span>
                     </label>
-                    <input id="desc" type="text" v-model="info.file_name" class="bk-form-input" placeholder="请输入">
+                    <input id="desc" type="text" v-model="info.file_name" class="bk-form-input" placeholder="请输入"
+                        @blur="validate"
+                        :data-vv-name="$t('ProcessConfig[\'文件名称\']')"
+                        v-validate="'required|singlechar'">
+                    <span v-show="errors.has($t('ProcessConfig[\'文件名称\']'))" class="error-msg is-danger">{{ errors.first($t('ProcessConfig[\'文件名称\']')) }}</span>
                 </li>
                 <li>
                     <label for="desc">
                         {{$t('ProcessConfig["绝对路径"]')}}
                         <span class="color-danger">*</span>
                     </label>
-                    <input id="desc" type="text" v-model="info.path" class="bk-form-input" placeholder="请输入">
+                    <input id="desc" type="text" v-model="info.path" class="bk-form-input" placeholder="请输入"
+                        @blur="validate"
+                        :data-vv-name="$t('ProcessConfig[\'绝对路径\']')"
+                        v-validate="'required|singlechar'">
+                    <span v-show="errors.has($t('ProcessConfig[\'绝对路径\']'))" class="error-msg is-danger">{{ errors.first($t('ProcessConfig[\'绝对路径\']')) }}</span>
                 </li>
                 <li>
                     <label for="desc">
                         {{$t('ProcessConfig["所属用户"]')}}
                         <span class="color-danger">*</span>
                     </label>
-                    <input id="desc" type="text" v-model="info.user" class="bk-form-input" placeholder="请输入">
+                    <input id="desc" type="text" v-model="info.user" class="bk-form-input" placeholder="请输入"
+                        @blur="validate"
+                        :data-vv-name="$t('ProcessConfig[\'所属用户\']')"
+                        v-validate="'required|singlechar'">
+                    <span v-show="errors.has($t('ProcessConfig[\'所属用户\']'))" class="error-msg is-danger">{{ errors.first($t('ProcessConfig[\'所属用户\']')) }}</span>
                 </li>
                 <li>
                     <label for="desc">
@@ -108,10 +120,17 @@
             ...mapGetters('processConfig', ['formData'])
         },
         methods: {
+            validate () {
+                this.$validator.validateAll()
+            },
             setOutput () {
 
             },
             submitForm () {
+                this.$validator.validateAll().then(res => {
+                    // if (res) {
+                    // }
+                })
             },
             closeForm () {
                 this.isShow = false
@@ -168,6 +187,7 @@
             margin: 20px auto 0;
             padding: 0 60px;
             >li {
+                position: relative;
                 float: left;
                 margin-top: 15px;
                 width: 220px;
@@ -179,6 +199,12 @@
                     margin-top: 5px;
                     width: 220px;
                 }
+            }
+            .error-msg{
+                position: absolute;
+                bottom: -15px;
+                left: 0;
+                line-height: 1;
             }
         }
         .form-btn-group {

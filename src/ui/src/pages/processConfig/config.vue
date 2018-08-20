@@ -27,7 +27,7 @@
                         :label="option.name">
                     </bk-select-option>
                 </bk-select>
-                <input type="text" class="bk-form-input search-text" :placeholder="$t('ProcessConfig[\'根据文件描述、文件名称搜索\']')" v-model="filter.searchText">
+                <input type="text" class="bk-form-input search-text" :placeholder="$t('ProcessConfig[\'根据文件描述搜索\']')" v-model="filter.templateName" @keyup.enter="search">
                 <bk-button class="search" type="primary" @click="search">
                     搜索
                 </bk-button>
@@ -68,40 +68,18 @@
     import vTable from '@/components/table/table'
     import vCreateForm from './children/createForm'
     import vConfigDetail from './children/configDetail'
+    import { mapGetters, mapActions, mapMutations } from 'vuex'
     export default {
         data () {
             return {
                 filter: {
+                    templateName: '',
                     selected: '',
                     bkBizId: '',
-                    searchText: '',
-                    params: {
-
-                    },
+                    params: {},
                     list: [{
                         id: '',
                         name: '所有分组'
-                    }, {
-                        id: 'template_name',
-                        name: '文件描述'
-                    }, {
-                        id: 'file_name',
-                        name: '文件名称'
-                    }, {
-                        id: 'path',
-                        name: '绝对路径'
-                    }, {
-                        id: 'user',
-                        name: '所属用户'
-                    }, {
-                        id: 'right',
-                        name: '文件权限'
-                    }, {
-                        id: 'group',
-                        name: '文件分组'
-                    }, {
-                        id: 'format',
-                        name: '输出格式'
                     }]
                 },
                 table: {
@@ -151,34 +129,47 @@
                 }
             }
         },
+        computed: {
+            ...mapGetters(['bkBizId'])
+        },
         watch: {
             'filter.bkBizId' () {
                 this.setCurrentPage(1)
             }
         },
         methods: {
+            ...mapActions('processConfig', [
+                'searchConfigTemplate',
+                'deleteConfigTemplate'
+            ]),
+            ...mapMutations('processConfig', [
+                'setFormData'
+            ]),
             search () {
                 let {
-                    searchText,
-                    bkBizId,
+                    templateName,
                     selected
                 } = this.filter
-                let params = {}
-                if (searchText.length) {
-                    if (selected === '') {
-                        params['template_name'] = searchText
-                        params['file_name'] = searchText
-                        params['path'] = searchText
-                        params['user'] = searchText
-                        params['right'] = searchText
-                        params['group'] = searchText
-                        params['format'] = searchText
-                    } else {
-                        params[selected] = searchText
-                    }
+                let params = {
+                    template_name: templateName
+                }
+                if (selected !== '') {
+                    Object.assign(params, {group: selected})
                 }
                 this.filter.params = params
                 this.setCurrentPage(1)
+            },
+            delConfirm (item) {
+                this.$bkInfo({
+                    title: this.$t("CustomQuery['确认要删除']", {name: item['template_name']}),
+                    confirmFn: () => {
+                        this.deleteTemplate(item)
+                    }
+                })
+            },
+            async deleteTemplate (item) {
+                await this.deleteConfigTemplate({bkBizId: this.bkBizId, templateId: item['template_id']})
+                this.getTableList()
             },
             submitForm () {
                 this.configDetail.isShow = true
@@ -187,7 +178,7 @@
                 this.createForm.isShow = true
             },
             editTemplate (item) {
-                this.$store.commit('processConfig/setFormData', item)
+                this.setFormData(item)
                 this.configDetail.isShow = true
             },
             async getTableList () {
@@ -199,17 +190,18 @@
                         },
                         condition: this.filter.params
                     }
-                    const res = await this.$store.dispatch('processConfig/searchProcessConfigTemplate', {
+                    const res = await this.searchConfigTemplate({
                         bkBizId: this.filter.bkBizId,
                         params: params
                     })
                     if (res.result) {
-                        this.table.list = res.data
+                        this.table.list = res.data.info
+                        this.table.pagination.count = res.data.count
                     } else {
                         this.$alertMsg(res['bk_error_msg'])
                     }
                 } catch (e) {
-                    this.$alertMsg(e.message || e.data['bk_error_msg'] || e.statusText)
+                    this.$alertMsg(e.data['bk_error_msg'] || e.message || e.statusText)
                 }
             },
             setCurrentPage (current) {
