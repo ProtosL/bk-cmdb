@@ -12,7 +12,7 @@
     <ul class="info-form">
         <li>
             <label for="">
-                <span class="title">{{$t('ProcessConfig["文件描述"]')}}</span>
+                <span class="title">{{$t('ConfigTemplate["文件描述"]')}}</span>
                 <span class="color-danger">*</span>
             </label>
             <input class="info-content" type="text"
@@ -27,7 +27,7 @@
         </li>
         <li>
             <label for="">
-                <span class="title">{{$t('ProcessConfig["文件名称"]')}}</span>
+                <span class="title">{{$t('ConfigTemplate["文件名称"]')}}</span>
                 <span class="color-danger">*</span>
             </label>
             <input class="info-content" type="text" 
@@ -42,7 +42,7 @@
         </li>
         <li>
             <label for="">
-                <span class="title">{{$t('ProcessConfig["绝对路径"]')}}</span>
+                <span class="title">{{$t('ConfigTemplate["绝对路径"]')}}</span>
                 <span class="color-danger">*</span>
             </label>
             <input class="info-content" type="text" 
@@ -57,7 +57,7 @@
         </li>
         <li>
             <label for="">
-                <span class="title">{{$t('ProcessConfig["所属用户"]')}}</span>
+                <span class="title">{{$t('ConfigTemplate["所属用户"]')}}</span>
                 <span class="color-danger">*</span>
             </label>
             <input class="info-content" type="text" 
@@ -72,7 +72,7 @@
         </li>
         <li>
             <label for="">
-                <span class="title">{{$t('ProcessConfig["文件权限"]')}}</span>
+                <span class="title">{{$t('ConfigTemplate["文件权限"]')}}</span>
                 <span class="color-danger">*</span>
             </label>
             <bk-select v-if="curEditContent==='right'" class="highlight-select" :selected.sync="info.right">
@@ -90,7 +90,7 @@
         </li>
         <li>
             <label for="">
-                <span class="title">{{$t('ProcessConfig["输出格式"]')}}</span>
+                <span class="title">{{$t('ConfigTemplate["输出格式"]')}}</span>
                 <span class="color-danger">*</span>
             </label>
             <bk-select v-if="curEditContent==='format'" class="highlight-select" :selected.sync="info.format">
@@ -108,7 +108,7 @@
         </li>
         <li>
             <label for="">
-                <span class="title">{{$t('ProcessConfig["文件分组"]')}}</span>
+                <span class="title">{{$t('ConfigTemplate["文件分组"]')}}</span>
             </label>
             <input class="info-content" type="text" v-if="curEditContent==='group'" v-focus @blur="updateFormData('group', info.group)">
             <span class="info-content" v-else>
@@ -140,7 +140,7 @@
             }
         },
         computed: {
-            ...mapGetters('processConfig', ['formData']),
+            ...mapGetters('configTemplate', ['formData']),
             ...mapGetters(['bkBizId'])
         },
         filters: {
@@ -160,14 +160,14 @@
                 try {
                     let params = {}
                     params[key] = value
-                    const res = await this.$store.dispatch('processConfig/editConfigTemplate', {
+                    const res = await this.$store.dispatch('configTemplate/editConfigTemplate', {
                         bkBizId: this.bkBizId,
                         templateId: 1,
                         params
                     })
                     if (res.result) {
                         this.curEditContent = ''
-                        this.$store.commit('processConfig/setFormData', {key: value})
+                        this.$store.commit('configTemplate/setFormData', {key: value})
                     } else {
                         this.$alertMsg(res.data['bk_error_msg'])
                     }
@@ -195,7 +195,7 @@
                                     if (!this.formData[attr]) {
                                         let params = {}
                                         params[attr] = this.info[attr]
-                                        this.$store.commit('processConfig/setFormData', params)
+                                        this.$store.commit('configTemplate/setFormData', params)
                                     }
                                 }
                             }

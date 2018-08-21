@@ -20,11 +20,13 @@ const state = {
         group: '',
         format: '',
         template_id: ''
-    }
+    },
+    templateVersion: []
 }
 
 const getters = {
-    formData: state => state.formData
+    formData: state => state.formData,
+    templateVersion: state => state.templateVersion
 }
 
 const actions = {
@@ -38,7 +40,7 @@ const actions = {
      * @return {Promise} promise 对象
      */
     createConfigTemplate ({ commit, state, dispatch, rootState }, { bkBizId, params }) {
-        return $axios.post(`template/${rootState.common.bkSupplierAccount}/${bkBizId}`, params)
+        return $axios.post(`template/${rootState.common.bkSupplierAccount}/${bkBizId}`, params, { globalError: true })
     },
     /**
      * 编辑进程配置文件模板
@@ -51,7 +53,7 @@ const actions = {
      * @return {Promise} promise 对象
      */
     editConfigTemplate ({ commit, state, dispatch, rootState }, { bkBizId, templateId, params }) {
-        return $axios.put(`template/${rootState.common.bkSupplierAccount}/${bkBizId}/${templateId}`, params)
+        return $axios.put(`template/${rootState.common.bkSupplierAccount}/${bkBizId}/${templateId}`, params, { globalError: true })
     },
     /**
      * 查询进程配置文件模板
@@ -63,7 +65,7 @@ const actions = {
      * @return {Promise} promise 对象
      */
     searchConfigTemplate ({ commit, state, dispatch, rootState }, { bkBizId, params }) {
-        return $axios.post(`template/search/${rootState.common.bkSupplierAccount}/${bkBizId}`, params)
+        return $axios.post(`template/search/${rootState.common.bkSupplierAccount}/${bkBizId}`, params, { globalError: true })
     },
     /**
      * 删除进程配置文件模板
@@ -75,7 +77,7 @@ const actions = {
      * @return {Promise} promise 对象
      */
     deleteConfigTemplate ({ commit, state, dispatch, rootState }, { bkBizId, templateId }) {
-        return $axios.delete(`template/${rootState.common.bkSupplierAccount}/${bkBizId}/${templateId}`)
+        return $axios.delete(`template/${rootState.common.bkSupplierAccount}/${bkBizId}/${templateId}`, { globalError: true })
     },
     /**
      * 获取进程配置文件版本
@@ -87,7 +89,19 @@ const actions = {
      * @return {Promise} promise 对象
      */
     getConfigTemplateVersion ({ commit, state, dispatch, rootState }, { bkBizId, templateId, params }) {
-        return $axios.post(`template/version/${rootState.common.bkSupplierAccount}/${bkBizId}/${templateId}`, params)
+        return $axios.post(`template/version/${rootState.common.bkSupplierAccount}/${bkBizId}/${templateId}`, params, { globalError: true })
+    },
+    /**
+     * 新增配置文件版本信息
+     * @param {Function} commit store commit mutation hander
+     * @param {Object} state store state
+     * @param {String} dispatch store dispatch action hander
+     * @param {Number} bkBizId 业务id
+     * @param {Number} templateId 模版文件id
+     * @return {Promise} promise 对象
+     */
+    createConfigTemplateVersion ({ commit, state, dispatch, rootState }, { bkBizId, templateId, params }) {
+        return $axios.post(`template/version/${rootState.common.bkSupplierAccount}/${bkBizId}/${templateId}`, params, { globalError: true })
     },
     /**
      * 编辑配置文件版本信息
@@ -101,7 +115,7 @@ const actions = {
      * @return {Promise} promise 对象
      */
     editConfigTemplateVersion ({ commit, state, dispatch, rootState }, { bkBizId, templateId, versionId, params }) {
-        return $axios.put(`template/version/${rootState.common.bkSupplierAccount}/${bkBizId}/${templateId}/${versionId}`, params)
+        return $axios.put(`template/version/${rootState.common.bkSupplierAccount}/${bkBizId}/${templateId}/${versionId}`, params, { globalError: true })
     },
     /**
      * 获取进程绑定配置文件
@@ -113,7 +127,7 @@ const actions = {
      * @return {Promise} promise 对象
      */
     getProcessBindTemplate ({ commit, state, dispatch, rootState }, { bkBizId, bkProcessId }) {
-        return $axios.get(`proc/template/${rootState.common.bkSupplierAccount}/${bkBizId}/${bkProcessId}`)
+        return $axios.get(`proc/template/${rootState.common.bkSupplierAccount}/${bkBizId}/${bkProcessId}`, { globalError: true })
     },
     /**
      * 绑定配置文件到进程
@@ -126,7 +140,7 @@ const actions = {
      * @return {Promise} promise 对象
      */
     bindProcessConfigTemplate ({ commit, state, dispatch, rootState }, { bkBizId, bkProcessId, templateId }) {
-        return $axios.put(`proc/template/${rootState.common.bkSupplierAccount}/${bkBizId}/${bkProcessId}/${templateId}`)
+        return $axios.put(`proc/template/${rootState.common.bkSupplierAccount}/${bkBizId}/${bkProcessId}/${templateId}`, { globalError: true })
     },
     /**
      * 解绑进程配置文件
@@ -139,7 +153,7 @@ const actions = {
      * @return {Promise} promise 对象
      */
     deleteProcessConfigTemplate ({ commit, state, dispatch, rootState }, { bkBizId, bkProcessId, templateId }) {
-        return $axios.delete(`proc/template/${rootState.common.bkSupplierAccount}/${bkBizId}/${bkProcessId}/${templateId}`)
+        return $axios.delete(`proc/template/${rootState.common.bkSupplierAccount}/${bkBizId}/${bkProcessId}/${templateId}`, { globalError: true })
     },
     /**
      * 获取进程实例
@@ -152,7 +166,7 @@ const actions = {
      * @return {Promise} promise 对象
      */
     getProcessInst ({ commit, state, dispatch, rootState }, { bkBizId }) {
-        return $axios.get(`proc/inst/${rootState.common.bkSupplierAccount}/${bkBizId}`)
+        return $axios.get(`proc/inst/${rootState.common.bkSupplierAccount}/${bkBizId}`, { globalError: true })
     },
     /**
      * 预览配置生成
@@ -165,7 +179,7 @@ const actions = {
      * @return {Promise} promise 对象
      */
     previewProcessConfigTemplate ({ commit, state, dispatch, rootState }, { bkBizId, templateId, params }) {
-        return $axios.get(`proc/template/${rootState.common.bkSupplierAccount}/${bkBizId}/${templateId}`, params)
+        return $axios.get(`proc/template/${rootState.common.bkSupplierAccount}/${bkBizId}/${templateId}`, params, { globalError: true })
     }
 }
 
@@ -176,6 +190,9 @@ const mutations = {
                 state.formData[key] = formData[key]
             }
         }
+    },
+    setTemplateVersion (state, templateVersion) {
+        state.templateVersion = templateVersion
     }
 }
 

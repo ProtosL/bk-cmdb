@@ -17,47 +17,47 @@
         :width="590" 
         :padding="0">
         <div class="form-content" slot="content">
-            <p class="form-title">{{$t('ProcessConfig["上线"]')}}aaa</p>
+            <p class="form-title">{{$t('ConfigTemplate["上线"]')}}aaa</p>
             <ul class="content-group clearfix">
                 <li>
                     <label for="desc">
-                        {{$t('ProcessConfig["文件名称"]')}}
+                        {{$t('ConfigTemplate["文件名称"]')}}
                         <span class="color-danger">*</span>
                     </label>
                     <input id="desc" type="text" v-model="info.file_name" class="bk-form-input" placeholder="请输入"
                         @blur="validate"
-                        :data-vv-name="$t('ProcessConfig[\'文件名称\']')"
+                        :data-vv-name="$t('ConfigTemplate[\'文件名称\']')"
                         v-validate="'required|singlechar'">
-                    <span v-show="errors.has($t('ProcessConfig[\'文件名称\']'))" class="error-msg is-danger">{{ errors.first($t('ProcessConfig[\'文件名称\']')) }}</span>
+                    <span v-show="errors.has($t('ConfigTemplate[\'文件名称\']'))" class="error-msg is-danger">{{ errors.first($t('ConfigTemplate[\'文件名称\']')) }}</span>
                 </li>
                 <li>
                     <label for="desc">
-                        {{$t('ProcessConfig["绝对路径"]')}}
+                        {{$t('ConfigTemplate["绝对路径"]')}}
                         <span class="color-danger">*</span>
                     </label>
                     <input id="desc" type="text" v-model="info.path" class="bk-form-input" placeholder="请输入"
                         @blur="validate"
-                        :data-vv-name="$t('ProcessConfig[\'绝对路径\']')"
+                        :data-vv-name="$t('ConfigTemplate[\'绝对路径\']')"
                         v-validate="'required|singlechar'">
-                    <span v-show="errors.has($t('ProcessConfig[\'绝对路径\']'))" class="error-msg is-danger">{{ errors.first($t('ProcessConfig[\'绝对路径\']')) }}</span>
+                    <span v-show="errors.has($t('ConfigTemplate[\'绝对路径\']'))" class="error-msg is-danger">{{ errors.first($t('ConfigTemplate[\'绝对路径\']')) }}</span>
                 </li>
                 <li>
                     <label for="desc">
-                        {{$t('ProcessConfig["所属用户"]')}}
+                        {{$t('ConfigTemplate["所属用户"]')}}
                         <span class="color-danger">*</span>
                     </label>
                     <input id="desc" type="text" v-model="info.user" class="bk-form-input" placeholder="请输入"
                         @blur="validate"
-                        :data-vv-name="$t('ProcessConfig[\'所属用户\']')"
+                        :data-vv-name="$t('ConfigTemplate[\'所属用户\']')"
                         v-validate="'required|singlechar'">
-                    <span v-show="errors.has($t('ProcessConfig[\'所属用户\']'))" class="error-msg is-danger">{{ errors.first($t('ProcessConfig[\'所属用户\']')) }}</span>
+                    <span v-show="errors.has($t('ConfigTemplate[\'所属用户\']'))" class="error-msg is-danger">{{ errors.first($t('ConfigTemplate[\'所属用户\']')) }}</span>
                 </li>
                 <li>
                     <label for="desc">
-                        {{$t('ProcessConfig["文件权限"]')}}
+                        {{$t('ConfigTemplate["文件权限"]')}}
                         <span class="color-danger">*</span>
                     </label>
-                    <bk-select class="select-box" :selected.sync="info.right" @on-selected="setOutput">
+                    <bk-select class="select-box" :selected.sync="info.right">
                         <bk-select-option
                             v-for="(option, index) of info.rightList"
                             :key="option.id"
@@ -68,10 +68,10 @@
                 </li>
                 <li>
                     <label for="desc">
-                        {{$t('ProcessConfig["输出格式"]')}}
+                        {{$t('ConfigTemplate["输出格式"]')}}
                         <span class="color-danger">*</span>
                     </label>
-                    <bk-select class="select-box" :selected.sync="info.format" @on-selected="setOutput">
+                    <bk-select class="select-box" :selected.sync="info.format">
                         <bk-select-option
                             v-for="(option, index) of info.formatList"
                             :key="option.id"
@@ -82,7 +82,7 @@
                 </li>
                 <li>
                     <label for="desc">
-                        {{$t('ProcessConfig["文件分组"]')}}
+                        {{$t('ConfigTemplate["文件分组"]')}}
                     </label>
                     <input id="desc" type="text" v-model="info.group" class="bk-form-input" placeholder="请输入">
                 </li>
@@ -98,7 +98,7 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
+    import { mapGetters, mapActions, mapMutations } from 'vuex'
     export default {
         data () {
             return {
@@ -117,19 +117,52 @@
             }
         },
         computed: {
-            ...mapGetters('processConfig', ['formData'])
+            ...mapGetters([
+                'bkBizId'
+            ]),
+            ...mapGetters('configTemplate', [
+                'formData',
+                'templateVersion'
+            ])
         },
         methods: {
+            ...mapActions('configTemplate', [
+                'editConfigTemplate',
+                'editConfigTemplateVersion'
+            ]),
+            ...mapMutations('configTemplate', [
+                'setFormData'
+            ]),
             validate () {
                 this.$validator.validateAll()
             },
-            setOutput () {
-
-            },
             submitForm () {
-                this.$validator.validateAll().then(res => {
-                    // if (res) {
-                    // }
+                this.$validator.validateAll().then(async res => {
+                    if (res) {
+                        this.$emit('submitForm')
+                        let editParams = {
+                            file_name: this.info['file_name'],
+                            format: this.info.format,
+                            group: this.info.group,
+                            path: this.info.path,
+                            user: this.info.user,
+                            right: this.info.right
+                        }
+                        await this.editConfigTemplate({
+                            bkBizId: this.bkBizId,
+                            templateId: this.info['template_id'],
+                            params: editParams
+                        })
+                        this.setFormData(editParams)
+                        this.editConfigTemplateVersion({
+                            bkBizId: this.bkBizId,
+                            templateId: this.info['template_id'],
+                            versionId: this.templateVersion[0]['version_id'],
+                            params: {
+                                status: 'online'
+                            }
+                        })
+                    }
                 })
             },
             closeForm () {
@@ -144,25 +177,21 @@
                 }
             },
             async getAttribute () {
-                try {
-                    const res = await this.$store.dispatch('object/getAttribute', {objId: 'config_template'})
-                    if (res.result) {
-                        this.attribute = res.data;
-                        ['format', 'right'].map(attr => {
-                            let property = this.attribute.find(({bk_property_id: bkPropertyId}) => bkPropertyId === attr)
-                            if (property) {
-                                this.info[`${attr}List`] = property.option
-                                let defaultValue = property.option.find(({is_default: isDefault}) => isDefault)
-                                if (defaultValue) {
-                                    this.info[attr] = this.info[attr] === '' ? defaultValue.id : this.info[attr]
-                                }
+                const res = await this.$store.dispatch('object/getAttribute', {objId: 'config_template'})
+                if (res.result) {
+                    this.attribute = res.data;
+                    ['format', 'right'].map(attr => {
+                        let property = this.attribute.find(({bk_property_id: bkPropertyId}) => bkPropertyId === attr)
+                        if (property) {
+                            this.info[`${attr}List`] = property.option
+                            let defaultValue = property.option.find(({is_default: isDefault}) => isDefault)
+                            if (defaultValue) {
+                                this.info[attr] = this.info[attr] === '' ? defaultValue.id : this.info[attr]
                             }
-                        })
-                    } else {
-                        this.$alert(res.data['bk_error_msg'])
-                    }
-                } catch (e) {
-                    this.$alertMsg(e.message || e.data['bk_error_msg'] || e.statusText)
+                        }
+                    })
+                } else {
+                    this.$alert(res.data['bk_error_msg'])
                 }
             }
         },

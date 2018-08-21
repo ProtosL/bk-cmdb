@@ -17,10 +17,10 @@
         :width="460" 
         :padding="0">
         <div class="form-content" slot="content">
-            <p class="form-title">{{$t('ProcessConfig["新建进程配置文件模版"]')}}</p>
+            <p class="form-title">{{$t('ConfigTemplate["新建进程配置文件模版"]')}}</p>
             <div class="content-group clearfix">
                 <label for="desc">
-                    {{$t('ProcessConfig["文件描述"]')}}
+                    {{$t('ConfigTemplate["文件描述"]')}}
                     <span class="color-danger">*</span>
                 </label>
                 <input id="desc" type="text" class="bk-form-input" placeholder="请输入" v-model="templateName" v-focus>
@@ -50,27 +50,23 @@
         },
         methods: {
             async submitForm () {
-                try {
-                    let params = {
-                        template_name: this.templateName,
-                        file_name: '',
-                        path: '',
-                        user: '',
-                        format: 'utf8',
-                        right: '644',
-                        group: ''
-                    }
-                    const res = await this.$store.dispatch('processConfig/createConfigTemplate', {
-                        bkBizId: this.bkBizId, params
-                    })
-                    if (res.result) {
-                        this.$store.commit('processConfig/setFormData', {template_name: this.templateName})
-                        this.$emit('submitForm')
-                    } else {
-                        this.$alertMsg(res['bk_error_msg'])
-                    }
-                } catch (e) {
-                    this.$alertMsg(e.data['bk_error_msg'] || e.message || e.statusText)
+                let params = {
+                    template_name: this.templateName,
+                    file_name: '',
+                    path: '',
+                    user: '',
+                    format: 'utf8',
+                    right: '644',
+                    group: ''
+                }
+                const res = await this.$store.dispatch('configTemplate/createConfigTemplate', {
+                    bkBizId: this.bkBizId, params
+                })
+                if (res.result) {
+                    this.$store.commit('configTemplate/setFormData', {template_name: this.templateName})
+                    this.$emit('submitForm')
+                } else {
+                    this.$alertMsg(res['bk_error_msg'])
                 }
             },
             closeForm () {

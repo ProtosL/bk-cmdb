@@ -680,38 +680,6 @@ body .bk-message.primary .bk-message-icon {
     z-index: 10000;
 
     &.tooltip-history {
-        &.tooltip-position {
-            &-0 {
-                top: -402px !important;
-            }
-            &-1 {
-                top: -362px !important;
-            }
-            &-2 {
-                top: -322px !important;
-            }
-            &-3 {
-                top: -282px !important;
-            }
-            &-4 {
-                top: -242px !important;
-            }
-            &-5 {
-                top: -202px !important;
-            }
-            &-6 {
-                top: -162px !important;
-            }
-            &-7 {
-                top: -122px !important;
-            }
-            &-8 {
-                top: -82px !important;
-            }
-            &-9 {
-                top: -42px !important;
-            }
-        }
         .tooltip-inner {
             max-width: 300px;
             word-wrap: break-word;
@@ -805,11 +773,11 @@ body .bk-message.primary .bk-message-icon {
     }
 
     &.popover {
-        $color: #f9f9f9;
+        $color: #333;
 
         .popover-inner {
             background: $color;
-            color: black;
+            color: white;
             padding: 24px;
             border-radius: 5px;
             box-shadow: 0 5px 30px rgba(black, .1);

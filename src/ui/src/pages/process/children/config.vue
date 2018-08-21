@@ -2,7 +2,7 @@
     <div class="config-wrapper">
         <div class="config-title">
             <p>已绑定<span></span>个配置文件</p>
-            <bk-button class="vice-btn" type="default">全部取消</bk-button>
+            <bk-button class="vice-btn" type="default" @click="unbindAll">全部取消</bk-button>
         </div>
         <div class="config-table-wrapper">
             <v-table class="config-table"
@@ -25,33 +25,65 @@
 
 <script>
     import vTable from '@/components/table/table'
+    import { mapActions } from 'vuex'
     export default {
+        props: {
+            bkProcessId: {
+                required: true
+            },
+            bkBizId: {
+                required: true
+            }
+        },
         data () {
             return {
                 table: {
                     header: [{
-                        id: 'bk_module_name',
-                        name: this.$t("ProcessConfig['配置描述']")
+                        id: 'template_name',
+                        name: this.$t("ConfigTemplate['配置描述']")
                     }, {
-                        id: 'set_num',
-                        name: this.$t("ProcessConfig['文件名称']")
+                        id: 'file_name',
+                        name: this.$t("ConfigTemplate['文件名称']")
                     }, {
                         id: 'is_bind',
-                        name: this.$t("ProcessConfig['操作']")
+                        name: this.$t("ConfigTemplate['操作']")
                     }],
-                    list: [{
-                        'bk_module_name': 'aaa',
-                        'set_num': '111'
-                    }],
+                    list: [],
                     isLoading: false,
                     maxHeight: 0
                 }
             }
         },
         methods: {
-            changeBinding () {
+            ...mapActions('configTemplate', [
+                'getProcessBindTemplate',
+                'bindProcessConfigTemplate',
+                'deleteProcessConfigTemplate'
+            ]),
+            changeBinding (item) {
+                if (item['is_bind'] === 0) {
+                    this.bindProcessConfigTemplate({
+                        bkBizId: this.bkBizId,
+                        bkProcessId: this.bkProcessId,
+                        templateId: item['template_name']
+                    })
+                } else {
+                    this.deleteProcessConfigTemplate({
+                        bkBizId: this.bkBizId,
+                        bkProcessId: this.bkProcessId,
+                        templateId: item['template_name']
+                    })
+                }
+            },
+            unbindAll () {
 
             }
+        },
+        async created () {
+            const res = await this.getProcessBindTemplate({
+                bkBizId: this.bkBizId,
+                bkProcessId: this.bkProcessId
+            })
         },
         components: {
             vTable

@@ -34,8 +34,8 @@
             "name": "进程管理",
             "classificationId": "bk_host_manage"
         }, {
-            "i18n": "ProcessConfig['进程配置管理']",
-            "path": "/processConfig",
+            "i18n": "ConfigTemplate['进程配置管理']",
+            "path": "/configTemplate",
             "id": "process_config",
             "icon": "icon-cc-process",
             "name": "进程配置管理",

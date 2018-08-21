@@ -16,7 +16,7 @@
                 :selected.sync="filter.bkBizId">
             </v-application-selector>
             <bk-button type="primary" @click="createConfig">
-                {{$t('ProcessConfig["新建进程配置模版"]')}}
+                {{$t('ConfigTemplate["新建进程配置模版"]')}}
             </bk-button>
             <div class="search-wrapper fr">
                 <bk-select class="left-select fl" :selected.sync="filter.selected" ref="filterSelector">
@@ -27,7 +27,7 @@
                         :label="option.name">
                     </bk-select-option>
                 </bk-select>
-                <input type="text" class="bk-form-input search-text" :placeholder="$t('ProcessConfig[\'根据文件描述搜索\']')" v-model="filter.templateName" @keyup.enter="search">
+                <input type="text" class="bk-form-input search-text" :placeholder="$t('ConfigTemplate[\'根据文件描述搜索\']')" v-model="filter.templateName" @keyup.enter="search">
                 <bk-button class="search" type="primary" @click="search">
                     搜索
                 </bk-button>
@@ -138,11 +138,11 @@
             }
         },
         methods: {
-            ...mapActions('processConfig', [
+            ...mapActions('configTemplate', [
                 'searchConfigTemplate',
                 'deleteConfigTemplate'
             ]),
-            ...mapMutations('processConfig', [
+            ...mapMutations('configTemplate', [
                 'setFormData'
             ]),
             search () {
@@ -173,6 +173,7 @@
             },
             submitForm () {
                 this.configDetail.isShow = true
+                this.createForm.isShow = false
             },
             createConfig () {
                 this.createForm.isShow = true

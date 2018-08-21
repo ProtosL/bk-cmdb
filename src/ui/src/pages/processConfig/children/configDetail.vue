@@ -10,7 +10,9 @@
  
 <template>
     <div class="config-detail-wrapper">
-        <v-sidebar></v-sidebar>
+        <v-sidebar
+            @contrast="contrast"
+        ></v-sidebar>
         <div class="editor-wrapper">
             <v-fullscreen class="fullscreen"
                 :isFullscreen.sync="editorTab.isFullScreen"
@@ -23,10 +25,10 @@
                                 <i class="icon-cc-question" v-if="editorTab.active === 'name'" @click="toggleSample"></i>
                                 <template v-if="false">
                                     <div class="first-entry-mask"></div>
-                                    <div class="tooltip">{{$t('ProcessConfig["点此查看进程配置文件示例"]')}}</div>
+                                    <div class="tooltip">{{$t('ConfigTemplate["点此查看进程配置文件示例"]')}}</div>
                                 </template>
                             </div>
-                            <span class="title">{{$t('ProcessConfig["高亮风格"]')}}</span>
+                            <span class="title">{{$t('ConfigTemplate["高亮风格"]')}}</span>
                             <bk-select class="highlight-select" :selected.sync="highlight.selected" @on-selected="setHighlight">
                                 <bk-select-option
                                     v-for="(option, index) of highlight.list"
@@ -44,17 +46,17 @@
                             <div class="editor-content">
                                 <p class="editor-title">自动保存草稿 21:28:45</p>
                                 <ace class="ace-editor" 
-                                    :config="config"
+                                    :config="editConfig"
                                     @init="aceEditInit">
                                 </ace>
                             </div>
                             <div v-if="sample.isShow" class="editor-content readonly">
                                 <p class="editor-title">
-                                    {{$t('ProcessConfig["示例文件（只读）"]')}}
+                                    {{$t('ConfigTemplate["示例文件（只读）"]')}}
                                     <i class="bk-icon icon-close" @click="sample.isShow=false"></i>
                                 </p>
                                 <ace class="ace-editor" 
-                                :config="config"
+                                :config="sampleConfig"
                                 @init="aceSampleInit">
                                 </ace>
                             </div>
@@ -75,6 +77,7 @@
         </div>
         <v-online-form 
             v-if="onLineForm.isShow"
+            @submitForm="submitOnlineForm"
             @closeForm="onLineForm.isShow = false"
         ></v-online-form>
     </div>
@@ -86,13 +89,17 @@
     import vOnlineForm from './onlineForm'
     import vPreview from './preview'
     import vFullscreen from '@/components/fullscreen/fullscreen'
-    import { mapGetters, mapActions } from 'vuex'
+    import { mapGetters, mapActions, mapMutations } from 'vuex'
     export default {
         data () {
             return {
                 attribute: [],
-                config: {
+                editConfig: {
                     mode: ''
+                },
+                sampleConfig: {
+                    mode: '',
+                    readOnly: true
                 },
                 editorTab: {
                     active: 'name',
@@ -118,15 +125,31 @@
         },
         computed: {
             ...mapGetters(['bkBizId']),
-            ...mapGetters('processConfig', [
-                'formData'
+            ...mapGetters('configTemplate', [
+                'formData',
+                'templateVersion'
             ])
         },
         methods: {
-            ...mapActions('processConfig', [
+            ...mapActions('configTemplate', [
                 'editConfigTemplateVersion',
-                'getConfigTemplateVersion'
+                'getConfigTemplateVersion',
+                'createConfigTemplateVersion'
             ]),
+            ...mapMutations('configTemplate', [
+                'setTemplateVersion'
+            ]),
+            contrast (item) {
+                this.sample.isShow = true
+                this.$nextTick(() => {
+                    this.$aceSample.setValue(item.content, 1)
+                })
+            },
+            submitOnlineForm () {
+                this.onLineForm.isShow = false
+                clearTimeout(this.timer)
+                this.timer = null
+            },
             toggleFullScreen () {
                 this.editorTab.isFullScreen = !this.editorTab.isFullScreen
                 if (this.editorTab.isFullScreen) {
@@ -147,33 +170,50 @@
             },
             aceEditInit ($ace) {
                 this.$aceEdit = $ace
+                this.$aceEdit.on('change', () => {
+                    if (this.timer === null) {
+                        this.autoSave()
+                    }
+                })
             },
             online () {
                 this.onLineForm.isShow = true
             },
             saveDraft () {
                 clearTimeout(this.timer)
+                this.timer = null
                 this.updateConfig()
                 this.autoSave()
             },
-            async updateConfig () {
-                try {
-                    let params = {}
-                    const res = await this.editConfigTemplateVersion({
-                        bkBizId: this.bkBizId,
-                        templateId: this.formData['template_id'],
-                        versionId: 1,
-                        params: params
-                    })
-                    if (!res.result) {
-                        this.$alertMsg(res.data['bk_error_msg'])
+            async createTemplateVersion () {
+                await this.createConfigTemplateVersion({
+                    content: this.$aceEdit.getValue(),
+                    status: 'draft'
+                })
+            },
+            async editTemplateVersion () {
+                const res = await this.editConfigTemplateVersion({
+                    bkBizId: this.bkBizId,
+                    templateId: this.formData['template_id'],
+                    versionId: this.templateVersion[0]['version_id'],
+                    params: {
+                        content: this.$aceEdit.getValue()
                     }
-                } catch (e) {
-                    this.$alertMsg(e.message || e.data['bk_error_msg'] || e.statusText)
+                })
+                if (!res.result) {
+                    this.$alertMsg(res.data['bk_error_msg'])
                 }
             },
-            getTemplateVersion () {
-                this.getConfigTemplateVersion({bkBizId: this.bkBizId, templateId: this.formData['template_id'], params: {status: 'draft'}})
+            updateConfig () {
+                if (this.templateVersion[0].status !== 'draft') {
+                    this.createTemplateVersion()
+                } else {
+                    this.editTemplateVersion()
+                }
+            },
+            async getTemplateVersion () {
+                const res = await this.getConfigTemplateVersion({bkBizId: this.bkBizId, templateId: this.formData['template_id'], params: {}})
+                this.setTemplateVersion(res)
             },
             cancel () {
                 this.$emit('cancel')
@@ -182,15 +222,15 @@
                 this.timer = setTimeout(() => {
                     this.updateConfig()
                     this.autoSave()
-                }, 60000)
+                }, 10000)
             }
         },
-        mounted () {
-            this.getTemplateVersion()
-            this.autoSave()
+        async created () {
+            await this.getTemplateVersion()
         },
         destroyed () {
             clearTimeout(this.timer)
+            this.timer = null
         },
         components: {
             ace,

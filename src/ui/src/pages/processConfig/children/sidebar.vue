@@ -13,13 +13,14 @@
         <a href="javascript:void(0);" class="bk-icon icon-angle-right detail-toggle" :class="{'close': !isOpen}" @click="toggleSidebar"></a>
         <div class="tab-wrapper" v-if="this.isOpen">
             <bk-tab class="detail-tab" :active-name.sync="tab.active">
-                <bk-tabpanel name="info" :title="$t('ProcessConfig[\'基本信息\']')">
+                <bk-tabpanel name="info" :title="$t('ConfigTemplate[\'基本信息\']')">
                     <v-info v-if="tab.active==='info'"></v-info>
                 </bk-tabpanel>
-                <bk-tabpanel name="history" :title="$t('ProcessConfig[\'历史记录\']')">
-                    <v-history v-if="tab.active==='history'"></v-history>
+                <bk-tabpanel name="history" :title="$t('ConfigTemplate[\'历史记录\']')">
+                    <v-history v-if="tab.active==='history'"
+                        @contrast="contrast"></v-history>
                 </bk-tabpanel>
-                <bk-tabpanel name="help" :title="$t('ProcessConfig[\'帮助\']')">
+                <bk-tabpanel name="help" :title="$t('ConfigTemplate[\'帮助\']')">
                     <v-help v-if="tab.active==='help'"></v-help>
                 </bk-tabpanel>
             </bk-tab>
@@ -43,6 +44,9 @@
         methods: {
             toggleSidebar () {
                 this.isOpen = !this.isOpen
+            },
+            contrast (item) {
+                this.$emit('contrast', item)
             }
         },
         components: {

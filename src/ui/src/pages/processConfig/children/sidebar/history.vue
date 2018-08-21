@@ -11,7 +11,6 @@
 <template>
     <div class="history-table-wrapper">
         <v-table
-            v-tooltip="{show: table.tipIndex !== -1, classes: ['tooltip-history', `tooltip-position-${table.tipIndex}`], content: tooltipContent}"
             class="history-table"
             :header="table.header" 
             :list="table.list" 
@@ -23,8 +22,11 @@
             @handlePageChange="setCurrentPage"
             @handleSizeChange="setCurrentSize"
             @handleSortChange="setCurrentSort">
+            <template slot="create_time" slot-scope="{ item }">
+                <span class="tooltip-box" v-tooltip="{show: table.tipIndex === item['version_id'], classes: ['tooltip-history'], content: tooltipContent}">{{item['create_time']}}</span>
+            </template>
             <template slot="operation" slot-scope="{ item }">
-                <a href="javascript:;" class="operation-btn">对比</a>
+                <a href="javascript:;" class="operation-btn" @click="contrast(item)">对比</a>
             </template>
         </v-table>
     </div>
@@ -37,15 +39,15 @@
             return {
                 table: {
                     header: [{
-                        id: 'desc',
+                        id: 'description',
                         name: '描述',
                         width: 79
                     }, {
-                        id: 'time',
+                        id: 'create_time',
                         name: '操作时间',
                         width: 79
                     }, {
-                        id: 'user',
+                        id: 'operator',
                         name: '操作人',
                         width: 79
                     }, {
@@ -54,45 +56,68 @@
                         width: 79
                     }],
                     list: [{
-                        desc: '简',
-                        time: '2018-07-06 18:16:03',
-                        user: 'bencemo'
+                        'version_id': 10,
+                        'create_time': '2018-02-18 10:20:30',
+                        'operator': 'owen',
+                        'content': 'aaaaaaaa#vvvvvvvv',
+                        'status': 'draft',
+                        'description': 'test'
                     }, {
-                        desc: '简单',
-                        time: '2018-07-06 18:16:03',
-                        user: 'bencemo'
+                        'version_id': 9,
+                        'create_time': '2018-02-18 10:20:30',
+                        'operator': 'owen',
+                        'content': 'aaaaaaaa#vvvvvvvv',
+                        'status': 'draft',
+                        'description': 'test'
                     }, {
-                        desc: '简单文',
-                        time: '2018-07-06 18:16:03',
-                        user: 'bencemo'
+                        'version_id': 8,
+                        'create_time': '2018-02-18 10:20:30',
+                        'operator': 'owen',
+                        'content': 'aaaaaaaa#vvvvvvvv',
+                        'status': 'draft',
+                        'description': 'test'
                     }, {
-                        desc: '简单文件',
-                        time: '2018-07-06 18:16:03',
-                        user: 'bencemo'
+                        'version_id': 7,
+                        'create_time': '2018-02-18 10:20:30',
+                        'operator': 'owen',
+                        'content': 'aaaaaaaa#vvvvvvvv',
+                        'status': 'draft',
+                        'description': 'test'
                     }, {
-                        desc: '简单文件',
-                        time: '2018-07-06 18:16:03',
-                        user: 'b'
+                        'version_id': 6,
+                        'create_time': '2018-02-18 10:20:30',
+                        'operator': 'owen',
+                        'content': 'aaaaaaaa#vvvvvvvv',
+                        'status': 'draft',
+                        'description': 'test'
                     }, {
-                        desc: '简单文件',
-                        time: '2018-07-06 18:16:03',
-                        user: 'be'
+                        'version_id': 5,
+                        'create_time': '2018-02-18 10:20:30',
+                        'operator': 'owen',
+                        'content': 'aaaaaaaa#vvvvvvvv',
+                        'status': 'draft',
+                        'description': 'test'
                     }, {
-                        desc: '简单文件',
-                        time: '2018-07-06 18:16:03',
-                        user: 'ben'
+                        'version_id': 4,
+                        'create_time': '2018-02-18 10:20:30',
+                        'operator': 'owen',
+                        'content': 'aaaaaaaa#vvvvvvvv',
+                        'status': 'draft',
+                        'description': 'test'
                     }, {
-                        desc: '简单文件',
-                        time: '2018-07-06 18:16:03',
-                        user: 'benc'
+                        'version_id': 3,
+                        'create_time': '2018-02-18 10:20:30',
+                        'operator': 'owen',
+                        'content': 'aaaaaaaa#vvvvvvvv',
+                        'status': 'draft',
+                        'description': 'test'
                     }, {
-                        desc: '简单文件',
-                        time: '2018-07-06 18:16:03',
-                        user: 'bence'
-                    }, {
-                        desc: '简单文件',
-                        time: '2018-07-06 18:16:03',
-                        user: 'bencem'
+                        'version_id': 2,
+                        'create_time': '2018-02-18 10:20:30',
+                        'operator': 'owen',
+                        'content': 'aaaaaaaa#vvvvvvvv',
+                        'status': 'draft',
+                        'description': 'test'
                     }],
                     chooseId: [],
                     pagination: {
@@ -112,18 +137,22 @@
                     list,
                     tipIndex
                 } = this.table
-                if (tipIndex === -1) {
+                let item = list.find(({version_id: versionId}) => versionId === tipIndex)
+                if (!item) {
                     return ''
                 }
-                return `${list[tipIndex].desc} ${list[tipIndex].user} ${list[tipIndex].time}`
+                return `${item.description} ${item.operator} ${item.create_time}`
             }
         },
         methods: {
+            contrast (item) {
+                this.$emit('contrast', item)
+            },
             getTableList () {
                 
             },
             handlRowMouseover (item, index) {
-                this.table.tipIndex = index
+                this.table.tipIndex = item['version_id']
             },
             setCurrentPage (current) {
                 this.table.pagination.current = current
@@ -156,9 +185,10 @@
                 color: #3c96ff;
             }
         }
+        .tooltip-box{
+            display: inline-block;
+            height: 40px;
+            line-height: 40px;
+        }
     }
-</style>
-
-<style lang="scss">
-    
 </style>
