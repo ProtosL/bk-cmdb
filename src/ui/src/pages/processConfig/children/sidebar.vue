@@ -44,6 +44,7 @@
         methods: {
             toggleSidebar () {
                 this.isOpen = !this.isOpen
+                this.$emit('toggleSidebar')
             },
             contrast (item) {
                 this.$emit('contrast', item)

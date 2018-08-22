@@ -15,11 +15,15 @@
                 <span class="title">{{$t('ConfigTemplate["文件描述"]')}}</span>
                 <span class="color-danger">*</span>
             </label>
-            <input class="info-content" type="text"
-                v-focus 
-                v-model="info.template_name" 
-                v-if="curEditContent==='template_name'"
-                @blur="updateFormData('template_name', info.template_name)">
+            <div class="input-box" v-if="curEditContent==='template_name'">
+                <input class="info-content" type="text"
+                    v-focus 
+                    v-model="info.template_name" 
+                    :data-vv-name="$t('ConfigTemplate[\'文件描述\']')"
+                    v-validate="'required|singlechar'"
+                    @blur="validateValue('template_name', info.template_name)">
+                    <span v-show="errors.has($t('ConfigTemplate[\'文件描述\']'))" class="error-msg is-danger">{{ errors.first($t('ConfigTemplate[\'文件描述\']')) }}</span>
+            </div>
             <span class="info-content" v-else>
                 {{formData.template_name | isEmpty}}
                 <i class="icon-cc-edit" @click="editContent('template_name')"></i>
@@ -30,11 +34,15 @@
                 <span class="title">{{$t('ConfigTemplate["文件名称"]')}}</span>
                 <span class="color-danger">*</span>
             </label>
-            <input class="info-content" type="text" 
-            v-focus 
-            v-model="info.file_name"
-            v-if="curEditContent==='file_name'" 
-            @blur="updateFormData('file_name', info.file_name)">
+            <div class="input-box" v-if="curEditContent==='file_name'">
+                <input class="info-content" type="text" 
+                v-focus 
+                v-model="info.file_name"
+                :data-vv-name="$t('ConfigTemplate[\'文件名称\']')"
+                v-validate="'singlechar'"
+                @blur="validateValue('file_name', info.file_name)">
+                <span v-show="errors.has($t('ConfigTemplate[\'文件名称\']'))" class="error-msg is-danger">{{ errors.first($t('ConfigTemplate[\'文件名称\']')) }}</span>
+            </div>
             <span class="info-content" v-else>
                 {{formData.file_name | isEmpty}}
                 <i class="icon-cc-edit" @click="editContent('file_name')"></i>
@@ -45,11 +53,15 @@
                 <span class="title">{{$t('ConfigTemplate["绝对路径"]')}}</span>
                 <span class="color-danger">*</span>
             </label>
-            <input class="info-content" type="text" 
-            v-focus 
-            v-model="info.path"
-            v-if="curEditContent==='path'" 
-            @blur="updateFormData('path', info.path)">
+            <div class="input-box" v-if="curEditContent==='path'">
+                <input class="info-content" type="text" 
+                v-focus 
+                v-model="info.path"
+                :data-vv-name="$t('ConfigTemplate[\'绝对路径\']')"
+                v-validate="'singlechar'"
+                @blur="validateValue('path', info.path)">
+                <span v-show="errors.has($t('ConfigTemplate[\'绝对路径\']'))" class="error-msg is-danger">{{ errors.first($t('ConfigTemplate[\'绝对路径\']')) }}</span>
+            </div>
             <span class="info-content" v-else>
                 {{formData.path | isEmpty}}
                 <i class="icon-cc-edit" @click="editContent('path')"></i>
@@ -60,11 +72,15 @@
                 <span class="title">{{$t('ConfigTemplate["所属用户"]')}}</span>
                 <span class="color-danger">*</span>
             </label>
-            <input class="info-content" type="text" 
-            v-focus 
-            v-model="info.user"
-            v-if="curEditContent==='user'" 
-            @blur="updateFormData('user', info.user)">
+            <div class="input-box" v-if="curEditContent==='user'">
+                <input class="info-content" type="text" 
+                v-focus 
+                v-model="info.user"
+                :data-vv-name="$t('ConfigTemplate[\'所属用户\']')"
+                v-validate="'singlechar'"
+                @blur="validateValue('user', info.user)">
+                <span v-show="errors.has($t('ConfigTemplate[\'所属用户\']'))" class="error-msg is-danger">{{ errors.first($t('ConfigTemplate[\'所属用户\']')) }}</span>
+            </div>
             <span class="info-content" v-else>
                 {{formData.user | isEmpty}}
                 <i class="icon-cc-edit" @click="editContent('user')"></i>
@@ -156,23 +172,27 @@
                 this.curEditContent = key
                 this.info[key] = this.formData[key]
             },
-            async updateFormData (key, value) {
-                try {
-                    let params = {}
-                    params[key] = value
-                    const res = await this.$store.dispatch('configTemplate/editConfigTemplate', {
-                        bkBizId: this.bkBizId,
-                        templateId: 1,
-                        params
-                    })
-                    if (res.result) {
-                        this.curEditContent = ''
-                        this.$store.commit('configTemplate/setFormData', {key: value})
-                    } else {
-                        this.$alertMsg(res.data['bk_error_msg'])
+            validateValue (key, value) {
+                this.$validator.validateAll().then(res => {
+                    if (res) {
+                        console.log(res)
+                        this.updateFormData(key, value)
                     }
-                } catch (e) {
-                    this.$alertMsg(e.message || e.data['bk_error_msg'] || e.statusText)
+                })
+            },
+            async updateFormData (key, value) {
+                let params = {}
+                params[key] = value
+                const res = await this.$store.dispatch('configTemplate/editConfigTemplate', {
+                    bkBizId: this.bkBizId,
+                    templateId: this.formData['template_id'],
+                    params
+                })
+                if (res.result) {
+                    this.curEditContent = ''
+                    this.$store.commit('configTemplate/setFormData', params)
+                } else {
+                    this.$alertMsg(res.data['bk_error_msg'])
                 }
             },
             getFormData () {
@@ -181,30 +201,26 @@
                 }
             },
             async getAttribute () {
-                try {
-                    const res = await this.$store.dispatch('object/getAttribute', {objId: 'config_template'})
-                    if (res.result) {
-                        this.attribute = res.data;
-                        ['format', 'right'].map(attr => {
-                            let property = this.attribute.find(({bk_property_id: bkPropertyId}) => bkPropertyId === attr)
-                            if (property) {
-                                this.info[`${attr}List`] = property.option
-                                let defaultValue = property.option.find(({is_default: isDefault}) => isDefault)
-                                if (defaultValue) {
-                                    this.info[attr] = this.info[attr] === '' ? defaultValue.id : this.info[attr]
-                                    if (!this.formData[attr]) {
-                                        let params = {}
-                                        params[attr] = this.info[attr]
-                                        this.$store.commit('configTemplate/setFormData', params)
-                                    }
+                const res = await this.$store.dispatch('object/getAttribute', {objId: 'config_template'})
+                if (res.result) {
+                    this.attribute = res.data;
+                    ['format', 'right'].map(attr => {
+                        let property = this.attribute.find(({bk_property_id: bkPropertyId}) => bkPropertyId === attr)
+                        if (property) {
+                            this.info[`${attr}List`] = property.option
+                            let defaultValue = property.option.find(({is_default: isDefault}) => isDefault)
+                            if (defaultValue) {
+                                this.info[attr] = this.info[attr] === '' ? defaultValue.id : this.info[attr]
+                                if (!this.formData[attr]) {
+                                    let params = {}
+                                    params[attr] = this.info[attr]
+                                    this.$store.commit('configTemplate/setFormData', params)
                                 }
                             }
-                        })
-                    } else {
-                        this.$alert(res.data['bk_error_msg'])
-                    }
-                } catch (e) {
-                    this.$alertMsg(e.message || e.data['bk_error_msg'] || e.statusText)
+                        }
+                    })
+                } else {
+                    this.$alert(res.data['bk_error_msg'])
                 }
             }
         },
@@ -226,8 +242,6 @@
     .info-form {
         padding-top: 15px;
         li {
-            height: 34px;
-            line-height: 34px;
             font-size: 14px;
             color: #737987;
             &:hover {
@@ -240,6 +254,8 @@
                 width: 84px;
                 height: 34px;
                 font-size: 0;
+                line-height: 34px;
+                vertical-align: middle;
                 span {
                     font-size: 14px;
                 }
@@ -253,10 +269,23 @@
                 position: absolute;
                 font-size: 14px;
             }
+            .input-box{
+                display: inline-block;
+                line-height: 34px;
+                .info-content{
+                    line-height: 1;
+                }
+                .error-msg{
+                    display: block;
+                    line-height: 1;
+                }
+            }
             .info-content {
                 display: inline-block;
                 width: 230px;
                 @include ellipsis;
+                line-height: 34px;
+                vertical-align: middle;
                 .icon-cc-edit {
                     display: none;
                     cursor: pointer;

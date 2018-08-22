@@ -12,7 +12,7 @@
     <div class="preview-wrapper">
         <p class="preview-title">
             <label for="">服务器<span class="color-danger">*</span></label>
-            <bk-select class="server-select" :selected.sync="server.selected" @on-selected="setServer">
+            <bk-select class="server-select" :selected.sync="server.selected">
                 <bk-select-option
                     v-for="(option, index) of server.list"
                     :key="option"
@@ -40,9 +40,8 @@
             }
         },
         methods: {
-            setServer () {
-
-            }
+        },
+        created () {
         },
         components: {
             ace

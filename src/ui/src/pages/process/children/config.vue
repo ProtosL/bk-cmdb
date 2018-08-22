@@ -1,19 +1,19 @@
 <template>
     <div class="config-wrapper">
         <div class="config-title">
-            <p>已绑定<span></span>个配置文件</p>
+            <p>已绑定<span>{{bindNum}}</span>个配置文件</p>
             <bk-button class="vice-btn" type="default" @click="unbindAll">全部取消</bk-button>
         </div>
         <div class="config-table-wrapper">
             <v-table class="config-table"
                 :header="table.header"
                 :list="table.list"
-                :loading="table.isLoading"
+                :loading="$loading('getProcessBindTemplate')"
                 :width="754"
                 :wrapperMinusHeight="150"
                 :sortable="false">
                 <template slot="is_bind" slot-scope="{ item }">
-                    <bk-button :type="item['is_bind'] ? 'primary' : 'default'" :loading="$loading(`${item['bk_module_name']}Bind`)" @click="changeBinding(item)" 
+                    <bk-button :type="item['is_bind'] ? 'primary' : 'default'" :loading="$loading(`${item['template_name']}Bind`)" @click="changeBinding(item)" 
                         :class="item['is_bind'] ? 'main-btn' : 'vice-btn'">
                         {{item['is_bind'] ? $t("ProcessManagement['已绑定']") : $t("ProcessManagement['未绑定']")}}
                     </bk-button>
@@ -35,6 +35,11 @@
                 required: true
             }
         },
+        computed: {
+            bindNum () {
+                return this.table.list.filter(({is_bind: isBind}) => isBind === 1).length
+            }
+        },
         data () {
             return {
                 table: {
@@ -49,7 +54,6 @@
                         name: this.$t("ConfigTemplate['操作']")
                     }],
                     list: [],
-                    isLoading: false,
                     maxHeight: 0
                 }
             }
@@ -60,19 +64,27 @@
                 'bindProcessConfigTemplate',
                 'deleteProcessConfigTemplate'
             ]),
-            changeBinding (item) {
+            async changeBinding (item) {
                 if (item['is_bind'] === 0) {
-                    this.bindProcessConfigTemplate({
+                    await this.bindProcessConfigTemplate({
                         bkBizId: this.bkBizId,
                         bkProcessId: this.bkProcessId,
-                        templateId: item['template_name']
+                        templateId: item['template_id'],
+                        config: {
+                            id: `${item['template_name']}Bind`
+                        }
                     })
+                    item['is_bind'] = 1
                 } else {
-                    this.deleteProcessConfigTemplate({
+                    await this.deleteProcessConfigTemplate({
                         bkBizId: this.bkBizId,
                         bkProcessId: this.bkProcessId,
-                        templateId: item['template_name']
+                        templateId: item['template_id'],
+                        config: {
+                            id: `${item['template_name']}Bind`
+                        }
                     })
+                    item['is_bind'] = 0
                 }
             },
             unbindAll () {
@@ -82,8 +94,12 @@
         async created () {
             const res = await this.getProcessBindTemplate({
                 bkBizId: this.bkBizId,
-                bkProcessId: this.bkProcessId
+                bkProcessId: this.bkProcessId,
+                config: {
+                    id: 'getProcessBindTemplate'
+                }
             })
+            this.table.list = res.data
         },
         components: {
             vTable

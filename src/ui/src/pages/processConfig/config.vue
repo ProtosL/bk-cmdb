@@ -140,7 +140,8 @@
         methods: {
             ...mapActions('configTemplate', [
                 'searchConfigTemplate',
-                'deleteConfigTemplate'
+                'deleteConfigTemplate',
+                'getProcessConfigTemplateGroup'
             ]),
             ...mapMutations('configTemplate', [
                 'setFormData'
@@ -182,27 +183,28 @@
                 this.setFormData(item)
                 this.configDetail.isShow = true
             },
+            async getTemplateGroup () {
+                const res = await this.getProcessConfigTemplateGroup({
+                    bkBizId: this.filter.bkBizId
+                })
+            },
             async getTableList () {
-                try {
-                    let params = {
-                        page: {
-                            start: (this.table.pagination.current - 1) * this.table.pagination.size,
-                            limit: this.table.pagination.size
-                        },
-                        condition: this.filter.params
-                    }
-                    const res = await this.searchConfigTemplate({
-                        bkBizId: this.filter.bkBizId,
-                        params: params
-                    })
-                    if (res.result) {
-                        this.table.list = res.data.info
-                        this.table.pagination.count = res.data.count
-                    } else {
-                        this.$alertMsg(res['bk_error_msg'])
-                    }
-                } catch (e) {
-                    this.$alertMsg(e.data['bk_error_msg'] || e.message || e.statusText)
+                let params = {
+                    page: {
+                        start: (this.table.pagination.current - 1) * this.table.pagination.size,
+                        limit: this.table.pagination.size
+                    },
+                    condition: this.filter.params
+                }
+                const res = await this.searchConfigTemplate({
+                    bkBizId: this.filter.bkBizId,
+                    params: params
+                })
+                if (res.result) {
+                    this.table.list = res.data.info
+                    this.table.pagination.count = res.data.count
+                } else {
+                    this.$alertMsg(res['bk_error_msg'])
                 }
             },
             setCurrentPage (current) {
@@ -217,6 +219,9 @@
                 this.table.sort = sort
                 this.setCurrentPage(1)
             }
+        },
+        created () {
+            this.getTemplateGroup()
         },
         components: {
             vTable,

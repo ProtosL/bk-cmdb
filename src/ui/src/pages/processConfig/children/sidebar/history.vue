@@ -34,6 +34,7 @@
 
 <script>
     import vTable from '@/components/table/table'
+    import { mapActions, mapGetters } from 'vuex'
     export default {
         data () {
             return {
@@ -58,14 +59,14 @@
                     list: [{
                         'version_id': 10,
                         'create_time': '2018-02-18 10:20:30',
-                        'operator': 'owen',
+                        'operator': 'tew',
                         'content': 'aaaaaaaa#vvvvvvvv',
                         'status': 'draft',
                         'description': 'test'
                     }, {
                         'version_id': 9,
                         'create_time': '2018-02-18 10:20:30',
-                        'operator': 'owen',
+                        'operator': 'cxz',
                         'content': 'aaaaaaaa#vvvvvvvv',
                         'status': 'draft',
                         'description': 'test'
@@ -79,42 +80,42 @@
                     }, {
                         'version_id': 7,
                         'create_time': '2018-02-18 10:20:30',
-                        'operator': 'owen',
+                        'operator': 'asdf',
                         'content': 'aaaaaaaa#vvvvvvvv',
                         'status': 'draft',
                         'description': 'test'
                     }, {
                         'version_id': 6,
                         'create_time': '2018-02-18 10:20:30',
-                        'operator': 'owen',
+                        'operator': 'fsd',
                         'content': 'aaaaaaaa#vvvvvvvv',
                         'status': 'draft',
                         'description': 'test'
                     }, {
                         'version_id': 5,
                         'create_time': '2018-02-18 10:20:30',
-                        'operator': 'owen',
+                        'operator': 'qw',
                         'content': 'aaaaaaaa#vvvvvvvv',
                         'status': 'draft',
                         'description': 'test'
                     }, {
                         'version_id': 4,
                         'create_time': '2018-02-18 10:20:30',
-                        'operator': 'owen',
+                        'operator': 'adf',
                         'content': 'aaaaaaaa#vvvvvvvv',
                         'status': 'draft',
                         'description': 'test'
                     }, {
                         'version_id': 3,
                         'create_time': '2018-02-18 10:20:30',
-                        'operator': 'owen',
+                        'operator': 'oweasdfn',
                         'content': 'aaaaaaaa#vvvvvvvv',
                         'status': 'draft',
                         'description': 'test'
                     }, {
                         'version_id': 2,
                         'create_time': '2018-02-18 10:20:30',
-                        'operator': 'owen',
+                        'operator': 'qwr',
                         'content': 'aaaaaaaa#vvvvvvvv',
                         'status': 'draft',
                         'description': 'test'
@@ -132,6 +133,12 @@
             }
         },
         computed: {
+            ...mapGetters([
+                'bkBizId'
+            ]),
+            ...mapGetters('configTemplate', [
+                'formData'
+            ]),
             tooltipContent () {
                 let {
                     list,
@@ -145,18 +152,35 @@
             }
         },
         methods: {
+            ...mapActions('configTemplate', [
+                'getConfigTemplateVersion'
+            ]),
             contrast (item) {
                 this.$emit('contrast', item)
             },
-            getTableList () {
-                
+            async getTableList () {
+                let params = {
+                    page: {
+                        start: (this.table.pagination.current - 1) * this.table.pagination.size,
+                        limit: this.table.pagination.size,
+                        sort: '-version_id'
+                    },
+                    condition: {}
+                }
+                const res = await this.getConfigTemplateVersion({
+                    bkBizId: this.bkBizId,
+                    templateId: this.formData['template_id'],
+                    params
+                })
+                this.table.list = res.data.info
+                this.table.pagination.count = res.data.count
             },
             handlRowMouseover (item, index) {
                 this.table.tipIndex = item['version_id']
             },
             setCurrentPage (current) {
                 this.table.pagination.current = current
-                // this.getTableList()
+                this.getTableList()
             },
             setCurrentSize (size) {
                 this.table.pagination.size = size
@@ -166,6 +190,9 @@
                 this.table.sort = sort
                 this.setCurrentPage(1)
             }
+        },
+        created () {
+            this.getTableList()
         },
         components: {
             vTable

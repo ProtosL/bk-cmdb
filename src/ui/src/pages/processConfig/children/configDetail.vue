@@ -12,6 +12,7 @@
     <div class="config-detail-wrapper">
         <v-sidebar
             @contrast="contrast"
+            @toggleSidebar="resizeEditor"
         ></v-sidebar>
         <div class="editor-wrapper">
             <v-fullscreen class="fullscreen"
@@ -44,7 +45,11 @@
                     <bk-tabpanel name="name" title="name">
                         <div class="editor-box" :class="{'has-sample': sample.isShow}">
                             <div class="editor-content">
-                                <p class="editor-title">自动保存草稿 21:28:45</p>
+                                <p class="editor-title">
+                                    <template v-if="editInfo.time">
+                                    自动保存草稿 21:28:45
+                                    </template>
+                                </p>
                                 <ace class="ace-editor" 
                                     :config="editConfig"
                                     @init="aceEditInit">
@@ -120,15 +125,24 @@
                 },
                 $aceEdit: null,
                 $aceSample: null,
-                timer: null
+                editInfo: {
+                    time: '',
+                    timer: null,
+                    isAutoSave: false
+                }
             }
         },
         computed: {
             ...mapGetters(['bkBizId']),
             ...mapGetters('configTemplate', [
                 'formData',
-                'templateVersion'
+                'currentVersion'
             ])
+        },
+        watch: {
+            'sample.isShow' () {
+                this.resizeEditor()
+            }
         },
         methods: {
             ...mapActions('configTemplate', [
@@ -139,6 +153,11 @@
             ...mapMutations('configTemplate', [
                 'setTemplateVersion'
             ]),
+            resizeEditor () {
+                this.$nextTick(() => {
+                    this.$aceEdit.resize()
+                })
+            },
             contrast (item) {
                 this.sample.isShow = true
                 this.$nextTick(() => {
@@ -147,8 +166,8 @@
             },
             submitOnlineForm () {
                 this.onLineForm.isShow = false
-                clearTimeout(this.timer)
-                this.timer = null
+                clearTimeout(this.editInfo.timer)
+                this.editInfo.timer = null
             },
             toggleFullScreen () {
                 this.editorTab.isFullScreen = !this.editorTab.isFullScreen
@@ -171,7 +190,7 @@
             aceEditInit ($ace) {
                 this.$aceEdit = $ace
                 this.$aceEdit.on('change', () => {
-                    if (this.timer === null) {
+                    if (this.editInfo.timer === null && this.editInfo.isAutoSave) {
                         this.autoSave()
                     }
                 })
@@ -180,57 +199,77 @@
                 this.onLineForm.isShow = true
             },
             saveDraft () {
-                clearTimeout(this.timer)
-                this.timer = null
+                clearTimeout(this.editInfo.timer)
+                this.editInfo.timer = null
                 this.updateConfig()
-                this.autoSave()
             },
             async createTemplateVersion () {
                 await this.createConfigTemplateVersion({
-                    content: this.$aceEdit.getValue(),
-                    status: 'draft'
+                    bkBizId: this.bkBizId,
+                    templateId: this.formData['template_id'],
+                    params: {
+                        content: this.$aceEdit.getValue(),
+                        status: 'draft'
+                    }
                 })
+                await this.getTemplateVersion()
+                this.autoSave()
             },
             async editTemplateVersion () {
                 const res = await this.editConfigTemplateVersion({
                     bkBizId: this.bkBizId,
                     templateId: this.formData['template_id'],
-                    versionId: this.templateVersion[0]['version_id'],
+                    versionId: this.currentVersion['version_id'],
                     params: {
                         content: this.$aceEdit.getValue()
                     }
                 })
+                this.autoSave()
                 if (!res.result) {
                     this.$alertMsg(res.data['bk_error_msg'])
                 }
             },
             updateConfig () {
-                if (this.templateVersion[0].status !== 'draft') {
+                if (this.currentVersion === null || this.currentVersion.status !== 'draft') {
                     this.createTemplateVersion()
                 } else {
                     this.editTemplateVersion()
                 }
             },
             async getTemplateVersion () {
-                const res = await this.getConfigTemplateVersion({bkBizId: this.bkBizId, templateId: this.formData['template_id'], params: {}})
-                this.setTemplateVersion(res)
+                let params = {
+                    page: {
+                        start: 0,
+                        limit: 1,
+                        sort: '-version_id'
+                    },
+                    condition: {}
+                }
+                const res = await this.getConfigTemplateVersion({bkBizId: this.bkBizId, templateId: this.formData['template_id'], params})
+                this.setTemplateVersion(res.data.info)
             },
             cancel () {
                 this.$emit('cancel')
             },
             autoSave () {
-                this.timer = setTimeout(() => {
+                this.editInfo.timer = setTimeout(() => {
                     this.updateConfig()
-                    this.autoSave()
                 }, 10000)
+            },
+            setValue () {
+                if (this.currentVersion) {
+                    this.$aceEdit.setValue(this.currentVersion['content'], 1)
+                }
+                this.editInfo.isAutoSave = true
             }
         },
         async created () {
             await this.getTemplateVersion()
+            this.setValue()
         },
         destroyed () {
-            clearTimeout(this.timer)
-            this.timer = null
+            clearTimeout(this.editInfo.timer)
+            this.editInfo.timer = null
         },
         components: {
             ace,

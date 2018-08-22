@@ -23,7 +23,13 @@
                     {{$t('ConfigTemplate["文件描述"]')}}
                     <span class="color-danger">*</span>
                 </label>
-                <input id="desc" type="text" class="bk-form-input" placeholder="请输入" v-model="templateName" v-focus>
+                <div class="input-box">
+                    <input id="desc" type="text" class="bk-form-input" placeholder="请输入" v-model="templateName" v-focus
+                        @blur="validate"
+                        :data-vv-name="$t('ConfigTemplate[\'文件描述\']')"
+                        v-validate="'required|singlechar'">
+                    <span v-show="errors.has($t('ConfigTemplate[\'文件描述\']'))" class="error-msg is-danger">{{ errors.first($t('ConfigTemplate[\'文件描述\']')) }}</span>
+                </div>
             </div>
             <div class="form-btn-group clearfix">
                 <div class="fr">
@@ -49,25 +55,32 @@
             }
         },
         methods: {
-            async submitForm () {
-                let params = {
-                    template_name: this.templateName,
-                    file_name: '',
-                    path: '',
-                    user: '',
-                    format: 'utf8',
-                    right: '644',
-                    group: ''
-                }
-                const res = await this.$store.dispatch('configTemplate/createConfigTemplate', {
-                    bkBizId: this.bkBizId, params
+            validate () {
+                this.$validator.validateAll()
+            },
+            submitForm () {
+                this.$validator.validateAll().then(async res => {
+                    if (res) {
+                        let params = {
+                            template_name: this.templateName,
+                            file_name: '',
+                            path: '',
+                            user: '',
+                            format: 'utf8',
+                            right: '644',
+                            group: ''
+                        }
+                        const res = await this.$store.dispatch('configTemplate/createConfigTemplate', {
+                            bkBizId: this.bkBizId, params
+                        })
+                        if (res.result) {
+                            this.$store.commit('configTemplate/setFormData', {template_name: this.templateName})
+                            this.$emit('submitForm')
+                        } else {
+                            this.$alertMsg(res['bk_error_msg'])
+                        }
+                    }
                 })
-                if (res.result) {
-                    this.$store.commit('configTemplate/setFormData', {template_name: this.templateName})
-                    this.$emit('submitForm')
-                } else {
-                    this.$alertMsg(res['bk_error_msg'])
-                }
             },
             closeForm () {
                 this.isShow = false
@@ -102,11 +115,16 @@
             text-align: center;
             label {
                 display: inline-block;
+                vertical-align: top;
             }
-            input {
+            .input-box {
                 display: inline-block;
                 width: 266px;
                 margin-left: 10px;
+            }
+            .error-msg{
+                float: left;
+                line-height: 16px;
             }
         }
     }

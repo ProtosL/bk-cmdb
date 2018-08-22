@@ -122,7 +122,7 @@
             ]),
             ...mapGetters('configTemplate', [
                 'formData',
-                'templateVersion'
+                'currentVersion'
             ])
         },
         methods: {
@@ -139,7 +139,6 @@
             submitForm () {
                 this.$validator.validateAll().then(async res => {
                     if (res) {
-                        this.$emit('submitForm')
                         let editParams = {
                             file_name: this.info['file_name'],
                             format: this.info.format,
@@ -154,14 +153,15 @@
                             params: editParams
                         })
                         this.setFormData(editParams)
-                        this.editConfigTemplateVersion({
+                        await this.editConfigTemplateVersion({
                             bkBizId: this.bkBizId,
                             templateId: this.info['template_id'],
-                            versionId: this.templateVersion[0]['version_id'],
+                            versionId: this.currentVersion['version_id'],
                             params: {
                                 status: 'online'
                             }
                         })
+                        this.$emit('submitForm')
                     }
                 })
             },
