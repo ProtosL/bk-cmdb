@@ -12,6 +12,7 @@ import { $Axios, $axios } from '@/api/axios'
 
 const state = {
     formData: {
+        description: '',
         template_name: '',
         file_name: '',
         path: '',

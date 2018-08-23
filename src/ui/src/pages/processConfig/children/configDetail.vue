@@ -46,8 +46,8 @@
                         <div class="editor-box" :class="{'has-sample': sample.isShow}">
                             <div class="editor-content">
                                 <p class="editor-title">
-                                    <template v-if="editInfo.time">
-                                    自动保存草稿 21:28:45
+                                    <template v-if="editInfo.lastTime">
+                                    {{$t("ConfigTemplate['自动保存草稿']")}} {{editInfo.lastTime}}
                                     </template>
                                 </p>
                                 <ace class="ace-editor" 
@@ -57,7 +57,7 @@
                             </div>
                             <div v-if="sample.isShow" class="editor-content readonly">
                                 <p class="editor-title">
-                                    {{$t('ConfigTemplate["示例文件（只读）"]')}}
+                                    <span :title="sample.title">{{sample.title}}</span>
                                     <i class="bk-icon icon-close" @click="sample.isShow=false"></i>
                                 </p>
                                 <ace class="ace-editor" 
@@ -67,16 +67,16 @@
                             </div>
                         </div>
                     </bk-tabpanel>
-                    <bk-tabpanel name="preview" title="预览">
+                    <bk-tabpanel name="preview" :title="$t('CustomQuery[\'预览\']')">
                         <v-preview></v-preview>
                     </bk-tabpanel>
                 </bk-tab>
             </v-fullscreen>
             <section class="editor-footer">
                 <div class="editor-btn-group">
-                    <bk-button type="default" @click="cancel">返回</bk-button>
-                    <bk-button type="primary" @click="saveDraft">保存草稿</bk-button>
-                    <bk-button type="primary" @click="online">上线</bk-button>
+                    <bk-button type="default" @click="cancel">{{$t("Common['返回']")}}</bk-button>
+                    <bk-button type="primary" @click="saveDraft">{{$t("ConfigTemplate['保存草稿']")}}</bk-button>
+                    <bk-button type="primary" @click="online">{{$t('ConfigTemplate["上线"]')}}</bk-button>
                 </div>
             </section>
         </div>
@@ -114,7 +114,8 @@
                     isShow: false
                 },
                 sample: {
-                    isShow: false
+                    isShow: false,
+                    title: ''
                 },
                 highlight: {
                     selected: '',
@@ -126,7 +127,7 @@
                 $aceEdit: null,
                 $aceSample: null,
                 editInfo: {
-                    time: '',
+                    lastTime: '',
                     timer: null,
                     isAutoSave: false
                 }
@@ -160,12 +161,14 @@
             },
             contrast (item) {
                 this.sample.isShow = true
+                this.sample.title = `${item.description} ${item.operator} ${this.$formatTime(item.last_time, 'YYYY-MM-DD HH:mm:ss')}`
                 this.$nextTick(() => {
                     this.$aceSample.setValue(item.content, 1)
                 })
             },
-            submitOnlineForm () {
+            async submitOnlineForm () {
                 this.onLineForm.isShow = false
+                await this.getTemplateVersion()
                 clearTimeout(this.editInfo.timer)
                 this.editInfo.timer = null
             },
@@ -179,6 +182,7 @@
                 this.editorTab.isFullScreen = isFullscreen
             },
             toggleSample () {
+                this.sample.title = this.$t('ConfigTemplate["示例文件（只读）"]')
                 this.sample.isShow = !this.sample.isShow
             },
             setHighlight (mode) {
@@ -212,8 +216,10 @@
                         status: 'draft'
                     }
                 })
+                this.editInfo.lastTime = this.$formatTime(new Date(), 'HH:mm:ss')
                 await this.getTemplateVersion()
-                this.autoSave()
+                clearTimeout(this.editInfo.timer)
+                this.editInfo.timer = null
             },
             async editTemplateVersion () {
                 const res = await this.editConfigTemplateVersion({
@@ -224,7 +230,9 @@
                         content: this.$aceEdit.getValue()
                     }
                 })
-                this.autoSave()
+                this.editInfo.lastTime = this.$formatTime(new Date(), 'HH:mm:ss')
+                clearTimeout(this.editInfo.timer)
+                this.editInfo.timer = null
                 if (!res.result) {
                     this.$alertMsg(res.data['bk_error_msg'])
                 }
@@ -254,10 +262,11 @@
             autoSave () {
                 this.editInfo.timer = setTimeout(() => {
                     this.updateConfig()
-                }, 10000)
+                }, 60000)
             },
             setValue () {
                 if (this.currentVersion) {
+                    this.editInfo.lastTime = this.$formatTime(this.currentVersion['last_time'], 'HH:mm:ss')
                     this.$aceEdit.setValue(this.currentVersion['content'], 1)
                 }
                 this.editInfo.isAutoSave = true
@@ -376,10 +385,9 @@
             }
         }
         .editor-box {
-            display: flex;
             height: 100%;
+            width: 100%;
             .editor-content {
-                flex: 1;
                 height: 100%;
                 .editor-title {
                     margin: 0;
@@ -397,6 +405,11 @@
                 &.readonly {
                     .editor-title {
                         color: #737987;
+                        span{
+                            display: inline-block;
+                            width: calc(100% - 40px);
+                            @include ellipsis;
+                        }
                     }
                     .icon-close {
                         float: right;
@@ -413,9 +426,13 @@
             &.has-sample {
                 .editor-content {
                     &:first-child {
+                        float: left;
+                        width: calc(50% - 5px);
                         margin-right: 5px;
                     }
                     &:last-child {
+                        float: left;
+                        width: calc(50% - 5px);
                         margin-left: 5px;
                     }
                 }

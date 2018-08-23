@@ -1,8 +1,8 @@
 <template>
     <div class="config-wrapper">
         <div class="config-title">
-            <p>已绑定<span>{{bindNum}}</span>个配置文件</p>
-            <bk-button class="vice-btn" type="default" @click="unbindAll">全部取消</bk-button>
+            <p>{{$tc("Common['已绑定N个配置文件']", bindNum, {num: bindNum})}}<span>{{bindNum}}</span></p>
+            <bk-button class="vice-btn" type="default" @click="unbindAll">{{$t("ConfigTemplate['全部取消']")}}</bk-button>
         </div>
         <div class="config-table-wrapper">
             <v-table class="config-table"
@@ -20,6 +20,7 @@
                 </template>
             ></v-table>
         </div>
+        <footer class="footer">*{{$t("ConfigTemplate['注：配置文件修改']")}}<router-link class="link" to="configTemplate">{{$t("ConfigTemplate['点此跳转']")}}</router-link></footer>
     </div>
 </template>
 
@@ -51,7 +52,7 @@
                         name: this.$t("ConfigTemplate['文件名称']")
                     }, {
                         id: 'is_bind',
-                        name: this.$t("ConfigTemplate['操作']")
+                        name: this.$t('Association["操作"]')
                     }],
                     list: [],
                     maxHeight: 0
@@ -128,7 +129,7 @@
         }
         .config-table-wrapper {
             margin-top: 10px;
-            height: calc(100% - 40px);
+            height: calc(100% - 82px);
             overflow: auto;
             @include scrollbar;
             .bk-button {
@@ -136,6 +137,18 @@
                 height: 22px;
                 line-height: 20px;
                 font-size: 12px;
+            }
+        }
+    }
+    .footer{
+        margin: 20px 0;
+        height: 20px;
+        line-height: 20px;
+        .link{
+            display: inline-block;
+            color: #3c96ff;
+            &.hover{
+                color: #0082ff;
             }
         }
     }

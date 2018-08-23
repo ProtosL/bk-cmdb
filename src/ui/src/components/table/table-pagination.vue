@@ -1,5 +1,5 @@
 <template>
-    <div class="table-pagination clearfix">
+    <div class="table-pagination clearfix" :class="{'bk-page-mini': table.pageSize === 'mini'}">
         <div class="pagination-info fl">
             <span class="mr10" v-if="hasCheckbox">{{$tc("Common['已选N行']", checked.length, {N: checked.length})}}</span>
             <span class="mr10">{{$tc('Common[\'页码\']', pagination.current, {current: pagination.current, count:pagination.count, total: totalPage})}}</span>

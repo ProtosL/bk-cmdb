@@ -1076,6 +1076,32 @@ $configDetailBorderColor: #dde4eb;
             background-color: rgba(255, 255, 255, 0);
         }
     }
+    .history-table-wrapper .history-table{
+        .body-layout{
+            overflow: visible;
+        }
+        .bk-page-mini{
+            padding: 0 8px;
+            .pagination-info{
+                display: none;
+            }
+            .pagination-list{
+                height: 28px;
+                margin: 7px 0;
+                >ul{
+                    height: 28px;
+                }
+                .page-item{
+                    height: 28px;
+                    min-width: 28px;
+                    line-height: 28px;
+                    .page-button{
+                        line-height: 26px;
+                    }
+                }
+            }
+        }
+    }
 }
 @keyframes tooltip-animation {
     0% {

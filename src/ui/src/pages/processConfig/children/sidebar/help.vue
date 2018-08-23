@@ -10,10 +10,10 @@
  
 <template>
     <div class="help-wrapper">
-        <p>配置模版中又需要根据主机实例变化的参数，可以填写“主机变量”。</p>
-        <p>配置实例生成时，这些“主机变量”会被实际主机的属性替换。</p>
-        <p class="info">变量格式为${hostname}</p>
-        <p>当前可用变量</p>
+        <p>{{$t('ConfigTemplate["配置模版中又需要根据主机实例变化的参数，可以填写“主机变量”。"]')}}</p>
+        <p>{{$t('ConfigTemplate["配置实例生成时，这些“主机变量”会被实际主机的属性替换。"]')}}</p>
+        <p class="info">{{$t('ConfigTemplate["变量格式为"]')}}${hostname}</p>
+        <p>{{$t('ConfigTemplate["当前可用变量"]')}}</p>
         <v-table
             class="help-table"
             :header="table.header" 
@@ -31,7 +31,7 @@
                     {{item[id]}}
                 </template>
                 <template v-else>
-                    <a href="javascript:;" class="operation-btn copy" :data-clipboard-text="`\${${item.name}}`">复制</a>
+                    <a href="javascript:;" class="operation-btn copy" :data-clipboard-text="`\${${item.name}}`">{{$t('Common["复制"]')}}</a>
                 </template>
             </template>
         </v-table>
@@ -48,21 +48,15 @@
                 table: {
                     header: [{
                         id: 'name',
-                        name: '名称'
+                        name: this.$t('Hosts[\'名称\']')
                     }, {
                         id: 'desc',
-                        name: '描述'
+                        name: this.$t('OperationAudit["描述"]')
                     }, {
                         id: 'operation',
-                        name: '操作'
+                        name: this.$t('Association["操作"]')
                     }],
-                    list: [{
-                        desc: '简单文件',
-                        name: 'hostname'
-                    }, {
-                        desc: '简单文件',
-                        name: 'setname'
-                    }],
+                    list: [],
                     chooseId: [],
                     pagination: {
                         count: 1,

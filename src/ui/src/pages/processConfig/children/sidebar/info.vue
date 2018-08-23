@@ -15,18 +15,8 @@
                 <span class="title">{{$t('ConfigTemplate["文件描述"]')}}</span>
                 <span class="color-danger">*</span>
             </label>
-            <div class="input-box" v-if="curEditContent==='template_name'">
-                <input class="info-content" type="text"
-                    v-focus 
-                    v-model="info.template_name" 
-                    :data-vv-name="$t('ConfigTemplate[\'文件描述\']')"
-                    v-validate="'required|singlechar'"
-                    @blur="validateValue('template_name', info.template_name)">
-                    <span v-show="errors.has($t('ConfigTemplate[\'文件描述\']'))" class="error-msg is-danger">{{ errors.first($t('ConfigTemplate[\'文件描述\']')) }}</span>
-            </div>
-            <span class="info-content" v-else>
+            <span class="info-content">
                 {{formData.template_name | isEmpty}}
-                <i class="icon-cc-edit" @click="editContent('template_name')"></i>
             </span>
         </li>
         <li>
@@ -126,7 +116,15 @@
             <label for="">
                 <span class="title">{{$t('ConfigTemplate["文件分组"]')}}</span>
             </label>
-            <input class="info-content" type="text" v-if="curEditContent==='group'" v-focus @blur="updateFormData('group', info.group)">
+            <div class="input-box" v-if="curEditContent==='group'">
+                <input class="info-content" type="text"
+                    v-focus 
+                    v-model="info.group" 
+                    :data-vv-name="$t('ConfigTemplate[\'文件分组\']')"
+                    v-validate="'singlechar'"
+                    @blur="validateValue('group', info.template_name)">
+                    <span v-show="errors.has($t('ConfigTemplate[\'文件分组\']'))" class="error-msg is-danger">{{ errors.first($t('ConfigTemplate[\'文件分组\']')) }}</span>
+            </div>
             <span class="info-content" v-else>
                 {{formData.group | isEmpty}}
                 <i class="icon-cc-edit" @click="editContent('group')"></i>
@@ -143,6 +141,7 @@
                 attribute: [],
                 curEditContent: '',
                 info: {
+                    description: '',
                     file_name: '',
                     template_name: '',
                     path: '',
@@ -175,7 +174,6 @@
             validateValue (key, value) {
                 this.$validator.validateAll().then(res => {
                     if (res) {
-                        console.log(res)
                         this.updateFormData(key, value)
                     }
                 })

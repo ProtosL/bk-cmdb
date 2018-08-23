@@ -24,7 +24,7 @@
                     <span class="color-danger">*</span>
                 </label>
                 <div class="input-box">
-                    <input id="desc" type="text" class="bk-form-input" placeholder="请输入" v-model="templateName" v-focus
+                    <input id="desc" type="text" class="bk-form-input" :placeholder="$t('ConfigTemplate[\'请输入\']')" v-model="templateName" v-focus
                         @blur="validate"
                         :data-vv-name="$t('ConfigTemplate[\'文件描述\']')"
                         v-validate="'required|singlechar'">

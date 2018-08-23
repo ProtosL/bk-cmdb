@@ -29,7 +29,7 @@
                 </bk-select>
                 <input type="text" class="bk-form-input search-text" :placeholder="$t('ConfigTemplate[\'根据文件描述搜索\']')" v-model="filter.templateName" @keyup.enter="search">
                 <bk-button class="search" type="primary" @click="search">
-                    搜索
+                    {{$t('Association["搜索"]')}}
                 </bk-button>
             </div>
         </div>
@@ -44,8 +44,8 @@
                 @handleSizeChange="setCurrentSize"
                 @handleSortChange="setCurrentSort">
                 <template slot="operation" slot-scope="{ item }">
-                    <span class="operation-btn mr20" @click.stop="editTemplate(item)">编辑</span>
-                    <span class="operation-btn" @click.stop="delConfirm(item)">删除</span>
+                    <span class="operation-btn mr20" @click.stop="editTemplate(item)">{{$t('Common["编辑"]')}}</span>
+                    <span class="operation-btn" @click.stop="delConfirm(item)">{{$t('Common["删除"]')}}</span>
                 </template>
             </v-table>
         </div>
@@ -79,39 +79,37 @@
                     params: {},
                     list: [{
                         id: '',
-                        name: '所有分组'
+                        name: this.$t('ConfigTemplate["所有分组"]')
                     }]
                 },
                 table: {
                     header: [{
                         id: 'template_name',
-                        name: '文件描述'
+                        name: this.$t('ConfigTemplate["文件描述"]')
                     }, {
                         id: 'file_name',
-                        name: '文件名称'
+                        name: this.$t('ConfigTemplate["文件名称"]')
                     }, {
                         id: 'path',
-                        name: '绝对路径'
+                        name: this.$t('ConfigTemplate["绝对路径"]')
                     }, {
                         id: 'user',
-                        name: '所属用户'
+                        name: this.$t('ConfigTemplate["所属用户"]')
                     }, {
                         id: 'right',
-                        name: '文件权限'
+                        name: this.$t('ConfigTemplate["文件权限"]')
                     }, {
                         id: 'group',
-                        name: '文件分组'
+                        name: this.$t('ConfigTemplate["文件分组"]')
                     }, {
                         id: 'format',
-                        name: '输出格式'
+                        name: this.$t('ConfigTemplate["输出格式"]')
                     }, {
                         id: 'operation',
-                        name: '操作',
+                        name: this.$t('Association["操作"]'),
                         sortable: false
                     }],
-                    list: [{
-                        template_name: 'aaa'
-                    }],
+                    list: [],
                     chooseId: [],
                     pagination: {
                         count: 0,
@@ -135,6 +133,7 @@
         watch: {
             'filter.bkBizId' () {
                 this.setCurrentPage(1)
+                this.getTemplateGroup()
             }
         },
         methods: {
@@ -151,8 +150,9 @@
                     templateName,
                     selected
                 } = this.filter
-                let params = {
-                    template_name: templateName
+                let params = {}
+                if (templateName !== '') {
+                    Object.assign(params, {template_name: templateName})
                 }
                 if (selected !== '') {
                     Object.assign(params, {group: selected})
@@ -187,6 +187,19 @@
                 const res = await this.getProcessConfigTemplateGroup({
                     bkBizId: this.filter.bkBizId
                 })
+                let groupList = [{
+                    id: '',
+                    name: this.$t('ConfigTemplate["所有分组"]')
+                }]
+                res.data.map(item => {
+                    if (item !== '') {
+                        groupList.push({
+                            id: item,
+                            name: item
+                        })
+                    }
+                })
+                this.filter.list = groupList
             },
             async getTableList () {
                 let params = {
@@ -219,9 +232,6 @@
                 this.table.sort = sort
                 this.setCurrentPage(1)
             }
-        },
-        created () {
-            this.getTemplateGroup()
         },
         components: {
             vTable,

@@ -17,43 +17,53 @@
         :width="590" 
         :padding="0">
         <div class="form-content" slot="content">
-            <p class="form-title">{{$t('ConfigTemplate["上线"]')}}aaa</p>
+            <p class="form-title">{{$t('ConfigTemplate["上线"]')}}{{info.template_name}}</p>
             <ul class="content-group clearfix">
                 <li>
                     <label for="desc">
+                        {{$t('ConfigTemplate["版本描述"]')}}
+                    </label>
+                    <input id="desc" type="text" v-model="info.description" class="bk-form-input" :placeholder="$t('ConfigTemplate[\'请输入\']')"
+                        @blur="validate"
+                        :data-vv-name="$t('ConfigTemplate[\'版本描述\']')"
+                        v-validate="'singlechar'">
+                    <span v-show="errors.has($t('ConfigTemplate[\'版本描述\']'))" class="error-msg is-danger">{{ errors.first($t('ConfigTemplate[\'版本描述\']')) }}</span>
+                </li>
+                <li>
+                    <label for="file_name">
                         {{$t('ConfigTemplate["文件名称"]')}}
                         <span class="color-danger">*</span>
                     </label>
-                    <input id="desc" type="text" v-model="info.file_name" class="bk-form-input" placeholder="请输入"
+                    <input id="file_name" type="text" v-model="info.file_name" class="bk-form-input" :placeholder="$t('ConfigTemplate[\'请输入\']')"
                         @blur="validate"
                         :data-vv-name="$t('ConfigTemplate[\'文件名称\']')"
                         v-validate="'required|singlechar'">
                     <span v-show="errors.has($t('ConfigTemplate[\'文件名称\']'))" class="error-msg is-danger">{{ errors.first($t('ConfigTemplate[\'文件名称\']')) }}</span>
                 </li>
                 <li>
-                    <label for="desc">
+                    <label for="path">
                         {{$t('ConfigTemplate["绝对路径"]')}}
                         <span class="color-danger">*</span>
                     </label>
-                    <input id="desc" type="text" v-model="info.path" class="bk-form-input" placeholder="请输入"
+                    <input id="path" type="text" v-model="info.path" class="bk-form-input" :placeholder="$t('ConfigTemplate[\'请输入\']')"
                         @blur="validate"
                         :data-vv-name="$t('ConfigTemplate[\'绝对路径\']')"
                         v-validate="'required|singlechar'">
                     <span v-show="errors.has($t('ConfigTemplate[\'绝对路径\']'))" class="error-msg is-danger">{{ errors.first($t('ConfigTemplate[\'绝对路径\']')) }}</span>
                 </li>
                 <li>
-                    <label for="desc">
+                    <label for="user">
                         {{$t('ConfigTemplate["所属用户"]')}}
                         <span class="color-danger">*</span>
                     </label>
-                    <input id="desc" type="text" v-model="info.user" class="bk-form-input" placeholder="请输入"
+                    <input id="user" type="text" v-model="info.user" class="bk-form-input" :placeholder="$t('ConfigTemplate[\'请输入\']')"
                         @blur="validate"
                         :data-vv-name="$t('ConfigTemplate[\'所属用户\']')"
                         v-validate="'required|singlechar'">
                     <span v-show="errors.has($t('ConfigTemplate[\'所属用户\']'))" class="error-msg is-danger">{{ errors.first($t('ConfigTemplate[\'所属用户\']')) }}</span>
                 </li>
                 <li>
-                    <label for="desc">
+                    <label for="right">
                         {{$t('ConfigTemplate["文件权限"]')}}
                         <span class="color-danger">*</span>
                     </label>
@@ -67,7 +77,7 @@
                     </bk-select>
                 </li>
                 <li>
-                    <label for="desc">
+                    <label for="format">
                         {{$t('ConfigTemplate["输出格式"]')}}
                         <span class="color-danger">*</span>
                     </label>
@@ -81,10 +91,15 @@
                     </bk-select>
                 </li>
                 <li>
-                    <label for="desc">
+                    <label for="group">
                         {{$t('ConfigTemplate["文件分组"]')}}
+                        <span class="color-danger">*</span>
                     </label>
-                    <input id="desc" type="text" v-model="info.group" class="bk-form-input" placeholder="请输入">
+                    <input id="group" type="text" v-model="info.file_name" class="bk-form-input" :placeholder="$t('ConfigTemplate[\'请输入\']')"
+                        @blur="validate"
+                        :data-vv-name="$t('ConfigTemplate[\'文件分组\']')"
+                        v-validate="'singlechar'">
+                    <span v-show="errors.has($t('ConfigTemplate[\'文件分组\']'))" class="error-msg is-danger">{{ errors.first($t('ConfigTemplate[\'文件分组\']')) }}</span>
                 </li>
             </ul>
             <div class="form-btn-group clearfix">
@@ -104,6 +119,7 @@
             return {
                 isShow: true,
                 info: {
+                    description: '',
                     file_name: '',
                     template_name: '',
                     path: '',
@@ -220,13 +236,20 @@
                 float: left;
                 margin-top: 15px;
                 width: 220px;
-                &:nth-child(2n) {
+                &:nth-child(2n - 1) {
                     margin-left: 30px;
                 }
                 input,
                 .select-box {
                     margin-top: 5px;
                     width: 220px;
+                }
+                &:first-child{
+                    width: 100%;
+                    margin-left: 0;
+                    input{
+                        width: 100%;
+                    }
                 }
             }
             .error-msg{

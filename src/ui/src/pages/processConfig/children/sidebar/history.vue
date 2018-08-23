@@ -18,15 +18,16 @@
             :defaultSort="table.defaultSort"
             :wrapperMinusHeight="150"
             :sortable="false"
+            :pageSize="'mini'"
             @handlRowMouseover="handlRowMouseover"
             @handlePageChange="setCurrentPage"
             @handleSizeChange="setCurrentSize"
             @handleSortChange="setCurrentSort">
             <template slot="create_time" slot-scope="{ item }">
-                <span class="tooltip-box" v-tooltip="{show: table.tipIndex === item['version_id'], classes: ['tooltip-history'], content: tooltipContent}">{{item['create_time']}}</span>
+                <span class="tooltip-box" v-tooltip="{show: table.tipIndex === item['version_id'], classes: ['tooltip-history'], content: tooltipContent}">{{$formatTime(item['create_time'], 'YYYY-MM-DD HH:mm:ss')}}</span>
             </template>
             <template slot="operation" slot-scope="{ item }">
-                <a href="javascript:;" class="operation-btn" @click="contrast(item)">对比</a>
+                <a href="javascript:;" class="operation-btn" @click="contrast(item)">{{$t('ConfigTemplate["对比"]')}}</a>
             </template>
         </v-table>
     </div>
@@ -41,92 +42,29 @@
                 table: {
                     header: [{
                         id: 'description',
-                        name: '描述',
+                        name: this.$t('OperationAudit["描述"]'),
                         width: 79
                     }, {
-                        id: 'create_time',
-                        name: '操作时间',
+                        id: 'last_time',
+                        name: this.$t('OperationAudit["操作时间"]'),
                         width: 79
                     }, {
                         id: 'operator',
-                        name: '操作人',
+                        name: this.$t('EventPush["操作人"]'),
                         width: 79
                     }, {
                         id: 'operation',
-                        name: '操作',
+                        name: this.$t('Association["操作"]'),
                         width: 79
                     }],
-                    list: [{
-                        'version_id': 10,
-                        'create_time': '2018-02-18 10:20:30',
-                        'operator': 'tew',
-                        'content': 'aaaaaaaa#vvvvvvvv',
-                        'status': 'draft',
-                        'description': 'test'
-                    }, {
-                        'version_id': 9,
-                        'create_time': '2018-02-18 10:20:30',
-                        'operator': 'cxz',
-                        'content': 'aaaaaaaa#vvvvvvvv',
-                        'status': 'draft',
-                        'description': 'test'
-                    }, {
-                        'version_id': 8,
-                        'create_time': '2018-02-18 10:20:30',
-                        'operator': 'owen',
-                        'content': 'aaaaaaaa#vvvvvvvv',
-                        'status': 'draft',
-                        'description': 'test'
-                    }, {
-                        'version_id': 7,
-                        'create_time': '2018-02-18 10:20:30',
-                        'operator': 'asdf',
-                        'content': 'aaaaaaaa#vvvvvvvv',
-                        'status': 'draft',
-                        'description': 'test'
-                    }, {
-                        'version_id': 6,
-                        'create_time': '2018-02-18 10:20:30',
-                        'operator': 'fsd',
-                        'content': 'aaaaaaaa#vvvvvvvv',
-                        'status': 'draft',
-                        'description': 'test'
-                    }, {
-                        'version_id': 5,
-                        'create_time': '2018-02-18 10:20:30',
-                        'operator': 'qw',
-                        'content': 'aaaaaaaa#vvvvvvvv',
-                        'status': 'draft',
-                        'description': 'test'
-                    }, {
-                        'version_id': 4,
-                        'create_time': '2018-02-18 10:20:30',
-                        'operator': 'adf',
-                        'content': 'aaaaaaaa#vvvvvvvv',
-                        'status': 'draft',
-                        'description': 'test'
-                    }, {
-                        'version_id': 3,
-                        'create_time': '2018-02-18 10:20:30',
-                        'operator': 'oweasdfn',
-                        'content': 'aaaaaaaa#vvvvvvvv',
-                        'status': 'draft',
-                        'description': 'test'
-                    }, {
-                        'version_id': 2,
-                        'create_time': '2018-02-18 10:20:30',
-                        'operator': 'qwr',
-                        'content': 'aaaaaaaa#vvvvvvvv',
-                        'status': 'draft',
-                        'description': 'test'
-                    }],
+                    list: [],
                     chooseId: [],
                     pagination: {
                         count: 1,
                         size: 10,
                         current: 1
                     },
-                    defaultSort: '-desc',
+                    defaultSort: '-version_id',
                     sort: '',
                     tipIndex: -1
                 }
@@ -148,7 +86,7 @@
                 if (!item) {
                     return ''
                 }
-                return `${item.description} ${item.operator} ${item.create_time}`
+                return `${item.description} ${item.operator} ${this.$formatTime(item.last_time, 'YYYY-MM-DD HH:mm:ss')}`
             }
         },
         methods: {

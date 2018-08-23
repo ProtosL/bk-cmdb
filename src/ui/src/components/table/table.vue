@@ -177,6 +177,9 @@
             isCheckboxShow: {
                 type: Boolean,
                 default: true
+            },
+            pageSize: {
+                type: String
             }
         },
         data () {
