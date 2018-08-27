@@ -12,6 +12,7 @@
     <div class="history-table-wrapper">
         <v-table
             class="history-table"
+            :loading="$loading('getConfigTemplateVersion')"
             :header="table.header" 
             :list="table.list" 
             :pagination.sync="table.pagination"
@@ -108,7 +109,10 @@
                 const res = await this.getConfigTemplateVersion({
                     bkBizId: this.bkBizId,
                     templateId: this.formData['template_id'],
-                    params
+                    params,
+                    config: {
+                        id: 'getConfigTemplateVersion'
+                    }
                 })
                 this.table.list = res.data.info
                 this.table.pagination.count = res.data.count
@@ -139,8 +143,10 @@
 </script>
 
 <style lang="scss" scoped>
+    .history-table-wrapper{
+        padding-top: 22px;
+    }
     .history-table {
-        margin-top: 22px;
         .operation-btn {
             color: #3c96ff;
             &:hover {

@@ -1,14 +1,14 @@
 <template>
     <div class="config-wrapper">
         <div class="config-title">
-            <p>{{$tc("Common['已绑定N个配置文件']", bindNum, {num: bindNum})}}<span>{{bindNum}}</span></p>
-            <bk-button class="vice-btn" type="default" @click="unbindAll">{{$t("ConfigTemplate['全部取消']")}}</bk-button>
+            <p>{{$tc("ConfigTemplate['已绑定N个配置文件']", bindNum, {num: bindNum})}}</p>
+            <bk-button class="vice-btn" type="default" @click="unbindAll" :loading="$loading('unbindAll')">{{$t("ConfigTemplate['全部取消']")}}</bk-button>
         </div>
         <div class="config-table-wrapper">
             <v-table class="config-table"
                 :header="table.header"
                 :list="table.list"
-                :loading="$loading('getProcessBindTemplate')"
+                :loading="$loading('getProcessBindTemplate', 'unbindAll')"
                 :width="754"
                 :wrapperMinusHeight="150"
                 :sortable="false">
@@ -63,7 +63,8 @@
             ...mapActions('configTemplate', [
                 'getProcessBindTemplate',
                 'bindProcessConfigTemplate',
-                'deleteProcessConfigTemplate'
+                'deleteProcessConfigTemplate',
+                'batchDeleteProcessConfigTemplate'
             ]),
             async changeBinding (item) {
                 if (item['is_bind'] === 0) {
@@ -88,19 +89,39 @@
                     item['is_bind'] = 0
                 }
             },
-            unbindAll () {
-
+            async getTableData () {
+                const res = await this.getProcessBindTemplate({
+                    bkBizId: this.bkBizId,
+                    bkProcessId: this.bkProcessId,
+                    config: {
+                        id: 'getProcessBindTemplate'
+                    }
+                })
+                this.table.list = res.data
+            },
+            async unbindAll () {
+                let unbindList = this.table.list.filter(({is_bind: isBind}) => isBind)
+                let params = []
+                unbindList.map(item => {
+                    params.push({
+                        bk_process_id: this.bkProcessId,
+                        template_id: item['template_id']
+                    })
+                })
+                await this.batchDeleteProcessConfigTemplate({
+                    bkBizId: this.bkBizId,
+                    config: {
+                        data: params,
+                        id: 'unbindAll'
+                    }
+                })
+                this.table.list.map(item => {
+                    item['is_bind'] = 0
+                })
             }
         },
-        async created () {
-            const res = await this.getProcessBindTemplate({
-                bkBizId: this.bkBizId,
-                bkProcessId: this.bkProcessId,
-                config: {
-                    id: 'getProcessBindTemplate'
-                }
-            })
-            this.table.list = res.data
+        created () {
+            this.getTableData()
         },
         components: {
             vTable

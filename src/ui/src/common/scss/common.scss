@@ -1037,6 +1037,13 @@ $configDetailBorderColor: #dde4eb;
             display: block;
         }
     }
+    .detail-tab{
+        .bk-tab2-content {
+            >section.active {
+                height: 100%;
+            }
+        }
+    }
     .highlight-select,
     .server-select {
         .bk-select-wrapper {

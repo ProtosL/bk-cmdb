@@ -95,7 +95,7 @@
                         {{$t('ConfigTemplate["文件分组"]')}}
                         <span class="color-danger">*</span>
                     </label>
-                    <input id="group" type="text" v-model="info.file_name" class="bk-form-input" :placeholder="$t('ConfigTemplate[\'请输入\']')"
+                    <input id="group" type="text" v-model="info.group" class="bk-form-input" :placeholder="$t('ConfigTemplate[\'请输入\']')"
                         @blur="validate"
                         :data-vv-name="$t('ConfigTemplate[\'文件分组\']')"
                         v-validate="'singlechar'">

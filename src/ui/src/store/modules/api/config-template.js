@@ -96,8 +96,8 @@ const actions = {
      * @param {Number} templateId 模版文件id
      * @return {Promise} promise 对象
      */
-    getConfigTemplateVersion ({ commit, state, dispatch, rootState }, { bkBizId, templateId, params }) {
-        return $axios.post(`template/version/search/${rootState.common.bkSupplierAccount}/${bkBizId}/${templateId}`, params, { globalError: true })
+    getConfigTemplateVersion ({ commit, state, dispatch, rootState }, { bkBizId, templateId, params, config }) {
+        return $axios.post(`template/version/search/${rootState.common.bkSupplierAccount}/${bkBizId}/${templateId}`, params, { ...config, ...{globalError: true} })
     },
     /**
      * 获取业务下配置模板分组
@@ -173,6 +173,18 @@ const actions = {
      */
     deleteProcessConfigTemplate ({ commit, state, dispatch, rootState }, { bkBizId, bkProcessId, templateId, config }) {
         return $axios.delete(`template/proc/${rootState.common.bkSupplierAccount}/${bkBizId}/${bkProcessId}/${templateId}`, { ...config, ...{globalError: true} })
+    },
+    /**
+     * 批量解绑进程配置文件
+     * @param {Function} commit store commit mutation hander
+     * @param {Object} state store state
+     * @param {String} dispatch store dispatch action hander
+     * @param {Number} bkBizId 业务id
+     * @param {Number} templateId 模版文件id
+     * @return {Promise} promise 对象
+     */
+    batchDeleteProcessConfigTemplate ({ commit, state, dispatch, rootState }, { bkBizId, config }) {
+        return $axios.delete(`template/proc/${rootState.common.bkSupplierAccount}/${bkBizId}`, { ...config, ...{globalError: true} })
     },
     /**
      * 获取进程实例

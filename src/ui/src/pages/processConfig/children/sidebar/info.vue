@@ -81,14 +81,17 @@
                 <span class="title">{{$t('ConfigTemplate["文件权限"]')}}</span>
                 <span class="color-danger">*</span>
             </label>
-            <bk-select v-if="curEditContent==='right'" class="highlight-select" :selected.sync="info.right">
-                <bk-select-option
-                    v-for="(option, index) of info.rightList"
-                    :key="option.id"
-                    :value="option.id"
-                    :label="option.name">
-                </bk-select-option>
-            </bk-select>
+            <div class="select-wrapper" v-if="curEditContent==='right'">
+                <bk-select class="highlight-select" :selected.sync="info.right">
+                    <bk-select-option
+                        v-for="(option, index) of info.rightList"
+                        :key="option.id"
+                        :value="option.id"
+                        :label="option.name">
+                    </bk-select-option>
+                </bk-select>
+                <div class="mask" @click="updateFormData('right', info.right)"></div>
+            </div>
             <span class="info-content" v-else>
                 {{formData.right | isEmpty}}
                 <i class="icon-cc-edit" @click="editContent('right')"></i>
@@ -99,14 +102,17 @@
                 <span class="title">{{$t('ConfigTemplate["输出格式"]')}}</span>
                 <span class="color-danger">*</span>
             </label>
-            <bk-select v-if="curEditContent==='format'" class="highlight-select" :selected.sync="info.format">
-                <bk-select-option
-                    v-for="(option, index) of info.formatList"
-                    :key="option.id"
-                    :value="option.id"
-                    :label="option.name">
-                </bk-select-option>
-            </bk-select>
+            <div class="select-wrapper" v-if="curEditContent==='format'">
+                <bk-select class="highlight-select" :selected.sync="info.format">
+                    <bk-select-option
+                        v-for="(option, index) of info.formatList"
+                        :key="option.id"
+                        :value="option.id"
+                        :label="option.name">
+                    </bk-select-option>
+                </bk-select>
+                <div class="mask" @click="updateFormData('format', info.format)"></div>
+            </div>
             <span class="info-content" v-else>
                 {{formData.format | isEmpty}}
                 <i class="icon-cc-edit" @click="editContent('format')"></i>
@@ -289,10 +295,20 @@
                     cursor: pointer;
                 }
             }
+            .select-wrapper {
+                .mask {
+                    position: fixed;
+                    top: 0;
+                    bottom: 0;
+                    left: 0;
+                    right: 0;
+                }
+            }
             .highlight-select {
                 display: inline-block;
                 width: 230px;
-                line-height: 1;
+                padding-top: 4px;
+                height: 34px;
                 vertical-align: middle;
             }
         }

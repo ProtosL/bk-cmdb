@@ -13,28 +13,28 @@
         <p>{{$t('ConfigTemplate["配置模版中又需要根据主机实例变化的参数，可以填写“主机变量”。"]')}}</p>
         <p>{{$t('ConfigTemplate["配置实例生成时，这些“主机变量”会被实际主机的属性替换。"]')}}</p>
         <p class="info">{{$t('ConfigTemplate["变量格式为"]')}}${hostname}</p>
-        <p>{{$t('ConfigTemplate["当前可用变量"]')}}</p>
-        <v-table
-            class="help-table"
-            :header="table.header" 
-            :list="table.list" 
-            :pagination.sync="table.pagination"
-            :defaultSort="table.defaultSort"
-            :wrapperMinusHeight="150"
-            :sortable="false"
-            :showFooter="false"
-            @handlePageChange="setCurrentPage"
-            @handleSizeChange="setCurrentSize"
-            @handleSortChange="setCurrentSort">
-            <template v-for="{id, name} in table.header" :slot="id" slot-scope="{ item }">
-                <template v-if="id !== 'operation'">
-                    {{item[id]}}
+        <p class="mb5">{{$t('ConfigTemplate["当前可用变量"]')}}</p>
+        <div class="help-table-wrapper">
+            <v-table
+                class="help-table"
+                :loading="table.isLoading"
+                :header="table.header" 
+                :list="table.list" 
+                :pagination.sync="table.pagination"
+                :defaultSort="table.defaultSort"
+                :wrapperMinusHeight="328"
+                :sortable="false"
+                :showFooter="false">
+                <template v-for="{id, name} in table.header" :slot="id" slot-scope="{ item }">
+                    <template v-if="id !== 'operation'">
+                        {{item[id]}}
+                    </template>
+                    <template v-else>
+                        <a href="javascript:;" class="operation-btn copy" :data-clipboard-text="`\${${item.name}}`">{{$t('Common["复制"]')}}</a>
+                    </template>
                 </template>
-                <template v-else>
-                    <a href="javascript:;" class="operation-btn copy" :data-clipboard-text="`\${${item.name}}`">{{$t('Common["复制"]')}}</a>
-                </template>
-            </template>
-        </v-table>
+            </v-table>
+        </div>
     </div>
 </template>
 
@@ -46,15 +46,18 @@
             return {
                 clipboard: {},
                 table: {
+                    isLoading: false,
                     header: [{
                         id: 'name',
                         name: this.$t('Hosts[\'名称\']')
                     }, {
                         id: 'desc',
-                        name: this.$t('OperationAudit["描述"]')
+                        name: this.$t('OperationAudit["描述"]'),
+                        width: 100
                     }, {
                         id: 'operation',
-                        name: this.$t('Association["操作"]')
+                        name: this.$t('Association["操作"]'),
+                        width: 60
                     }],
                     list: [],
                     chooseId: [],
@@ -69,17 +72,23 @@
             }
         },
         methods: {
-            setCurrentPage (current) {
-                this.table.pagination.current = current
-                // this.getTableList()
-            },
-            setCurrentSize (size) {
-                this.table.pagination.size = size
-                this.setCurrentPage(1)
-            },
-            setCurrentSort (sort) {
-                this.table.sort = sort
-                this.setCurrentPage(1)
+            async getTableList () {
+                this.table.isLoading = true
+                const res = await Promise.all([
+                    this.$store.dispatch('object/getAttribute', {objId: 'host'}),
+                    this.$store.dispatch('object/getAttribute', {objId: 'set'}),
+                    this.$store.dispatch('object/getAttribute', {objId: 'module'})
+                ])
+                let list = []
+                res.map(({data}) => {
+                    data.map(({bk_property_id: bkPropertyId}) => {
+                        list.push({
+                            name: bkPropertyId
+                        })
+                    })
+                })
+                this.table.list = list
+                this.table.isLoading = false
             }
         },
         mounted () {
@@ -90,6 +99,9 @@
             this.clipboard.on('error', () => {
                 this.$alertMsg(this.$t('Common["复制失败"]'))
             })
+        },
+        created () {
+            this.getTableList()
         },
         destroyed () {
             this.clipboard.destroy()
@@ -103,7 +115,8 @@
 <style lang="scss" scoped>
     .help-wrapper {
         font-size: 14px;
-        margin-top: 20px;
+        padding-top: 20px;
+        height: 100%;
         p {
             margin: 0;
             line-height: 24px;
@@ -112,8 +125,11 @@
                 margin: 10px 0;
             }
         }
+        .help-table-wrapper {
+            height: calc(100% - 169px);
+            overflow: auto;
+        }
         .help-table {
-            margin-top: 5px;
             .operation-btn {
                 color: #3c96ff;
                 &:hover {

@@ -59,16 +59,11 @@
             this.$ace = brace.edit(this.$el)
             this.$emit('init', this.$ace)
             require(`brace/theme/${this.aceConfig.theme}`)
-            // 代码提示与自动补全
-            // this.$ace.setOptions({
-            //     enableBasicAutocompletion: this.aceConfig.autoCompletion,
-            //     enableLiveAutocompletion: this.aceConfig.autoCompletion
-            // })
             let session = this.$ace.getSession()
             this.$ace.setTheme(`ace/theme/${this.aceConfig.theme}`) // 配置主题
             this.$ace.setValue(this.aceConfig.value, 1) // 设置默认内容
             this.$ace.setReadOnly(this.aceConfig.readOnly) // 设置是否为只读模式
-
+            this.$ace.getSession().setMode(`ace/mode/${this.aceConfig.mode}`) // 设置高亮
             session.setTabSize(this.aceConfig.tabSize) // Tab大小
             session.setUseSoftTabs(true)
 

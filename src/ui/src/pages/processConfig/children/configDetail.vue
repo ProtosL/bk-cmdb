@@ -23,8 +23,13 @@
                     <template slot="setting">
                         <div class="setting-wrapper">
                             <div class="question-icon-box">
-                                <i class="icon-cc-question" v-if="editorTab.active === 'name'" @click="toggleSample"></i>
-                                <template v-if="false">
+                                <template v-if="isFirstIn">
+                                    <i class="icon-cc-question" v-if="editorTab.active === 'name'" @click="toggleSample"></i>
+                                </template>
+                                <template v-else>
+                                    <i class="icon-cc-question" v-if="editorTab.active === 'name'" v-tooltip="$t('ConfigTemplate[\'点此查看进程配置文件示例\']')" @click="toggleSample"></i>
+                                </template>
+                                <template v-if="isFirstIn">
                                     <div class="first-entry-mask"></div>
                                     <div class="tooltip">{{$t('ConfigTemplate["点此查看进程配置文件示例"]')}}</div>
                                 </template>
@@ -43,7 +48,7 @@
                         </div>
                     </template>
                     <bk-tabpanel name="name" title="name">
-                        <div class="editor-box" :class="{'has-sample': sample.isShow}">
+                        <div class="editor-box" :class="{'has-sample': sampleInfo.isShow}">
                             <div class="editor-content">
                                 <p class="editor-title">
                                     <template v-if="editInfo.lastTime">
@@ -55,10 +60,10 @@
                                     @init="aceEditInit">
                                 </ace>
                             </div>
-                            <div v-if="sample.isShow" class="editor-content readonly">
+                            <div v-if="sampleInfo.isShow" class="editor-content readonly">
                                 <p class="editor-title">
-                                    <span :title="sample.title">{{sample.title}}</span>
-                                    <i class="bk-icon icon-close" @click="sample.isShow=false"></i>
+                                    <span :title="sampleInfo.title">{{sampleInfo.title}}</span>
+                                    <i class="bk-icon icon-close" @click="sampleInfo.isShow=false"></i>
                                 </p>
                                 <ace class="ace-editor" 
                                 :config="sampleConfig"
@@ -94,11 +99,14 @@
     import vOnlineForm from './onlineForm'
     import vPreview from './preview'
     import vFullscreen from '@/components/fullscreen/fullscreen'
+    import SAMPLE_FILE from '@/common/json/sample.json'
     import { mapGetters, mapActions, mapMutations } from 'vuex'
     export default {
         data () {
             return {
                 attribute: [],
+                $aceEdit: null,
+                $aceSample: null,
                 editConfig: {
                     mode: ''
                 },
@@ -113,9 +121,10 @@
                 onLineForm: {
                     isShow: false
                 },
-                sample: {
+                sampleInfo: {
                     isShow: false,
-                    title: ''
+                    title: '',
+                    content: SAMPLE_FILE.content // 示例文件内容
                 },
                 highlight: {
                     selected: '',
@@ -124,13 +133,12 @@
                         'json'
                     ]
                 },
-                $aceEdit: null,
-                $aceSample: null,
                 editInfo: {
                     lastTime: '',
                     timer: null,
                     isAutoSave: false
-                }
+                },
+                isFirstIn: false
             }
         },
         computed: {
@@ -138,10 +146,13 @@
             ...mapGetters('configTemplate', [
                 'formData',
                 'currentVersion'
+            ]),
+            ...mapGetters('usercustom', [
+                'usercustom'
             ])
         },
         watch: {
-            'sample.isShow' () {
+            'sampleInfo.isShow' () {
                 this.resizeEditor()
             }
         },
@@ -150,6 +161,9 @@
                 'editConfigTemplateVersion',
                 'getConfigTemplateVersion',
                 'createConfigTemplateVersion'
+            ]),
+            ...mapActions('usercustom', [
+                'updateUserCustom'
             ]),
             ...mapMutations('configTemplate', [
                 'setTemplateVersion'
@@ -160,8 +174,8 @@
                 })
             },
             contrast (item) {
-                this.sample.isShow = true
-                this.sample.title = `${item.description} ${item.operator} ${this.$formatTime(item.last_time, 'YYYY-MM-DD HH:mm:ss')}`
+                this.sampleInfo.isShow = true
+                this.sampleInfo.title = `${item.description} ${item.operator} ${this.$formatTime(item.last_time, 'YYYY-MM-DD HH:mm:ss')}`
                 this.$nextTick(() => {
                     this.$aceSample.setValue(item.content, 1)
                 })
@@ -180,13 +194,27 @@
             },
             fullscreenChange (isFullscreen) {
                 this.editorTab.isFullScreen = isFullscreen
+                this.resizeEditor()
             },
             toggleSample () {
-                this.sample.title = this.$t('ConfigTemplate["示例文件（只读）"]')
-                this.sample.isShow = !this.sample.isShow
+                this.isFirstIn = false
+                if (this.sampleInfo.isShow) {
+                    if (this.sampleInfo.content !== this.$aceSample.getValue()) {
+                        this.$aceSample.setValue(this.sampleInfo.content, 1)
+                    } else {
+                        this.sampleInfo.isShow = !this.sampleInfo.isShow
+                    }
+                } else {
+                    this.sampleInfo.isShow = !this.sampleInfo.isShow
+                    this.$nextTick(() => {
+                        this.$aceSample.setValue(this.sampleInfo.content, 1)
+                    })
+                }
+                this.sampleInfo.title = this.$t('ConfigTemplate["示例文件（只读）"]')
             },
             setHighlight (mode) {
-                this.config.mode = mode.value
+                this.editConfig.mode = mode.value
+                this.sampleConfig.mode = mode.value
             },
             aceSampleInit ($ace) {
                 this.$aceSample = $ace
@@ -275,6 +303,10 @@
             }
         },
         async created () {
+            if (!this.usercustom.hasOwnProperty('isFirstInConfigTemplate')) {
+                this.isFirstIn = true
+                this.updateUserCustom({...this.usercustom, ...{isFirstInConfigTemplate: true}})
+            }
             await this.getTemplateVersion()
             this.setValue()
         },
