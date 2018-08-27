@@ -253,8 +253,10 @@
                     },
                     condition: {}
                 }
-                const res = await this.getConfigTemplateVersion({bkBizId: this.bkBizId, templateId: this.formData['template_id'], params})
-                this.setTemplateVersion(res.data.info)
+                if (this.formData['template_id'] !== '') {
+                    const res = await this.getConfigTemplateVersion({bkBizId: this.bkBizId, templateId: this.formData['template_id'], params})
+                    this.setTemplateVersion(res.data.info)
+                }
             },
             cancel () {
                 this.$emit('cancel')

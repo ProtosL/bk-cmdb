@@ -134,6 +134,11 @@
             'filter.bkBizId' () {
                 this.setCurrentPage(1)
                 this.getTemplateGroup()
+            },
+            'configDetail.isShow' (isShow) {
+                if (!isShow) {
+                    this.setCurrentPage(1)
+                }
             }
         },
         methods: {

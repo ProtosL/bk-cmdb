@@ -74,7 +74,8 @@
                             bkBizId: this.bkBizId, params
                         })
                         if (res.result) {
-                            this.$store.commit('configTemplate/setFormData', {template_name: this.templateName})
+                            let formData = {...params, ...{template_id: '', description: ''}}
+                            this.$store.commit('configTemplate/setFormData', formData)
                             this.$emit('submitForm')
                         } else {
                             this.$alertMsg(res['bk_error_msg'])
