@@ -87,6 +87,7 @@
         </div>
         <v-online-form 
             v-if="onLineForm.isShow"
+            :$aceEdit="$aceEdit"
             @submitForm="submitOnlineForm"
             @closeForm="onLineForm.isShow = false"
         ></v-online-form>

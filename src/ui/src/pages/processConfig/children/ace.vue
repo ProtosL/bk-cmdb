@@ -20,7 +20,7 @@
                 value: '',
                 width: 500,
                 height: 300,
-                mode: 'sqlserver',
+                mode: '',
                 theme: 'monokai',
                 readOnly: false,
                 fullScreen: true,
@@ -63,7 +63,9 @@
             this.$ace.setTheme(`ace/theme/${this.aceConfig.theme}`) // 配置主题
             this.$ace.setValue(this.aceConfig.value, 1) // 设置默认内容
             this.$ace.setReadOnly(this.aceConfig.readOnly) // 设置是否为只读模式
-            this.$ace.getSession().setMode(`ace/mode/${this.aceConfig.mode}`) // 设置高亮
+            if (this.aceConfig.mode) {
+                this.$ace.getSession().setMode(`ace/mode/${this.aceConfig.mode}`) // 设置高亮
+            }
             session.setTabSize(this.aceConfig.tabSize) // Tab大小
             session.setUseSoftTabs(true)
 

@@ -93,7 +93,6 @@
                 <li>
                     <label for="group">
                         {{$t('ConfigTemplate["文件分组"]')}}
-                        <span class="color-danger">*</span>
                     </label>
                     <input id="group" type="text" v-model="info.group" class="bk-form-input" :placeholder="$t('ConfigTemplate[\'请输入\']')"
                         @blur="validate"
@@ -115,6 +114,9 @@
 <script>
     import { mapGetters, mapActions, mapMutations } from 'vuex'
     export default {
+        props: {
+            $aceEdit: Object
+        },
         data () {
             return {
                 isShow: true,
@@ -143,6 +145,7 @@
         },
         methods: {
             ...mapActions('configTemplate', [
+                'createConfigTemplateVersion',
                 'editConfigTemplate',
                 'editConfigTemplateVersion'
             ]),
@@ -169,17 +172,33 @@
                             params: editParams
                         })
                         this.setFormData(editParams)
-                        await this.editConfigTemplateVersion({
-                            bkBizId: this.bkBizId,
-                            templateId: this.info['template_id'],
-                            versionId: this.currentVersion['version_id'],
-                            params: {
-                                status: 'online'
-                            }
-                        })
+                        await this.updateTemplateVersion()
                         this.$emit('submitForm')
                     }
                 })
+            },
+            async updateTemplateVersion () {
+                if (this.currentVersion === null) {
+                    await this.createConfigTemplateVersion({
+                        bkBizId: this.bkBizId,
+                        templateId: this.info['template_id'],
+                        params: {
+                            content: this.$aceEdit.getValue(),
+                            status: 'online',
+                            description: this.info.description
+                        }
+                    })
+                } else {
+                    await this.editConfigTemplateVersion({
+                        bkBizId: this.bkBizId,
+                        templateId: this.info['template_id'],
+                        versionId: this.currentVersion['version_id'],
+                        params: {
+                            status: 'online',
+                            description: this.info.description
+                        }
+                    })
+                }
             },
             closeForm () {
                 this.isShow = false

@@ -74,7 +74,7 @@
                             bkBizId: this.bkBizId, params
                         })
                         if (res.result) {
-                            let formData = {...params, ...{template_id: '', description: ''}}
+                            let formData = {...params, ...{template_id: res.data['template_id'], description: ''}}
                             this.$store.commit('configTemplate/setFormData', formData)
                             this.$emit('submitForm')
                         } else {
