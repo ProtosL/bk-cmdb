@@ -10,35 +10,38 @@
 
 <template>
     <div class="content-box">
-        <div class="button-wrapper">
-            <bk-button type="primary" @click="addPush">新增推送</bk-button>
+        <div class="button-wrapper clearfix">
+            <bk-button class="fr" type="primary" @click="addPush">{{$t('EventPush["新增推送"]')}}</bk-button>
         </div>
         <v-table
-            :tableHeader="table.header"
-            :tableList="table.list"
+            :header="table.header"
+            :list="table.list"
             :defaultSort="table.defaultSort"
-            :pagination="table.pagination"
-            :isLoading="table.isLoading"
-            @handlePageTurning="setCurrentPage"
-            @handlePageSizeChange="setCurrentSize"
-            @handleTableSortClick="setCurrentSort">
-                <td slot="statistics" slot-scope="{ item }">
+            :pagination.sync="table.pagination"
+            :loading="table.isLoading"
+            :wrapperMinusHeight="150"
+            @handlePageChange="setCurrentPage"
+            @handleSizeChange="setCurrentSize"
+            @handleSortChange="setCurrentSort">
+                <template slot="statistics" slot-scope="{ item }">
                     <i class="circle" :class="[{'danger':item.statistics.failure},{'success':!item.statistics.failure}]"></i>
-                    失败 {{item.statistics.failure}} / 总量 {{item.statistics.total}}
-                </td>
-                <td slot="setting" slot-scope="{ item }">
-                    <i class="icon-cc-edit mr20" @click="editEvent(item)"></i>
-                    <i class="icon-cc-del" @click="delConfirm(item)"></i>
-                </td>
+                    {{$t('EventPush[\'失败\']')}} {{item.statistics.failure}} / {{$t('EventPush[\'总量\']')}} {{item.statistics.total}}
+                </template>
+                <template slot="setting" slot-scope="{ item }">
+                    <i class="icon-cc-edit mr20" @click.stop="editEvent(item)"></i>
+                    <i class="icon-cc-del" @click.stop="delConfirm(item)"></i>
+                </template>
         </v-table>
         <v-sideslider
             :title="sliderTitle"
-            :isShow.sync="isSliderShow"
-            :hasQuickClose="true"
-            @closeSlider="closeSlider"
+            :isShow.sync="slider.isShow"
+            :hasCloseConfirm="true"
+            :isCloseConfirmShow="slider.isCloseConfirmShow"
+            @closeSlider="closeSliderConfirm"
         >
             <v-push-detail
-                :isShow="isSliderShow"
+                ref="detail"
+                :isShow="slider.isShow"
                 :type="operationType"
                 :curEvent="curEvent"
                 @saveSuccess="saveSuccess"
@@ -59,31 +62,34 @@
             return {
                 curEvent: {},
                 operationType: '',              // 当前事件推送操作类型  add/edit
-                isSliderShow: false,            // 弹窗状态
+                slider: {
+                    isShow: false,            // 弹窗状态
+                    isCloseConfirmShow: false
+                },
                 sliderTitle: {
-                    text: '新增推送',
+                    text: '',
                     icon: 'icon-cc-edit'
                 },
                 table: {
                     header: [{
                         id: 'subscription_name',
-                        name: '推送名称'
+                        name: this.$t('EventPush["推送名称"]')
                     }, {
                         id: 'system_name',
-                        name: '系统名称'
+                        name: this.$t('EventPush["系统名称"]')
                     }, {
                         id: 'operator',
-                        name: '操作人'
+                        name: this.$t('EventPush["操作人"]')
                     }, {
                         id: 'last_time',
-                        name: '更新时间'
+                        name: this.$t('EventPush["更新时间"]')
                     }, {
                         id: 'statistics',
-                        name: '推送情况（近一周）',
+                        name: this.$t('EventPush["推送情况（近一周）"]'),
                         sortable: false
                     }, {
                         id: 'setting',
-                        name: '配置',
+                        name: this.$t('EventPush["配置"]'),
                         sortable: false
                     }],
                     list: [],
@@ -99,8 +105,34 @@
         },
         computed: {
             ...mapGetters([
-                'bkSupplierAccount'
+                'bkSupplierAccount',
+                'language'
             ])
+        },
+        watch: {
+            'language' () {
+                this.table.header = [{
+                    id: 'subscription_name',
+                    name: this.$t('EventPush["推送名称"]')
+                }, {
+                    id: 'system_name',
+                    name: this.$t('EventPush["系统名称"]')
+                }, {
+                    id: 'operator',
+                    name: this.$t('EventPush["操作人"]')
+                }, {
+                    id: 'last_time',
+                    name: this.$t('EventPush["更新时间"]')
+                }, {
+                    id: 'statistics',
+                    name: this.$t('EventPush["推送情况（近一周）"]'),
+                    sortable: false
+                }, {
+                    id: 'setting',
+                    name: this.$t('EventPush["配置"]'),
+                    sortable: false
+                }]
+            }
         },
         methods: {
             /*
@@ -126,7 +158,7 @@
                         this.table.list = res.data.info
                         pagination.count = res.data.count
                     } else {
-                        this.$alertMsg('获取推送列表失败')
+                        this.$alertMsg(this.$t('EventPush["获取推送列表失败"]'))
                     }
                     this.table.isLoading = false
                 }).catch(() => {
@@ -138,9 +170,9 @@
             */
             editEvent (item) {
                 this.curEvent = {...item}
-                this.isSliderShow = true
+                this.slider.isShow = true
                 this.operationType = 'edit'
-                this.sliderTitle.text = '编辑推送'
+                this.sliderTitle.text = this.$t('EventPush["编辑推送"]')
             },
             /*
                 保存推送成功回调
@@ -162,7 +194,7 @@
                 this.curEvent = item
                 let self = this
                 this.$bkInfo({
-                    title: `确定删除名称为 ${item['subscription_name']} 的推送？`,
+                    title: this.$tc('EventPush["删除推送确认"]', item['subscription_name'], {name: item['subscription_name']}),
                     confirmFn () {
                         self.delEvent(item)
                     }
@@ -175,10 +207,10 @@
                 let appid = 0
                 this.$axios.delete(`event/subscribe/${this.bkSupplierAccount}/${appid}/${item['subscription_id']}`).then(res => {
                     if (res.result) {
-                        this.$alertMsg('删除推送成功', 'success')
+                        this.$alertMsg(this.$t('EventPush["删除推送成功"]'), 'success')
                         this.getTableList()
                     } else {
-                        this.$alertMsg('删除推送失败')
+                        this.$alertMsg(this.$t('EventPush["删除推送失败"]'))
                     }
                 })
             },
@@ -187,14 +219,14 @@
             */
             addPush () {
                 this.operationType = 'add'
-                this.isSliderShow = true
-                this.sliderTitle.text = '新增推送'
+                this.slider.isShow = true
+                this.sliderTitle.text = this.$t('EventPush["新增推送"]')
             },
-            /*
-                关闭推送弹窗
-            */
             closeSlider () {
-                this.isSliderShow = false
+                this.slider.isShow = false
+            },
+            closeSliderConfirm () {
+                this.slider.isCloseConfirmShow = this.$refs.detail.isCloseConfirmShow()
             },
             setCurrentPage (current) {
                 this.table.pagination.current = current
@@ -226,7 +258,6 @@
         width: 100%;
         padding: 20px;
         .button-wrapper{
-            text-align: right;
             margin-bottom: 20px;
             .btn-add{
                 width: 124px;

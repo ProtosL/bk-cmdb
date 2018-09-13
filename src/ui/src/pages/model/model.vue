@@ -13,21 +13,27 @@
         <div class="left-tap-contain">
             <div class="list-tap" v-bkloading="{isLoading: isClassifyLoading}">
                 <ul>
-                    <li :class="{'active': curClassify['bk_classification_id']===item['bk_classification_id']}" v-for="(item, index) in classifyList" @click="changeClassify(item)">
+                    <li :class="{'active': topoView === 'models' && curClassify['bk_classification_id']===item['bk_classification_id']}" v-for="(item, index) in classifyList" @click="changeClassify(item)" @click.stop="topoView = 'models'">
                         <i :class="item['bk_classification_icon']"></i>
                         <span class="text">{{item['bk_classification_name']}}</span>
                     </li>
                 </ul>
                 <div class="bottom-btn-contain" @click="addClassify('add')">
                     <a class="bottom-btn" >
-                        <span>新增</span>
+                        <span>{{$t('Common["新增"]')}}</span>
                     </a>
                 </div>
             </div>
+            <div :class="['global-models', {'active': topoView === 'GLOBAL_MODELS'}]">
+                <button class="btn-global" @click="topoView = 'GLOBAL_MODELS'">
+                    <i class="icon-cc-fullscreen"></i>
+                    <span class="text">{{$t("ModelManagement['全局视图']")}}</span>
+                </button>
+            </div>
         </div>
         <div class="right-contain clearfix">
-            <!-- <span class="icon-content icon-content-del" :class="{'is-disabled': curClassify.bk_classification_type === 'inner'}"  v-if="curClassify.bk_classification_type!=='inner'&&curClassify.ClassificationId!==''"  @click="deleteClassify(curClassify)"><i class="icon-cc-del cp f12" title="删除分类"  ></i></span> -->
-            <div class="model-box clearfix" v-bkloading="{isLoading: isTopoLoading}">
+            <v-global-models v-if="topoView === 'GLOBAL_MODELS'"></v-global-models>
+            <div class="model-box clearfix" v-bkloading="{isLoading: isTopoLoading}" v-else>
                 <div class="model-diagram" v-if="curClassify['bk_classification_id']">
                     <div class="model-topo-box" v-show="topoList.length != 0 && !isCreateShow">
                         <template v-if="curClassify['bk_classification_id'] !== 'bk_biz_topo'">
@@ -51,7 +57,7 @@
                         </template>
                         <template v-else>
                             <div class="model-content" v-if="topoList.length != 0">
-                                <bk-button type="primary" class="topo-btn edit" @click="popShow('edit')">
+                                <bk-button v-if="curTempClassify['bk_classification_id'] !== 'bk_biz_topo' && curTempClassify['bk_classification_id'] !== 'bk_host_manage'" type="primary" class="topo-btn edit" @click="popShow('edit')" :title="$t('Common[\'编辑\']')">
                                     <i class="icon icon-cc-edit"></i>
                                 </bk-button>
                                 <bk-button type="danger" class="topo-btn del" v-if="curTempClassify['bk_classification_type']!=='inner'" @click="deleteClassify">
@@ -73,7 +79,7 @@
                         </template>
                     </div>
                     <div class="no-model-prompting tc" v-show="topoList.length == 0 || isCreateShow">
-                        <bk-button type="primary" class="topo-btn edit" @click="popShow('edit')">
+                        <bk-button v-if="curTempClassify['bk_classification_id'] !== 'bk_biz_topo' && curTempClassify['bk_classification_id'] !== 'bk_host_manage'" type="primary" class="topo-btn edit" @click="popShow('edit')" :title="$t('Common[\'编辑\']')">
                             <i class="icon icon-cc-edit"></i>
                         </bk-button>
                         <bk-button type="danger" class="topo-btn del" v-if="curTempClassify['bk_classification_type']!=='inner'" @click="deleteClassify">
@@ -86,7 +92,7 @@
                         <transition name="topo-disable-list">
                             <div class="topo-disable tl" v-show="isShowDisableList">
                                 <label class="disable-title">
-                                    <span>已禁用模型</span>
+                                    <span>{{$t('ModelManagement["已停用模型"]')}}</span>
                                     <i class="bk-icon icon-arrows-right" @click="isShowDisableList = false"></i>
                                 </label>
                                 <ul class="disable-list" ref="disableList">
@@ -97,9 +103,9 @@
                             </div>
                         </transition>
                         <img src="../../common/images/no_model_prompting.png" alt="">
-                        <p v-if="isCreateShow">此分类下无已启动模型</p>
-                        <p v-else>此分类下无模型</p>
-                        <bk-button type="primary" class="create-btn" @click="showAddModel">立即创建</bk-button>
+                        <p v-if="isCreateShow">{{$t('ModelManagement["此分组下无已启用模型"]')}}</p>
+                        <p v-else>{{$t('ModelManagement["此分组下无模型"]')}}</p>
+                        <bk-button type="primary" class="create-btn" @click="showAddModel">{{$t('Common["立即创建"]')}}</bk-button>
                     </div>
                 </div>
             </div>
@@ -110,59 +116,40 @@
             :classification="curTempClassify"
             @confirm="saveClassify"
         ></v-pop>
-        <v-sideslider :isShow.sync="isBusinessShow"
+        <v-sideslider :isShow.sync="slider.isBusinessShow"
         :title="sliderTitle"
-        :hasQuickClose="true"
-        @closeSlider="updateTopo">
+        :hasCloseConfirm="true"
+        :isCloseConfirmShow="slider.isCloseConfirmShow"
+        @closeSlider="closeSliderConfirm">
             <div class="content slide-content clearfix" slot="content">
                 <bk-tab :active-name="curTabName" @tab-changed="tabChanged">
-                    <!-- <bk-tabpanel name="base-info" title="模型配置">
-                        <v-base-info ref="baseInfo"
-                        :isShow="isBusinessShow"
-                        :ClassificationId='curClassify.ClassificationId'
-                        :AssociationId="curInsertInfo.PreObjID"
-                        :type="curModel.type"
-                        :isReadOnly="isModelDetailReadOnly"
-                        :isMainLine="isMainLine"
-                        @baseInfoSuccess="baseInfoSuccess"
-                        @confirm="baseInfoSuccess"
-                        @cancel="cancel">
-                        </v-base-info>
-                    </bk-tabpanel> -->
-                    <bk-tabpanel name="host" title="模型配置">
+                    <bk-tabpanel name="host" :title="$t('ModelManagement[\'模型配置\']')">
                         <v-field ref="field"
                         :bk_classification_id="curClassify['bk_classification_id']"
                         :type="curModel.type"
                         :id="curModel['id']"
-                        :isShow="isBusinessShow"
+                        :isShow="slider.isBusinessShow"
                         :objId="curModel['bk_obj_id']"
-                        :isMainLine="isMainLine"
+                        :isMainLine="curClassify['bk_classification_id']==='bk_biz_topo'"
                         :classificationId="curClassify['bk_classification_id']"
                         :associationId="curInsertInfo.preObj"
                         :isReadOnly="isModelDetailReadOnly"
                         :isCreateField="isCreateField"
+                        :isSliderShow.sync="slider.isBusinessShow"
                         @getTopogical="getTopogical"
                         @cancel="cancel"
                         @baseInfoSuccess="baseInfoSuccess"
                         @newField="isNewField=!isNewField"
                         ></v-field>
                     </bk-tabpanel>
-                    <bk-tabpanel name="layout" title="字段分组" :show="curModel.type==='change'">
+                    <bk-tabpanel name="layout" :title="$t('ModelManagement[\'字段分组\']')" :show="curModel.type==='change'">
                         <v-layout ref="layout"
                         :isShow="curTabName==='layout'"
-                        :id="curModel['id']"
-                        :objId="curModel['bk_obj_id']"
-                        :isNewField="isNewField"
+                        :activeModel="curModel"
+                        @cancel="cancel"
                         ></v-layout>
                     </bk-tabpanel>
-                    <!-- 后期迭代会用上 -->
-                    <!-- <bk-tabpanel name="rule" title="权限规则" :show="curModel.type==='change'">
-                        <v-rule></v-rule>
-                    </bk-tabpanel>
-                    <bk-tabpanel name="sort" title="排序" :show="curModel.type==='change'">
-                        <v-sort></v-sort>
-                    </bk-tabpanel> -->
-                    <bk-tabpanel name="other" title="其他操作" :show="curModel.type==='change'">
+                    <bk-tabpanel name="other" :title="$t('ModelManagement[\'其他操作\']')" :show="curModel.type==='change'">
                         <v-other
                             :parentClassificationId = "curClassify['bk_classification_id']"
                             :item="curModel"
@@ -189,14 +176,14 @@
     import vField from './children/field'
     import vLayout from './children/layout'
     import vOther from './children/other'
-    import vRule from './children/rule'
-    import vSort from './children/sort'
+    import vGlobalModels from './children/global-models'
     import vTopo from '@/components/topo/topo'
     import {mapGetters, mapActions} from 'vuex'
-    const iconList = require('@/common/json/modelIcon.json')
+    const iconList = require('@/common/json/classIcon.json')
     export default {
         data () {
             return {
+                topoView: 'models',
                 isShowDisableList: false,
                 isTopoLoading: false,           // 拓扑loading
                 isClassifyLoading: false,       // 分组列表loading
@@ -213,7 +200,10 @@
                     icon: 'icon-cc-model'
                 },
                 curTabName: 'host',
-                isBusinessShow: false,
+                slider: {
+                    isBusinessShow: false,
+                    isCloseConfirmShow: false
+                },
                 classifyList: [],           // 分类列表
                 isEditClassify: false,
                 curClassify: {},            // 当前类型
@@ -228,7 +218,6 @@
                 iconValue: 'icon-cc-business',               // 选择icon的值
                 list: [],                      // icon 的值
                 isChangeClassify: false,    // 是否点击的切换分组类型  true: 点击的切换分组 false: 点击的已启用/未启用
-                isMainLine: false,          // 是否操作主线模型
                 curTopoStructure: [],       // 当前分类模型拓扑结构
                 insertType: '',             // 插入模型  prev 向上 next 向下 mid 中间
                 insertParams: {},           // 插入时相关参数
@@ -266,7 +255,7 @@
             }
         },
         watch: {
-            isBusinessShow (val) {
+            'slider.isBusinessShow' (val) {
                 if (!val) {
                     this.changeClassify()
                 }
@@ -274,6 +263,9 @@
         },
         methods: {
             ...mapActions(['getAllClassify']),
+            closeSliderConfirm () {
+                this.slider.isCloseConfirmShow = this.$refs.field.isCloseConfirmShow()
+            },
             updateIsChangeClassify (val) {
                 this.isChangeClassify = val
             },
@@ -290,8 +282,6 @@
                 type: prev向上添加 next向下添加
             */
             addModel (item, type) {
-                this.isMainLine = true
-                // this.curInsertInfo = item
                 this.curTopoStructure.map(({bk_obj_id: objId, bk_pre_obj_id: preObj}) => {
                     if (objId === item['bk_obj_id']) {
                         this.curInsertInfo.preObj = preObj
@@ -323,7 +313,7 @@
                 }
             },
             closeBusiness () {
-                this.isBusinessShow = false
+                this.slider.isBusinessShow = false
             },
             /*
                 新增模型
@@ -332,16 +322,15 @@
                 // 插入类型置空
                 this.insertType = ''
                 this.isModelDetailReadOnly = false
-                this.isMainLine = false
                 this.showAddModel()
             },
             showAddModel () {
-                this.sliderTitle.text = '新增模型'
+                this.sliderTitle.text = this.$t('ModelManagement["新增模型"]')
                 this.sliderTitle.icon = 'icon-cc-model'
                 this.curTabName = 'host'
                 this.curModel = {}
                 this.curModel.type = 'new'
-                this.isBusinessShow = true
+                this.slider.isBusinessShow = true
             },
             /*
                 编辑模型
@@ -361,7 +350,7 @@
                 setTimeout(function () {
                     self.$refs.field.init()
                 }, 300)
-                this.isBusinessShow = true
+                this.slider.isBusinessShow = true
                 this.isEditClassify = false
             },
             /*
@@ -370,12 +359,6 @@
             restartModelConfirm (item) {
                 this.isModelDetailReadOnly = true
                 this.editModel(item)
-                // this.$bkInfo({
-                //     title: '确认要启用该模型？',
-                //     confirmFn () {
-                //         self.restartModel(item)
-                //     }
-                // })
             },
             /*
                 重新启用模型
@@ -407,35 +390,6 @@
                     bk_classification_type: ''
                 }
             },
-            // checkParams () {
-            //     if (this.curTempClassify.bk_classification_name === '') {
-            //         this.$alertMsg('请填写模型分类名称')
-            //         return false
-            //     }
-            //     if (this.curTempClassify.bk_classification_id === '') {
-            //         this.$alertMsg('请填写模型分类ID')
-            //         return false
-            //     }
-            //     if (this.curTempClassify.bk_classification_name.length > 20) {
-            //         this.$alertMsg('模型分类名称最多为20个字符')
-            //         return false
-            //     }
-            //     let reg = new RegExp(/^([a-zA-Z0-9_]|[\u4e00-\u9fa5]|[\uac00-\ud7ff]|[\u0800-\u4e00]){1,20}$/)
-            //     if (!reg.test(this.curTempClassify.bk_classification_name)) {
-            //         this.$alertMsg('包含了非下划线的特殊字符')
-            //         return false
-            //     }
-            //     if (this.curTempClassify.bk_classification_id.length > 20) {
-            //         this.$alertMsg('模型分类ID最多为20个字符')
-            //         return false
-            //     }
-            //     reg = new RegExp(/^[A-Za-z][a-zA-Z0-9_]{1,20}$/)
-            //     if (!reg.test(this.curTempClassify.bk_classification_id)) {
-            //         this.$alertMsg('模型ID必须为英文')
-            //         return false
-            //     }
-            //     return true
-            // },
             /*
                 保存分类
             */
@@ -445,7 +399,7 @@
                         bk_classification_name: classification['bk_classification_name'],
                         bk_classification_icon: classification['bk_classification_icon']
                     }
-                    this.$axios.put(`object/classification/${this.curClassify['id']}`, params).then(res => {
+                    this.$axios.put(`object/classification/${this.curClassify['id']}`, params, {id: 'saveClassify'}).then(res => {
                         if (res.result) { // 保存时显示当前项
                             for (var i = 0; i < this.classifyList.length; i++) {
                                 if (this.classifyList[i]['bk_classification_id'] === this.curClassify['bk_classification_id']) {
@@ -455,7 +409,10 @@
                             this.isEditClassify = false
                             this.isPopShow = false
                             this.isChoose = true
-                            this.$store.commit('updateClassify', {
+                            this.curClassify['bk_classification_name'] = classification['bk_classification_name']
+                            this.curClassify['bk_classification_icon'] = classification['bk_classification_icon']
+                            this.curTempClassify = this.$deepClone(this.curClassify)
+                            this.$store.commit('navigation/updateClassification', {
                                 bk_classification_id: classification['bk_classification_id'],
                                 bk_classification_name: classification['bk_classification_name'],
                                 bk_classification_icon: classification['bk_classification_icon']
@@ -470,7 +427,7 @@
                         bk_classification_name: classification['bk_classification_name'],
                         bk_classification_icon: classification['bk_classification_icon']
                     }
-                    this.$axios.post('object/classification', createParams).then((res) => {
+                    this.$axios.post('object/classification', createParams, {id: 'saveClassify'}).then((res) => {
                         if (res.result) {
                             this.getClassifyList(this.classifyList.length)
                             this.isEditClassify = false
@@ -670,14 +627,14 @@
             deleteClassify () {
                 var self = this
                 this.$bkInfo({
-                    title: '确认要删除此分类？',
+                    title: this.$t('ModelManagement["确认要删除此分组？"]'),
                     confirmFn () {
                         self.deletes()
                     }
                 })
             },
             deletes () {
-                this.$axios.delete(`object/classification/${this.curTempClassify['id']}`).then(res => {
+                this.$axios.delete(`object/classification/${this.curClassify['id']}`).then(res => {
                     if (res.result) {
                         this.getClassifyList()
                     } else {
@@ -690,12 +647,9 @@
             */
             baseInfoSuccess (obj) {
                 if (this.curModel.type === 'new') {
-                    // if (this.insertType === '') {
-                    //     this.updateTopo()
-                    // }
-                    this.getAllClassify()
+                    this.$store.dispatch('navigation/getClassifications', true)
                     this.curModel['id'] = obj['id']
-                    this.sliderTitle.text = `${obj['bk_obj_name']}(模型管理)`
+                    this.sliderTitle.text = `${obj['bk_obj_name']}`
                     this.curModel['bk_obj_id'] = obj['bk_obj_id']
                     this.curModel.type = 'change'
                     this.curTabName = 'host'
@@ -714,17 +668,6 @@
             */
             getTopogical () {
                 this.changeClassify()
-                // let params = {
-                //     ClassificationId: this.curClassify.ClassificationId
-                // }
-                // this.$axios.post(`object/classification/${this.getOwnerId}/objects`, params).then(res => {
-                //     if (res.result) {
-                //         this.topoList = res.data[0].Objects
-                //         this.setModelAttr()
-                //     } else {
-                //         this.$alertMsg(res['bk_error_msg'])
-                //     }
-                // })
             },
             getTopogical2 () {
                 let params = {
@@ -745,7 +688,7 @@
                 取消按钮
             */
             cancel () {
-                this.isBusinessShow = false
+                this.slider.isBusinessShow = false
             },
             /*
                 更新topo图
@@ -857,13 +800,49 @@
             vField,
             vLayout,
             vOther,
-            vSort,
-            vRule,
-            vPop
+            vPop,
+            vGlobalModels
         }
     }
 </script>
 
+<style lang="scss" scoped>
+    .global-models{
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 50px;
+        line-height: 50px;
+        text-align: center;
+        background-color: #f7fafe;
+        &.active{
+            background-color: #e2efff;
+            .btn-global{
+                color: #3578da;
+                border-color: currentColor;
+            }
+        }
+        .btn-global{
+            width: 120px;
+            height: 32px;
+            padding: 0;
+            line-height: 30px;
+            background-color: #ffffff;
+            border-radius: 2px;
+            border: solid 1px #d6d8df;
+            font-size: 14px;
+            color: $textColor;
+            outline: 0;
+            padding: 0;
+            .icon-cc-fullscreen,
+            .text{
+                display: inline-block;
+                vertical-align: middle;
+            }
+        }
+    }
+</style>
 <style media="screen" lang="scss" scoped>
     $borderColor: #bec6de; //边框色
     $defaultColor: #ffffff; //默认
@@ -910,10 +889,11 @@
             border-left: none;
             border-top: none;
             height: 100%;
+            position: relative;
+            border-right: 1px solid #dde4eb;
             .list-tap{
-                height: 100%;
+                height: calc(100% - 50px);
                 overflow-y: auto;
-                border-right: 1px solid #dde4eb;
                 &::-webkit-scrollbar{
                     width: 6px;
                     height: 5px;
@@ -1258,6 +1238,9 @@
                                 .content-name{
                                     margin-top: 10px;
                                     line-height: 1;
+                                    white-space: nowrap;
+                                    text-overflow: ellipsis;
+                                    overflow: hidden;
                                 }
                             }
                             &.locks-icon-content{

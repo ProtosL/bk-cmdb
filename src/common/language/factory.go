@@ -12,6 +12,9 @@
 
 package language
 
+// EmptyLanguageSetting empty language setting
+var EmptyLanguageSetting = map[string]LanguageMap{}
+
 // New create new Language instance,
 // dir is directory of language description resource
 func New(dir string) (CCLanguageIf, error) {
@@ -30,6 +33,7 @@ func New(dir string) (CCLanguageIf, error) {
 
 // NewFromCtx  get lange helper
 func NewFromCtx(lang map[string]LanguageMap) CCLanguageIf {
-	tmp := &ccLanguageHelper{lang: lang}
+	tmp := &ccLanguageHelper{}
+	tmp.Load(lang)
 	return tmp
 }

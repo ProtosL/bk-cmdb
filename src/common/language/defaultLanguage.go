@@ -21,7 +21,8 @@ type ccDefaultLanguageHelper struct {
 
 // Language returns an content for specific language
 func (cli *ccDefaultLanguageHelper) Language(key string) string {
-	return cli.languageStr(cli.languageType, key)
+	ret := cli.languageStr(cli.languageType, key)
+	return ret
 }
 
 // Languagef returns an content with args for specific language

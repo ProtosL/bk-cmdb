@@ -9,7 +9,7 @@
  */
 
 <template lang="html">
-    <div class="allField" @click="closePop">
+    <div class="allField">
         <v-base-info ref="baseInfo"
         :isShow="isShow"
         :objId="objId"
@@ -23,522 +23,480 @@
         @cancel="cancel">
         </v-base-info>
         <div class="tab-content model-field-content pb20" v-show="type==='change'">
-            <div class="add-field">
-                <bk-button type="primary" title="新增字段" @click="addField" v-if="!isReadOnly">
-                    新增字段
+            <div class="add-field clearfix">
+                <bk-button type="primary" :title="$t('ModelManagement[\'新增字段\']')" @click="addField" v-if="!isReadOnly">
+                    {{$t('ModelManagement["新增字段"]')}}
                 </bk-button>
-                <div class="btn-group">
-                    <bk-button type="default" title="导入" class="btn mr10">
-                        导入
-                        <input ref="fileInput" type="file" @change.prevent="handleFile">
+                <div class="btn-group" :class="{'disabled': isReadOnly}">
+                    <bk-button type="default" :title="$t('ModelManagement[\'导入\']')" :disabled="isReadOnly" class="btn mr10">
+                        {{$t('ModelManagement["导入"]')}}
+                        <input v-if="!isReadOnly" ref="fileInput" type="file" @change.prevent="handleFile">
                     </bk-button>
                     <form :action="exportUrl" method="POST" class="form">
-                        <bk-button type="default" title="导出" class="btn">
-                            导出
+                        <bk-button type="default" btnType="submit" :title="$t('ModelManagement[\'导出\']')" class="btn">
+                            {{$t('ModelManagement["导出"]')}}
                         </bk-button>
                     </form>
                 </div>
             </div>
             <div class="table-content" v-bkloading="{isLoading: isLoading}">
-                <!-- 无数据提示 -->
-                <div class="no-data-tip tc" v-if="fieldList.length===0&&isCreateField" v-show="!isLoading">
-                    <p>您还未创建字段配置，您可马上创建...</p>
-                    <button class="create-field-btn main-btn" @click="createField">立即创建</button>
+                <div class="title-content">
+                    <ul v-show="fieldList.length>0">
+                        <li>{{$t('ModelManagement["唯一"]')}}</li>
+                        <li>{{$t('ModelManagement["必填字段"]')}}</li>
+                        <li>{{$t('ModelManagement["类型"]')}}</li>
+                        <li>{{$t('ModelManagement["字段名"]')}}</li>
+                        <li>{{$t('ModelManagement["操作"]')}}</li>
+                    </ul>
                 </div>
-                <template v-else>
-                    <div class="title-content">
-                        <ul v-show="fieldList.length>0">
-                            <li>唯一 </li>
-                            <li>必填字段</li>
-                            <li>类型 </li>
-                            <li>字段名 </li>
-                            <li>操作</li>
-                        </ul>
-                    </div>
-                    <div class="list-content-wrapper">
-                        <form id="validate-form-change">
-                            <div class="list-content" v-for="(item, index) in fieldList" :class="{'editable':item['ispre'] || isReadOnly}">
-                                <ul @click="toggleDetailShow(item, index)">
-                                    <li><i class=" fb bk-icon icon-check-1" v-show="item['isonly']"></i></li>
-                                    <li><i class=" fb bk-icon icon-check-1" v-show="item['isrequired']"></i></li>
-                                    <li>{{formatFieldType(item['bk_property_type'])}}</li>
-                                    <li>{{item['bk_property_name']}}({{item['bk_property_id']}})</li>
-                                    <li>
-                                        <div class="btn-contain" v-if="item['bk_property_id']==='InstName'" v-bktooltips="{
-                                                isShow: tips.innerField.isShow,
-                                                content: tips.innerField.content,
-                                                direction: tips.innerField.direction
-                                            }">
-                                            <i class="icon-cc-del f14 vm editable"></i>
-                                        </div>
-                                        <div class="btn-contain" v-else>
-                                            <i class="icon-cc-del f14 vm"  v-if="!item['ispre'] && !isReadOnly"
-                                                :class="{'editable':item['ispre'] || isReadOnly}"
-                                                @click.stop="showConfirmDialog('delete',item, {id:item['id'], index:index})"
-                                            ></i>
-                                        </div>
-                                    </li>
-                                </ul>
-                                <div class="list-content-hidden" v-show="item.isShow">
-                                    <form class="from-common clearfix">
-                                        <div class="clearfix mb30">
-                                            <h3>字段配置</h3>
-                                            <div class="from-common-item" :class="{'disabled': isReadOnly}">
-                                                <label class="from-common-label">中文名<span class=""> * </span></label>
-                                                <div class="from-common-content interior-width-control">
-                                                    <input type="text" :disabled="isReadOnly" class="from-input" name="" placeholder="请输入字段名称" v-model.trim="curFieldInfo['bk_property_name']"
-                                                    maxlength="15"
-                                                    data-parsley-required="true"
-                                                    data-parsley-required-message="该字段是必填项"
-                                                    data-parsley-maxlength="20"
-                                                    data-parsley-pattern="^([a-zA-Z0-9_]|[\u4e00-\u9fa5]|[\uac00-\ud7ff]|[\u0800-\u4e00]){1,15}$"
-                                                    data-parsley-pattern-message="包含了非下划线的特殊字符"
-                                                    data-parsley-trigger="input blur"
-                                                    >
-                                                </div>
-                                            </div>
-                                            <div class="from-common-item disabled tr">
-                                                <label class="from-common-label">英文名<span class=""> * </span></label>
-                                                <div class="from-common-content interior-width-control tl">
-                                                    <input type="text" disabled class="from-input" name="" value="" placeholder="下划线/数字/字母" v-model.trim="item['bk_property_id']">
-                                                </div>
-                                            </div>
-                                            <div class="from-common-item tr" :class="{'disabled': isReadOnly}">
-                                                <label class="from-common-label">单位</label>
-                                                <div class="from-common-content interior-width-control">
-                                                    <input type="text" class="from-input" name="" placeholder="请输入单位"
-                                                    :disabled="isReadOnly"
-                                                    v-model.trim="curFieldInfo['unit']">
-                                                </div>
-                                            </div>
-                                            <div class="from-common-item block mt20" :class="{'disabled': isReadOnly}">
-                                                <label class="from-common-label">提示语</label>
-                                                <div class="from-common-content interior-width-control">
-                                                    <input type="text" :disabled="isReadOnly" class="from-input" name="" placeholder="请输入提示语" v-model.trim="curFieldInfo['placeholder']">
-                                                </div>
+                <div class="list-content-wrapper">
+                    <form id="validate-form-change">
+                        <div class="list-content" v-for="(item, index) in fieldList" :class="{'editable':item['ispre'] || isReadOnly}">
+                            <ul @click="toggleDetailShow(item, index)">
+                                <li><i class=" fb bk-icon icon-check-1" v-show="item['isonly']"></i></li>
+                                <li><i class=" fb bk-icon icon-check-1" v-show="item['isrequired']"></i></li>
+                                <li>{{formatFieldType(item['bk_property_type'])}}</li>
+                                <li :title="`${item['bk_property_name']}(${item['bk_property_id']})`">{{item['bk_property_name']}}({{item['bk_property_id']}})</li>
+                                <li>
+                                    <div class="btn-contain" v-if="item['bk_property_id']==='InstName'" v-bktooltips="{
+                                            isShow: tips.innerField.isShow,
+                                            content: tips.innerField.content,
+                                            direction: tips.innerField.direction
+                                        }">
+                                        <i class="icon-cc-del f14 vm editable"></i>
+                                    </div>
+                                    <div class="btn-contain" v-else>
+                                        <i class="icon-cc-del f14 vm"  v-if="!item['ispre'] && !isReadOnly"
+                                            :class="{'editable':item['ispre'] || isReadOnly}"
+                                            @click.stop="showConfirmDialog('delete',item, {id:item['id'], index:index})"
+                                        ></i>
+                                    </div>
+                                </li>
+                            </ul>
+                            <div class="list-content-hidden" v-show="item.isShow">
+                                <form class="form-common clearfix">
+                                    <div class="clearfix mb30">
+                                        <h3>{{$t('ModelManagement["字段配置"]')}}</h3>
+                                        <div class="form-common-item" :class="{'disabled': isReadOnly}">
+                                            <label class="form-common-label">{{$t('ModelManagement["中文名"]')}}<span class=""> * </span></label>
+                                            <div class="form-common-content interior-width-control">
+                                                <input type="text" :disabled="isReadOnly" class="from-input" name="" :placeholder="$t('ModelManagement[\'请输入字段名称\']')" v-model.trim="curFieldInfo['bk_property_name']"
+                                                maxlength="15"
+                                                data-parsley-required="true"
+                                                :data-parsley-required-message="$t('ModelManagement[\'该字段是必填项\']')"
+                                                data-parsley-maxlength="20"
+                                                :data-parsley-pattern="reg"
+                                                :data-parsley-pattern-message="$t('ModelManagement[\'包含了非法字符\']')"
+                                                data-parsley-trigger="input blur"
+                                                >
                                             </div>
                                         </div>
-                                        <!-- 数字 -->
-                                        <div class="mt20 clearfix" v-show="item['bk_property_type'] === 'int'">
-                                            <h3>选项</h3>
-                                            <div class="from-common-item disabled">
-                                                <label class="from-common-label">类型</label>
-                                                <div class="from-common-content interior-width-control">
-                                                    <input type="text" disabled class="from-input" name="" placeholder="" :value="formatFieldType(item['bk_property_type'])">
-                                                </div>
-                                            </div>
-                                            <div class="from-common-item from-common-item2 pl30">
-                                                <div class="from-selcet-wrapper mr30">
-                                                    <label class="bk-form-checkbox bk-checkbox-small">
-                                                        <i class="bk-checkbox-text mr5">是否可编辑</i>
-                                                        <input type="checkbox" name="checkbox1" v-model.trim="curFieldInfo['editable']" :disabled="item['ispre'] || isReadOnly">
-                                                    </label>
-                                                </div>
-                                                <div class="from-selcet-wrapper mr30">
-                                                    <label class="bk-form-checkbox bk-checkbox-small">
-                                                        <i class="bk-checkbox-text mr5">是否必填</i>
-                                                        <input type="checkbox" name="checkbox1" v-model="curFieldInfo['isrequired']" :disabled="item['ispre'] || isReadOnly">
-                                                    </label>
-                                                </div>
-                                                <div class="from-selcet-wrapper">
-                                                    <label class="bk-form-checkbox bk-checkbox-small">
-                                                        <i class="bk-checkbox-text">是否唯一</i>
-                                                        <input type="checkbox" name="checkbox1" v-model="curFieldInfo['isonly']" :disabled="item['ispre'] || isReadOnly">
-                                                    </label>
-                                                </div>
-                                            </div>
-                                            <div class="from-common-item mt20" :class="{'disabled': isReadOnly}">
-                                                <label class="from-common-label">最小值</label>
-                                                <div class="from-common-content interior-width-control">
-                                                    <input type="number" class="from-input" name="" placeholder="请输入最小值" v-model="item.option.min" v-if="item.option" :disabled="isReadOnly" @input="inputOptionMin(item)">
-                                                </div>
-                                            </div>
-                                            <div class="from-common-item mt20 ml10" :class="{'disabled': isReadOnly}">
-                                                <label class="from-common-label">最大值</label>
-                                                <div class="from-common-content interior-width-control">
-                                                    <input type="number" class="from-input" name="" placeholder="请输入最大值" v-model="item.option.max" v-if="item.option" :disabled="isReadOnly" @input="inputOptionMax(item)">
-                                                </div>
+                                        <div class="form-common-item disabled tr">
+                                            <label class="form-common-label">{{$t('ModelManagement["英文名"]')}}<span class=""> * </span></label>
+                                            <div class="form-common-content interior-width-control tl">
+                                                <input type="text" disabled class="from-input" name="" value="" :placeholder="$t('ModelManagement[\'下划线/数字/字母\']')" v-model.trim="item['bk_property_id']">
                                             </div>
                                         </div>
-                                        <!-- 长字符 -->
-                                        <div class="mt20 clearfix" v-show="item['bk_property_type'] === 'longchar'">
-                                            <h3>选项</h3>
-                                            <div class="from-common-item disabled">
-                                                <label class="from-common-label">类型</label>
-                                                <div class="from-common-content interior-width-control">
-                                                    <input type="text" disabled class="from-input" name="" placeholder="" :value="formatFieldType(item['bk_property_type'])">
-                                                </div>
-                                            </div>
-                                            <div class="from-common-item from-common-item2 pl30">
-                                                <div class="from-selcet-wrapper mr30">
-                                                    <label class="bk-form-checkbox bk-checkbox-small">
-                                                        <i class="bk-checkbox-text mr5">是否可编辑</i>
-                                                        <input type="checkbox" name="checkbox1" v-model="curFieldInfo['editable']" :disabled="item['ispre'] || isReadOnly">
-                                                    </label>
-                                                </div>
-                                                <div class="from-selcet-wrapper mr30">
-                                                    <label class="bk-form-checkbox bk-checkbox-small">
-                                                        <i class="bk-checkbox-text mr5">是否必填</i>
-                                                        <input type="checkbox" name="checkbox1" v-model="curFieldInfo['isrequired']" :disabled="item['ispre'] || isReadOnly">
-                                                    </label>
-                                                </div>
-                                                <div class="from-selcet-wrapper">
-                                                    <label class="bk-form-checkbox bk-checkbox-small">
-                                                        <i class="bk-checkbox-text">是否唯一</i>
-                                                        <input type="checkbox" name="checkbox1" v-model="curFieldInfo['isonly']" :disabled="item['ispre'] || isReadOnly">
-                                                    </label>
-                                                </div>
-                                            </div>
-                                            <div class="from-common-item mt20" :class="{'disabled': isReadOnly}">
-                                                <label class="from-common-label">正则验证</label>
-                                                <div class="from-common-content reg-verification ">
-                                                    <input type="text" class="from-input" name="" placeholder="" v-model.trim="item.option" :disabled="isReadOnly">
-                                                </div>
+                                        <div class="form-common-item tr" :class="{'disabled': isReadOnly}">
+                                            <label class="form-common-label">{{$t('ModelManagement["单位"]')}}</label>
+                                            <div class="form-common-content interior-width-control">
+                                                <input type="text" class="from-input" name="" :placeholder="$t('ModelManagement[\'请输入单位\']')"
+                                                :disabled="isReadOnly"
+                                                v-model.trim="curFieldInfo['unit']">
                                             </div>
                                         </div>
-                                        <!-- 短字符 -->
-                                        <div class="mt20 clearfix" v-show="item['bk_property_type'] === 'singlechar'">
-                                            <h3>选项</h3>
-                                            <div class="from-common-item disabled">
-                                                <label class="from-common-label">类型</label>
-                                                <div class="from-common-content interior-width-control">
-                                                    <input type="text" disabled class="from-input" name="" placeholder="" :value="formatFieldType(item['bk_property_type'])">
-                                                </div>
-                                            </div>
-                                            <div class="from-common-item from-common-item2 pl30">
-                                                <div class="from-selcet-wrapper mr30">
-                                                    <label class="bk-form-checkbox bk-checkbox-small">
-                                                        <i class="bk-checkbox-text mr5">是否可编辑</i>
-                                                        <input type="checkbox" name="checkbox1" v-model="curFieldInfo['editable']" :disabled="item['ispre'] || isReadOnly">
-                                                    </label>
-                                                </div>
-                                                <div class="from-selcet-wrapper mr30">
-                                                    <label class="bk-form-checkbox bk-checkbox-small">
-                                                        <i class="bk-checkbox-text mr5">是否必填</i>
-                                                        <input type="checkbox" name="checkbox1" v-model="curFieldInfo['isrequired']" :disabled="item['ispre'] || isReadOnly">
-                                                    </label>
-                                                </div>
-                                                <div class="from-selcet-wrapper">
-                                                    <label class="bk-form-checkbox bk-checkbox-small">
-                                                        <i class="bk-checkbox-text">是否唯一</i>
-                                                        <input type="checkbox" name="checkbox1" v-model="curFieldInfo['isonly']" :disabled="item['ispre'] || isReadOnly">
-                                                    </label>
-                                                </div>
-                                            </div>
-                                            <div class="from-common-item mt20" :class="{'disabled': isReadOnly}">
-                                                <label class="from-common-label">正则验证</label>
-                                                <div class="from-common-content reg-verification ">
-                                                    <input type="text" class="from-input" name="" placeholder="" v-model.trim="item.option" :disabled="isReadOnly">
-                                                </div>
+                                        <div class="form-common-item block mt20" :class="{'disabled': isReadOnly}">
+                                            <label class="form-common-label">{{$t('ModelManagement["提示语"]')}}</label>
+                                            <div class="form-common-content interior-width-control">
+                                                <input type="text" :disabled="isReadOnly" class="from-input" name="" :placeholder="$t('ModelManagement[\'请输入提示语\']')" v-model.trim="curFieldInfo['placeholder']">
                                             </div>
                                         </div>
-                                        <!-- 枚举 -->
-                                        <div class="mt20 clearfix" v-if="item['bk_property_type'] === 'enum'">
-                                            <h3>选项</h3>
-                                            <div class="from-common-item disabled">
-                                                <label class="from-common-label">类型</label>
-                                                <div class="from-common-content interior-width-control">
-                                                    <input type="text" disabled class="from-input" name="" placeholder="" :value="formatFieldType(item['bk_property_type'])">
-                                                </div>
+                                    </div>
+                                    <!-- 数字 -->
+                                    <div class="mt20 clearfix" v-show="item['bk_property_type'] === 'int'">
+                                        <h3>{{$t('ModelManagement["选项"]')}}</h3>
+                                        <div class="form-common-item disabled">
+                                            <label class="form-common-label">{{$t('ModelManagement["类型"]')}}</label>
+                                            <div class="form-common-content interior-width-control">
+                                                <input type="text" disabled class="from-input" name="" placeholder="" :value="formatFieldType(item['bk_property_type'])">
                                             </div>
-                                            <div class="from-common-item from-common-item2 pl30">
-                                                <div class="from-selcet-wrapper mr30">
-                                                    <label class="bk-form-checkbox bk-checkbox-small">
-                                                        <i class="bk-checkbox-text mr5">是否可编辑</i>
-                                                        <input type="checkbox" name="checkbox1" v-model="curFieldInfo['editable']" :disabled="item['ispre'] || isReadOnly">
-                                                    </label>
-                                                </div>
-                                                <!-- <div class="from-selcet-wrapper mr30">
-                                                    <label class="bk-form-checkbox bk-checkbox-small">
-                                                        <i class="bk-checkbox-text mr5">是否必填</i>
-                                                        <input type="checkbox" name="checkbox1" v-model="curFieldInfo['isrequired']">
-                                                    </label>
-                                                </div> -->
-                                                <div class="from-selcet-wrapper">
-                                                    <label class="bk-form-checkbox bk-checkbox-small">
-                                                        <i class="bk-checkbox-text">是否唯一</i>
-                                                        <input type="checkbox" name="checkbox1" v-model="curFieldInfo['isonly']" :disabled="item['ispre'] || isReadOnly">
-                                                    </label>
-                                                </div>
+                                        </div>
+                                        <div class="form-common-item form-common-item2 pl30">
+                                            <div class="from-selcet-wrapper mr30">
+                                                <label class="bk-form-checkbox bk-checkbox-small">
+                                                    <i class="bk-checkbox-text mr5">{{$t('ModelManagement["是否可编辑"]')}}</i>
+                                                    <input type="checkbox" name="checkbox1" v-model.trim="curFieldInfo['editable']" :disabled="item['ispre'] || isReadOnly">
+                                                </label>
                                             </div>
-                                            <div class="enum-table" :class="{'disabled':item['ispre'] || isReadOnly}">
-                                                <div v-if="item.isShow">
-                                                    <div class="form-enum-wrapper" v-for="(field, fieldIndex) in item.option.list">
-                                                        <span class="span-enum-radio" @click="item.option.defaultIndex = fieldIndex" title="设置为默认值" :class="{'active': fieldIndex === item.option.defaultIndex}"></span>
-                                                        <input type="text" placeholder="请输入名称英文数字"
+                                            <div class="from-selcet-wrapper mr30">
+                                                <label class="bk-form-checkbox bk-checkbox-small">
+                                                    <i class="bk-checkbox-text mr5">{{$t('ModelManagement["是否必填"]')}}</i>
+                                                    <input type="checkbox" name="checkbox1" v-model="curFieldInfo['isrequired']" :disabled="item['ispre'] || isReadOnly">
+                                                </label>
+                                            </div>
+                                            <div class="from-selcet-wrapper">
+                                                <label class="bk-form-checkbox bk-checkbox-small">
+                                                    <i class="bk-checkbox-text">{{$t('ModelManagement["是否唯一"]')}}</i>
+                                                    <input type="checkbox" name="checkbox1" v-model="curFieldInfo['isonly']" :disabled="item['ispre'] || isReadOnly">
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="form-common-item mt20" :class="{'disabled': isReadOnly}">
+                                            <label class="form-common-label">{{$t('ModelManagement["最小值"]')}}</label>
+                                            <div class="form-common-content interior-width-control">
+                                                <input type="text" maxlength="11" class="from-input" name="" :placeholder="$t('ModelManagement[\'请输入最小值\']')" v-model.trim="item.option.min" v-if="item.option" :disabled="isReadOnly">
+                                                <span class="error-msg" v-show="isIntErrorShow.min">{{$t('Common["内容不合法"]')}}</span>
+                                            </div>
+                                        </div>
+                                        <div class="form-common-item mt20 ml10" :class="{'disabled': isReadOnly}">
+                                            <label class="form-common-label">{{$t('ModelManagement["最大值"]')}}</label>
+                                            <div class="form-common-content interior-width-control">
+                                                <input type="text" maxlength="11" class="from-input" name="" :placeholder="$t('ModelManagement[\'请输入最大值\']')" v-model.trim="item.option.max" v-if="item.option" :disabled="isReadOnly">
+                                                <span class="error-msg" v-show="isIntErrorShow.max">{{$t('Common["内容不合法"]')}}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- 长字符 -->
+                                    <div class="mt20 clearfix" v-show="item['bk_property_type'] === 'longchar'">
+                                        <h3>{{$t('ModelManagement["选项"]')}}</h3>
+                                        <div class="form-common-item disabled">
+                                            <label class="form-common-label">{{$t('ModelManagement["类型"]')}}</label>
+                                            <div class="form-common-content interior-width-control">
+                                                <input type="text" disabled class="from-input" name="" placeholder="" :value="formatFieldType(item['bk_property_type'])">
+                                            </div>
+                                        </div>
+                                        <div class="form-common-item form-common-item2 pl30">
+                                            <div class="from-selcet-wrapper mr30">
+                                                <label class="bk-form-checkbox bk-checkbox-small">
+                                                    <i class="bk-checkbox-text mr5">{{$t('ModelManagement["是否可编辑"]')}}</i>
+                                                    <input type="checkbox" name="checkbox1" v-model="curFieldInfo['editable']" :disabled="item['ispre'] || isReadOnly">
+                                                </label>
+                                            </div>
+                                            <div class="from-selcet-wrapper mr30">
+                                                <label class="bk-form-checkbox bk-checkbox-small">
+                                                    <i class="bk-checkbox-text mr5">{{$t('ModelManagement["是否必填"]')}}</i>
+                                                    <input type="checkbox" name="checkbox1" v-model="curFieldInfo['isrequired']" :disabled="item['ispre'] || isReadOnly">
+                                                </label>
+                                            </div>
+                                            <div class="from-selcet-wrapper">
+                                                <label class="bk-form-checkbox bk-checkbox-small">
+                                                    <i class="bk-checkbox-text">{{$t('ModelManagement["是否唯一"]')}}</i>
+                                                    <input type="checkbox" name="checkbox1" v-model="curFieldInfo['isonly']" :disabled="item['ispre'] || isReadOnly">
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="form-common-item mt20" :class="{'disabled': isReadOnly}">
+                                            <label class="form-common-label">{{$t('Common["正则验证"]')}}</label>
+                                            <div class="form-common-content reg-verification ">
+                                                <input type="text" class="from-input" name="" placeholder="" v-model.trim="item.option" :disabled="isReadOnly">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- 短字符 -->
+                                    <div class="mt20 clearfix" v-show="item['bk_property_type'] === 'singlechar'">
+                                        <h3>{{$t('ModelManagement["选项"]')}}</h3>
+                                        <div class="form-common-item disabled">
+                                            <label class="form-common-label">{{$t('ModelManagement["类型"]')}}</label>
+                                            <div class="form-common-content interior-width-control">
+                                                <input type="text" disabled class="from-input" name="" placeholder="" :value="formatFieldType(item['bk_property_type'])">
+                                            </div>
+                                        </div>
+                                        <div class="form-common-item form-common-item2 pl30">
+                                            <div class="from-selcet-wrapper mr30">
+                                                <label class="bk-form-checkbox bk-checkbox-small">
+                                                    <i class="bk-checkbox-text mr5">{{$t('ModelManagement["是否可编辑"]')}}</i>
+                                                    <input type="checkbox" name="checkbox1" v-model="curFieldInfo['editable']" :disabled="item['ispre'] || isReadOnly">
+                                                </label>
+                                            </div>
+                                            <div class="from-selcet-wrapper mr30">
+                                                <label class="bk-form-checkbox bk-checkbox-small">
+                                                    <i class="bk-checkbox-text mr5">{{$t('ModelManagement["是否必填"]')}}</i>
+                                                    <input type="checkbox" name="checkbox1" v-model="curFieldInfo['isrequired']" :disabled="item['ispre'] || isReadOnly">
+                                                </label>
+                                            </div>
+                                            <div class="from-selcet-wrapper">
+                                                <label class="bk-form-checkbox bk-checkbox-small">
+                                                    <i class="bk-checkbox-text">{{$t('ModelManagement["是否唯一"]')}}</i>
+                                                    <input type="checkbox" name="checkbox1" v-model="curFieldInfo['isonly']" :disabled="item['ispre'] || isReadOnly">
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="form-common-item mt20" :class="{'disabled': isReadOnly}">
+                                            <label class="form-common-label">{{$t('Common["正则验证"]')}}</label>
+                                            <div class="form-common-content reg-verification ">
+                                                <input type="text" class="from-input" name="" placeholder="" v-model.trim="item.option" :disabled="isReadOnly">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- 枚举 -->
+                                    <div class="mt20 clearfix" v-if="item['bk_property_type'] === 'enum'">
+                                        <h3>{{$t('ModelManagement["选项"]')}}</h3>
+                                        <div class="form-common-item disabled">
+                                            <label class="form-common-label">{{$t('ModelManagement["类型"]')}}</label>
+                                            <div class="form-common-content interior-width-control">
+                                                <input type="text" disabled class="from-input" name="" placeholder="" :value="formatFieldType(item['bk_property_type'])">
+                                            </div>
+                                        </div>
+                                        <div class="form-common-item form-common-item2 pl30">
+                                            <div class="from-selcet-wrapper mr30">
+                                                <label class="bk-form-checkbox bk-checkbox-small">
+                                                    <i class="bk-checkbox-text mr5">{{$t('ModelManagement["是否可编辑"]')}}</i>
+                                                    <input type="checkbox" name="checkbox1" v-model="curFieldInfo['editable']" :disabled="item['ispre'] || isReadOnly">
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="enum-table" :class="{'disabled':item['ispre'] || isReadOnly}">
+                                            <div v-if="item.isShow">
+                                                <div class="form-enum-wrapper" v-for="(field, fieldIndex) in item.option.list">
+                                                    <span class="span-enum-radio" @click="item.option.defaultIndex = fieldIndex" :title="$t('ModelManagement[\'设置为默认值\']')" :class="{'active': fieldIndex === item.option.defaultIndex}"></span>
+                                                    <div class="enum-id">
+                                                        <input type="text" :placeholder="$t('ModelManagement[\'请输入ID\']')"
+                                                            v-model.trim="field.id"
+                                                            maxlength="15"
+                                                            data-parsley-required="true"
+                                                            :data-parsley-required-message="$t('ModelManagement[\'该字段是必填项\']')"
+                                                            data-parsley-pattern="^[a-zA-Z0-9_]{1,20}$"
+                                                            :data-parsley-pattern-message="$t('ModelManagement[\'包含了非法字符\']')"
+                                                            data-parsley-trigger="blur"
+                                                            data-parsley-no-repeat="changeId"
+                                                            @input="forceUpdate('newId')"
+                                                        >
+                                                    </div>
+                                                    <div class="enum-name">
+                                                        <input type="text" :placeholder="$t('ModelManagement[\'请输入名称英文数字\']')"
                                                             v-model.trim="field.name"
                                                             maxlength="15"
                                                             data-parsley-required="true"
-                                                            data-parsley-required-message="该字段是必填项"
+                                                            :data-parsley-required-message="$t('ModelManagement[\'该字段是必填项\']')"
                                                             data-parsley-maxlength="15"
-                                                            :data-parsley-pattern="enumReg"
-                                                            data-parsley-pattern-message="包含了非法字符"
+                                                            :data-parsley-pattern="reg"
+                                                            :data-parsley-pattern-message="$t('ModelManagement[\'包含了非法字符\']')"
                                                             data-parsley-trigger="blur"
                                                             data-parsley-no-repeat="change"
                                                             :data-parsley-errors-container="'#changeEnumError'+fieldIndex"
                                                             @input="forceUpdate('change')"
                                                         >
-                                                        <!-- <button class="bk-icon icon-arrows-up"
-                                                            :disabled="fieldIndex === 0"
-                                                            @click.prevent="enumUp('change',fieldIndex,index)"
-                                                        ></button>
-                                                        <button class="bk-icon icon-arrows-down"
-                                                            :disabled="fieldIndex === item.option.list.length - 1"
-                                                            @click.prevent="enumDown('change',fieldIndex,index)"
-                                                        ></button> -->
-                                                        <button class="bk-icon"
-                                                            :disabled="item.option.list.length === 1"
-                                                            @click.prevent="deleteEnum('change',fieldIndex,index)"
-                                                        ><i class="icon-cc-del"></i></button>
-                                                        <button class="bk-icon icon-plus" @click.prevent="addEnum('change',fieldIndex,index)" v-if="fieldIndex === (item.option.list.length -1)"></button>
                                                         <!-- 表单验证错误信息容器 -->
                                                         <div class="form-enum-error" :id="'changeEnumError'+fieldIndex"></div>
-                                                        <!-- 拖拽标识点，暂未实现，隐藏 -->
-                                                        <i class="form-enum-wrapper-dot" hidden></i>
                                                     </div>
+                                                    <button class="bk-icon"
+                                                        :disabled="item.option.list.length === 1"
+                                                        @click.prevent="deleteEnum('change',fieldIndex,index)"
+                                                    ><i class="icon-cc-del"></i></button>
+                                                    <button class="bk-icon icon-plus" @click.prevent="addEnum('change',fieldIndex,index)" v-if="fieldIndex === (item.option.list.length -1)"></button>
+                                                    <!-- 拖拽标识点，暂未实现，隐藏 -->
+                                                    <i class="form-enum-wrapper-dot" hidden></i>
                                                 </div>
-                                                <div class="enum-disabled" v-if="isReadOnly"></div>
+                                            </div>
+                                            <div class="enum-disabled" v-if="isReadOnly"></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 日期 -->
+                                    <div class="mt20 clearfix" v-show="item['bk_property_type'] === 'date'">
+                                        <h3>{{$t('ModelManagement["选项"]')}}</h3>
+                                        <div class="form-common-item disabled">
+                                            <label class="form-common-label">{{$t('ModelManagement["类型"]')}}</label>
+                                            <div class="form-common-content interior-width-control">
+                                                <input type="text" disabled class="from-input" name="" placeholder="" :value="formatFieldType(item['bk_property_type'])">
                                             </div>
                                         </div>
-                                        <!-- 日期 -->
-                                        <div class="mt20 clearfix" v-show="item['bk_property_type'] === 'date'">
-                                            <h3>选项</h3>
-                                            <div class="from-common-item disabled">
-                                                <label class="from-common-label">类型</label>
-                                                <div class="from-common-content interior-width-control">
-                                                    <input type="text" disabled class="from-input" name="" placeholder="" :value="formatFieldType(item['bk_property_type'])">
-                                                </div>
+                                        <div class="form-common-item form-common-item2 pl30">
+                                            <div class="from-selcet-wrapper mr30">
+                                                <label class="bk-form-checkbox bk-checkbox-small">
+                                                    <i class="bk-checkbox-text mr5">{{$t('ModelManagement["是否可编辑"]')}}</i>
+                                                    <input type="checkbox" name="checkbox1" v-model="curFieldInfo['editable']" :disabled="item['ispre'] || isReadOnly">
+                                                </label>
                                             </div>
-                                            <div class="from-common-item from-common-item2 pl30">
-                                                <div class="from-selcet-wrapper mr30">
-                                                    <label class="bk-form-checkbox bk-checkbox-small">
-                                                        <i class="bk-checkbox-text mr5">是否可编辑</i>
-                                                        <input type="checkbox" name="checkbox1" v-model="curFieldInfo['editable']" :disabled="item['ispre'] || isReadOnly">
-                                                    </label>
-                                                </div>
-                                                <div class="from-selcet-wrapper mr30">
-                                                    <label class="bk-form-checkbox bk-checkbox-small">
-                                                        <i class="bk-checkbox-text mr5">是否必填</i>
-                                                        <input type="checkbox" name="checkbox1" v-model="curFieldInfo['isrequired']" :disabled="item['ispre'] || isReadOnly">
-                                                    </label>
-                                                </div>
+                                            <div class="from-selcet-wrapper mr30">
+                                                <label class="bk-form-checkbox bk-checkbox-small">
+                                                    <i class="bk-checkbox-text mr5">{{$t('ModelManagement["是否必填"]')}}</i>
+                                                    <input type="checkbox" name="checkbox1" v-model="curFieldInfo['isrequired']" :disabled="item['ispre'] || isReadOnly">
+                                                </label>
                                             </div>
                                         </div>
-                                        <!-- 时间 -->
-                                        <div class="mt20 clearfix" v-show="item['bk_property_type'] === 'time'">
-                                            <h3>选项</h3>
-                                            <div class="from-common-item disabled">
-                                                <label class="from-common-label">类型</label>
-                                                <div class="from-common-content interior-width-control">
-                                                    <input type="text" disabled class="from-input" name="" placeholder="" :value="formatFieldType(item['bk_property_type'])">
-                                                </div>
-                                            </div>
-                                            <div class="from-common-item from-common-item2 pl30">
-                                                <div class="from-selcet-wrapper mr30">
-                                                    <label class="bk-form-checkbox bk-checkbox-small">
-                                                        <i class="bk-checkbox-text mr5">是否可编辑</i>
-                                                        <input type="checkbox" name="checkbox1" v-model="curFieldInfo['editable']" :disabled="item['ispre'] || isReadOnly">
-                                                    </label>
-                                                </div>
-                                                <div class="from-selcet-wrapper mr30">
-                                                    <label class="bk-form-checkbox bk-checkbox-small">
-                                                        <i class="bk-checkbox-text mr5">是否必填</i>
-                                                        <input type="checkbox" name="checkbox1" v-model="curFieldInfo['isrequired']" :disabled="item['ispre'] || isReadOnly">
-                                                    </label>
-                                                </div>
+                                    </div>
+                                    <!-- 时间 -->
+                                    <div class="mt20 clearfix" v-show="item['bk_property_type'] === 'time'">
+                                        <h3>{{$t('ModelManagement["选项"]')}}</h3>
+                                        <div class="form-common-item disabled">
+                                            <label class="form-common-label">{{$t('ModelManagement["类型"]')}}</label>
+                                            <div class="form-common-content interior-width-control">
+                                                <input type="text" disabled class="from-input" name="" placeholder="" :value="formatFieldType(item['bk_property_type'])">
                                             </div>
                                         </div>
-                                        <!-- 单关联 -->
-                                        <div class="mt20 clearfix" v-show="item['bk_property_type'] === 'singleasst'">
-                                            <h3>选项</h3>
-                                            <div class="from-common-item disabled">
-                                                <label class="from-common-label">类型</label>
-                                                <div class="from-common-content interior-width-control">
-                                                    <input type="text" disabled class="from-input" name="" placeholder="" :value="formatFieldType(item['bk_property_type'])">
-                                                </div>
+                                        <div class="form-common-item form-common-item2 pl30">
+                                            <div class="from-selcet-wrapper mr30">
+                                                <label class="bk-form-checkbox bk-checkbox-small">
+                                                    <i class="bk-checkbox-text mr5">{{$t('ModelManagement["是否可编辑"]')}}</i>
+                                                    <input type="checkbox" name="checkbox1" v-model="curFieldInfo['editable']" :disabled="item['ispre'] || isReadOnly">
+                                                </label>
                                             </div>
-                                            <div class="from-common-item from-common-item2 pl30">
-                                                <div class="from-selcet-wrapper mr30">
-                                                    <label class="bk-form-checkbox bk-checkbox-small">
-                                                        <i class="bk-checkbox-text mr5">是否可编辑</i>
-                                                        <input type="checkbox" name="checkbox1" v-model="curFieldInfo['editable']" :disabled="item['ispre'] || isReadOnly">
-                                                    </label>
-                                                </div>
-                                                <div class="from-selcet-wrapper mr30" :class="{'disabled':item['ispre'] || isReadOnly}">
-                                                    <div class="from-selcet-wrapper mr30">
-                                                        <label class="bk-form-checkbox bk-checkbox-small">
-                                                            <i class="bk-checkbox-text mr5">是否必填</i>
-                                                            <input type="checkbox" name="checkbox1" v-model="curFieldInfo['isrequired']" :disabled="item['ispre'] || isReadOnly">
-                                                        </label>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="from-common-item selcet-width-control mt20" :class="{'disabled':item['ispre'] || isReadOnly}">
-                                                <label class="from-common-label">关联模型</label>
-                                                <div class="from-common-content">
-                                                    <bk-select
-                                                        :disabled="item['ispre'] || isReadOnly"
-                                                        :selected="curModelType"
-                                                        @on-selected="modelChange">
-                                                        <bk-option-group
-                                                            v-for="(group, groupIndex) of modelList"
-                                                            :label="group['bk_classification_name']"
-                                                            :key="groupIndex">
-                                                            <bk-select-option
-                                                                v-for="(option, optionIndex) of group['bk_objects']"
-                                                                :key="optionIndex"
-                                                                :value="option['bk_obj_id']"
-                                                                :label="option['bk_obj_name']">
-                                                            </bk-select-option>
-                                                        </bk-option-group>
-                                                    </bk-select>
-                                                </div>
-                                            </div>
-                                            <!-- <div class="from-common-item correlate-more-control mt20 pl30" :class="{'disabled':item['ispre'] || isReadOnly}" style="width: 40%">
-                                                <label class="from-common-label">关联层级</label>
-                                                <div class="from-selcet-wrapper ">
-                                                    <label class="bk-form-radio bk-radio-small">
-                                                        <input type="radio" name="radio1" checked="checked" value="1" v-model="curFieldInfo['bk_asst_forward']" :disabled="item['ispre'] || isReadOnly">
-                                                        <i class="bk-radio-text">向上关联</i>
-                                                    </label>
-                                                    <label class="bk-form-radio bk-radio-small">
-                                                        <input type="radio" name="radio1" checked="checked" value="2" v-model="curFieldInfo['bk_asst_forward']" :disabled="item['ispre'] || isReadOnly">
-                                                        <i class="bk-radio-text">向下关联</i>
-                                                    </label>
-                                                </div>
-                                            </div> -->
-                                        </div>
-                                        <!-- 多关联 -->
-                                        <div class="mt20 clearfix" v-show="item['bk_property_type'] === 'multiasst'">
-                                            <h3>选项</h3>
-                                            <div class="from-common-item disabled">
-                                                <label class="from-common-label">类型</label>
-                                                <div class="from-common-content interior-width-control">
-                                                    <input type="text" disabled class="from-input" name="" placeholder="" :value="formatFieldType(item['bk_property_type'])">
-                                                </div>
-                                            </div>
-                                            <div class="from-common-item from-common-item2 pl30 correlate-single-control">
-                                                <div class="from-selcet-wrapper mr30">
-                                                    <label class="bk-form-checkbox bk-checkbox-small">
-                                                        <i class="bk-checkbox-text mr5">是否可编辑</i>
-                                                        <input type="checkbox" name="checkbox1" v-model="curFieldInfo['editable']" :disabled="item['ispre'] || isReadOnly">
-                                                    </label>
-                                                </div>
-                                                <div class="from-selcet-wrapper mr30">
-                                                    <label class="bk-form-checkbox bk-checkbox-small ml20">
-                                                        <i class="bk-checkbox-text" style="width:63px;">是否必填</i>
-                                                        <input type="checkbox" name="checkbox1" v-model="curFieldInfo['isrequired']" :disabled="item['ispre'] || isReadOnly">
-                                                    </label>
-                                                </div>
-                                            </div>
-                                            <div class="from-common-item mt20" :class="{'disabled':item['ispre'] || isReadOnly}">
-                                                <label class="from-common-label">类型</label>
-                                                <div class="from-common-content selcet-width-control">
-                                                    <bk-select
-                                                        :disabled="item['ispre'] || isReadOnly"
-                                                        :selected="curModelType"
-                                                        @on-selected="modelChange">
-                                                        <bk-option-group
-                                                            v-for="(group, groupIndex) of modelList"
-                                                            :label="group['bk_classification_name']"
-                                                            :key="groupIndex">
-                                                            <bk-select-option
-                                                                v-for="(option, optionIndex) of group['bk_objects']"
-                                                                :key="optionIndex"
-                                                                :value="option['bk_obj_id']"
-                                                                :label="option['bk_obj_name']">
-                                                            </bk-select-option>
-                                                        </bk-option-group>
-                                                    </bk-select>
-                                                </div>
+                                            <div class="from-selcet-wrapper mr30">
+                                                <label class="bk-form-checkbox bk-checkbox-small">
+                                                    <i class="bk-checkbox-text mr5">{{$t('ModelManagement["是否必填"]')}}</i>
+                                                    <input type="checkbox" name="checkbox1" v-model="curFieldInfo['isrequired']" :disabled="item['ispre'] || isReadOnly">
+                                                </label>
                                             </div>
                                         </div>
-                                        <!-- 用户 -->
-                                        <div class="mt20 clearfix" v-show="item['bk_property_type'] === 'objuser'">
-                                            <h3>选项</h3>
-                                            <div class="from-common-item disabled">
-                                                <label class="from-common-label">类型</label>
-                                                <div class="from-common-content interior-width-control">
-                                                    <input type="text" disabled class="from-input" name="" placeholder="" :value="formatFieldType(item['bk_property_type'])">
-                                                </div>
-                                            </div>
-                                            <div class="from-common-item from-common-item2 pl30">
-                                                <div class="from-selcet-wrapper mr30">
-                                                    <label class="bk-form-checkbox bk-checkbox-small">
-                                                        <i class="bk-checkbox-text mr5">是否可编辑</i>
-                                                        <input type="checkbox" name="checkbox1" v-model="curFieldInfo['editable']" :disabled="item['ispre'] || isReadOnly">
-                                                    </label>
-                                                </div>
-                                                <div class="from-selcet-wrapper mr30">
-                                                    <label class="bk-form-checkbox bk-checkbox-small">
-                                                        <i class="bk-checkbox-text mr5">是否必填</i>
-                                                        <input type="checkbox" name="checkbox1" v-model="curFieldInfo['isrequired']" :disabled="item['ispre'] || isReadOnly">
-                                                    </label>
-                                                </div>
+                                    </div>
+                                    <!-- 单关联 -->
+                                    <div class="mt20 clearfix" v-show="item['bk_property_type'] === 'singleasst'">
+                                        <h3>{{$t('ModelManagement["选项"]')}}</h3>
+                                        <div class="form-common-item disabled">
+                                            <label class="form-common-label">{{$t('ModelManagement["类型"]')}}</label>
+                                            <div class="form-common-content interior-width-control">
+                                                <input type="text" disabled class="from-input" name="" placeholder="" :value="formatFieldType(item['bk_property_type'])">
                                             </div>
                                         </div>
-                                        <!-- 时区 -->
-                                        <div class="mt20 clearfix" v-show="item['bk_property_type'] === 'timezone'">
-                                            <h3>选项</h3>
-                                            <div class="from-common-item disabled">
-                                                <label class="from-common-label">类型</label>
-                                                <div class="from-common-content interior-width-control">
-                                                    <input type="text" disabled class="from-input" name="" placeholder="" :value="formatFieldType(item['bk_property_type'])">
-                                                </div>
-                                            </div>
-                                            <div class="from-common-item from-common-item2 pl30">
-                                                <div class="from-selcet-wrapper mr30">
-                                                    <label class="bk-form-checkbox bk-checkbox-small">
-                                                        <i class="bk-checkbox-text mr5">是否可编辑</i>
-                                                        <input type="checkbox" name="checkbox1" v-model="curFieldInfo['editable']" :disabled="item['ispre'] || isReadOnly">
-                                                    </label>
-                                                </div>
-                                                <div class="from-selcet-wrapper mr30">
-                                                    <label class="bk-form-checkbox bk-checkbox-small">
-                                                        <i class="bk-checkbox-text mr5">是否必填</i>
-                                                        <input type="checkbox" name="checkbox1" v-model="curFieldInfo['isrequired']" :disabled="item['ispre'] || isReadOnly">
-                                                    </label>
-                                                </div>
+                                        <div class="form-common-item form-common-item2 pl30">
+                                            <div class="from-selcet-wrapper mr30">
+                                                <label class="bk-form-checkbox bk-checkbox-small">
+                                                    <i class="bk-checkbox-text mr5">{{$t('ModelManagement["是否可编辑"]')}}</i>
+                                                    <input type="checkbox" name="checkbox1" v-model="curFieldInfo['editable']" :disabled="item['ispre'] || isReadOnly">
+                                                </label>
                                             </div>
                                         </div>
-                                        <!-- bool -->
-                                        <div class="mt20 clearfix" v-show="item['bk_property_type'] === 'bool'">
-                                            <h3>选项</h3>
-                                            <div class="from-common-item disabled">
-                                                <label class="from-common-label">类型</label>
-                                                <div class="from-common-content interior-width-control">
-                                                    <input type="text" disabled class="from-input" name="" placeholder="" :value="formatFieldType(item['bk_property_type'])">
-                                                </div>
-                                            </div>
-                                            <div class="from-common-item from-common-item2 pl30">
-                                                <div class="from-selcet-wrapper mr30">
-                                                    <label class="bk-form-checkbox bk-checkbox-small">
-                                                        <i class="bk-checkbox-text mr5">是否可编辑</i>
-                                                        <input type="checkbox" name="checkbox1" v-model="curFieldInfo['editable']" :disabled="item['ispre'] || isReadOnly">
-                                                    </label>
-                                                </div>
-                                                <div class="from-selcet-wrapper mr30">
-                                                    <label class="bk-form-checkbox bk-checkbox-small">
-                                                        <i class="bk-checkbox-text mr5">是否必填</i>
-                                                        <input type="checkbox" name="checkbox1" v-model="curFieldInfo['isrequired']" :disabled="item['ispre'] || isReadOnly">
-                                                    </label>
-                                                </div>
+                                        <div class="form-common-item selcet-width-control mt20" :class="{'disabled':item['ispre'] || isReadOnly}">
+                                            <label class="form-common-label">{{$t('ModelManagement["关联模型"]')}}</label>
+                                            <div class="form-common-content">
+                                                <bk-select
+                                                    disabled
+                                                    :selected="curModelType"
+                                                    @on-selected="modelChange">
+                                                    <bk-option-group
+                                                        v-for="(group, groupIndex) of modelList"
+                                                        :label="group['bk_classification_name']"
+                                                        :key="groupIndex">
+                                                        <bk-select-option
+                                                            v-for="(option, optionIndex) of group['bk_objects']"
+                                                            :key="optionIndex"
+                                                            :value="option['bk_obj_id']"
+                                                            :label="option['bk_obj_name']">
+                                                        </bk-select-option>
+                                                    </bk-option-group>
+                                                </bk-select>
                                             </div>
                                         </div>
-                                        <div class="submit-btn" v-if="!isReadOnly">
-                                            <a class="save-btn main-btn mr10" @click="saveFieldChange(item, index)">
-                                                保存
-                                            </a>
-                                            <a class="cancel-btn vice-btn" @click="cancelFieldChange(item, index)">
-                                                取消
-                                            </a>
+                                    </div>
+                                    <!-- 多关联 -->
+                                    <div class="mt20 clearfix" v-show="item['bk_property_type'] === 'multiasst'">
+                                        <h3>{{$t('ModelManagement["选项"]')}}</h3>
+                                        <div class="form-common-item disabled">
+                                            <label class="form-common-label">{{$t('ModelManagement["类型"]')}}</label>
+                                            <div class="form-common-content interior-width-control">
+                                                <input type="text" disabled class="from-input" name="" placeholder="" :value="formatFieldType(item['bk_property_type'])">
+                                            </div>
                                         </div>
-                                    </form>
-                                </div>
+                                        <div class="form-common-item form-common-item2 pl30 correlate-single-control">
+                                            <div class="from-selcet-wrapper mr30">
+                                                <label class="bk-form-checkbox bk-checkbox-small">
+                                                    <i class="bk-checkbox-text mr5">{{$t('ModelManagement["是否可编辑"]')}}</i>
+                                                    <input type="checkbox" name="checkbox1" v-model="curFieldInfo['editable']" :disabled="item['ispre'] || isReadOnly">
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="form-common-item mt20" :class="{'disabled':item['ispre'] || isReadOnly}">
+                                            <label class="form-common-label">{{$t('ModelManagement["关联模型"]')}}</label>
+                                            <div class="form-common-content selcet-width-control">
+                                                <bk-select
+                                                    disabled
+                                                    :selected="curModelType"
+                                                    @on-selected="modelChange">
+                                                    <bk-option-group
+                                                        v-for="(group, groupIndex) of modelList"
+                                                        :label="group['bk_classification_name']"
+                                                        :key="groupIndex">
+                                                        <bk-select-option
+                                                            v-for="(option, optionIndex) of group['bk_objects']"
+                                                            :key="optionIndex"
+                                                            :value="option['bk_obj_id']"
+                                                            :label="option['bk_obj_name']">
+                                                        </bk-select-option>
+                                                    </bk-option-group>
+                                                </bk-select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- 用户 -->
+                                    <div class="mt20 clearfix" v-show="item['bk_property_type'] === 'objuser'">
+                                        <h3>{{$t('ModelManagement["选项"]')}}</h3>
+                                        <div class="form-common-item disabled">
+                                            <label class="form-common-label">{{$t('ModelManagement["类型"]')}}</label>
+                                            <div class="form-common-content interior-width-control">
+                                                <input type="text" disabled class="from-input" name="" placeholder="" :value="formatFieldType(item['bk_property_type'])">
+                                            </div>
+                                        </div>
+                                        <div class="form-common-item form-common-item2 pl30">
+                                            <div class="from-selcet-wrapper mr30">
+                                                <label class="bk-form-checkbox bk-checkbox-small">
+                                                    <i class="bk-checkbox-text mr5">{{$t('ModelManagement["是否可编辑"]')}}</i>
+                                                    <input type="checkbox" name="checkbox1" v-model="curFieldInfo['editable']" :disabled="item['ispre'] || isReadOnly">
+                                                </label>
+                                            </div>
+                                            <div class="from-selcet-wrapper mr30">
+                                                <label class="bk-form-checkbox bk-checkbox-small">
+                                                    <i class="bk-checkbox-text mr5">{{$t('ModelManagement["是否必填"]')}}</i>
+                                                    <input type="checkbox" name="checkbox1" v-model="curFieldInfo['isrequired']" :disabled="item['ispre'] || isReadOnly">
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- 时区 -->
+                                    <div class="mt20 clearfix" v-show="item['bk_property_type'] === 'timezone'">
+                                        <h3>{{$t('ModelManagement["选项"]')}}</h3>
+                                        <div class="form-common-item disabled">
+                                            <label class="form-common-label">{{$t('ModelManagement["类型"]')}}</label>
+                                            <div class="form-common-content interior-width-control">
+                                                <input type="text" disabled class="from-input" name="" placeholder="" :value="formatFieldType(item['bk_property_type'])">
+                                            </div>
+                                        </div>
+                                        <div class="form-common-item form-common-item2 pl30">
+                                            <div class="from-selcet-wrapper mr30">
+                                                <label class="bk-form-checkbox bk-checkbox-small">
+                                                    <i class="bk-checkbox-text mr5">{{$t('ModelManagement["是否可编辑"]')}}</i>
+                                                    <input type="checkbox" name="checkbox1" v-model="curFieldInfo['editable']" :disabled="item['ispre'] || isReadOnly">
+                                                </label>
+                                            </div>
+                                            <div class="from-selcet-wrapper mr30">
+                                                <label class="bk-form-checkbox bk-checkbox-small">
+                                                    <i class="bk-checkbox-text mr5">{{$t('ModelManagement["是否必填"]')}}</i>
+                                                    <input type="checkbox" name="checkbox1" v-model="curFieldInfo['isrequired']" :disabled="item['ispre'] || isReadOnly">
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- bool -->
+                                    <div class="mt20 clearfix" v-show="item['bk_property_type'] === 'bool'">
+                                        <h3>{{$t('ModelManagement["选项"]')}}</h3>
+                                        <div class="form-common-item disabled">
+                                            <label class="form-common-label">{{$t('ModelManagement["类型"]')}}</label>
+                                            <div class="form-common-content interior-width-control">
+                                                <input type="text" disabled class="from-input" name="" placeholder="" :value="formatFieldType(item['bk_property_type'])">
+                                            </div>
+                                        </div>
+                                        <div class="form-common-item form-common-item2 pl30">
+                                            <div class="from-selcet-wrapper mr30">
+                                                <label class="bk-form-checkbox bk-checkbox-small">
+                                                    <i class="bk-checkbox-text mr5">{{$t('ModelManagement["是否可编辑"]')}}</i>
+                                                    <input type="checkbox" name="checkbox1" v-model="curFieldInfo['editable']" :disabled="item['ispre'] || isReadOnly">
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="submit-btn" v-if="!isReadOnly">
+                                        <bk-button type="primary" :loading="$loading('saveChange')" class="save-btn main-btn mr10" :class="{'loading': $loading('saveChange')}" @click="saveFieldChange(item, index)">
+                                            {{$t('Common["保存"]')}}
+                                        </bk-button>
+                                        <bk-button type="default" class="cancel-btn vice-btn" @click="cancelFieldChange(item, index)">
+                                            {{$t('Common["取消"]')}}
+                                        </bk-button>
+                                    </div>
+                                </form>
                             </div>
-                        </form>
-                    </div>
-                </template>
+                        </div>
+                    </form>
+                </div>
             </div>
             <!-- <div class="add-field-detail" v-show="isAddFieldShow || (!isCreateField && !fieldList.length)"> -->
             <!-- 新增字段 -->
@@ -547,64 +505,64 @@
                     <div class="add-field-detail">
                         <div class="bg-titel" @click="closeAddFieldBox"><img src="../../../common/images/down_icon.png" alt="" ></div>
                         <div class="border-control">
-                            <form class="from-common clearfix">
+                            <form class="form-common clearfix">
                                 <div class="clearfix mb30">
-                                    <h3>字段配置</h3>
-                                    <div class="from-common-item tl">
-                                        <label class="from-common-label">中文名<span class=""> * </span></label>
-                                        <div class="from-common-content interior-width-control">
+                                    <h3>{{$t('ModelManagement["字段配置"]')}}</h3>
+                                    <div class="form-common-item tl">
+                                        <label class="form-common-label">{{$t('ModelManagement["中文名"]')}}<span class=""> * </span></label>
+                                        <div class="form-common-content interior-width-control">
                                             <input type="text" class="from-input" name="" placeholder="" v-model.trim="newFieldInfo.propertyName"
                                             maxlength="15"
                                             data-parsley-required="true"
-                                            data-parsley-required-message="该字段是必填项"
+                                            :data-parsley-required-message="$t('ModelManagement[\'该字段是必填项\']')"
                                             data-parsley-maxlength="20"
-                                            data-parsley-pattern="^([a-zA-Z0-9_]|[\u4e00-\u9fa5]|[\uac00-\ud7ff]|[\u0800-\u4e00]){1,15}$"
-                                            data-parsley-pattern-message="包含了非下划线的特殊字符"
+                                            :data-parsley-pattern="reg"
+                                            :data-parsley-pattern-message="$t('ModelManagement[\'包含了非法字符\']')"
                                             data-parsley-trigger="input blur"
                                             >
                                         </div>
                                     </div>
-                                    <div class="from-common-item tr">
-                                        <label class="from-common-label">英文名<span class=""> * </span></label>
-                                        <div class="from-common-content interior-width-control tl">
-                                            <input type="text" class="from-input" name="" value="" placeholder="下划线/数字/字母" v-model.trim="newFieldInfo.propertyId"
+                                    <div class="form-common-item tr pr">
+                                        <label class="form-common-label">{{$t('ModelManagement["英文名"]')}}<span class=""> * </span></label>
+                                        <div class="form-common-content interior-width-control tl">
+                                            <input type="text" class="from-input" name="" value="" v-model.trim="newFieldInfo.propertyId"
                                             maxlength="20"
                                             data-parsley-required="true"
-                                            data-parsley-required-message="该字段是必填项"
+                                            :data-parsley-required-message="$t('ModelManagement[\'该字段是必填项\']')"
                                             data-parsley-maxlength="20"
                                             data-parsley-pattern="^[a-zA-Z0-9_]{1,20}$"
-                                            data-parsley-pattern-message="必须以英文开头，由英文、数字及下划线组成"
+                                            :data-parsley-pattern-message="$t('ModelManagement[\'必须以英文开头，由英文、数字及下划线组成\']')"
                                             data-parsley-trigger="input blur"
                                             >
                                         </div>
+                                        <i class="icon-info-png" v-tooltip="$t('ModelManagement[\'下划线/数字/字母\']')"></i>
                                     </div>
-                                    <div class="from-common-item tr">
-                                        <label class="from-common-label">单位</label>
-                                        <div class="from-common-content interior-width-control">
-                                            <input type="text" class="from-input" name="" value="" placeholder="请输入单位" v-model.trim="newFieldInfo.unit">
+                                    <div class="form-common-item tr">
+                                        <label class="form-common-label">{{$t('ModelManagement["单位"]')}}</label>
+                                        <div class="form-common-content interior-width-control">
+                                            <input type="text" class="from-input" name="" value="" :placeholder="$t('ModelManagement[\'请输入单位\']')" v-model.trim="newFieldInfo.unit">
                                         </div>
                                     </div>
-                                    <div class="from-common-item mt20 block">
-                                        <label class="from-common-label">提示语</label>
-                                        <div class="from-common-content interior-width-control">
-                                            <input type="text" class="from-input" name="" value="" placeholder="请输入提示语" v-model.trim="newFieldInfo.placeholder">
+                                    <div class="form-common-item mt20 block">
+                                        <label class="form-common-label">{{$t('ModelManagement["提示语"]')}}</label>
+                                        <div class="form-common-content interior-width-control">
+                                            <input type="text" class="from-input" name="" value="" :placeholder="$t('ModelManagement[\'请输入提示语\']')" v-model.trim="newFieldInfo.placeholder">
                                         </div>
                                     </div>
                                 </div>
     
-                                <!-- 数字 -->
-                                <div class="mt20 clearfix" v-show="newFieldInfo.propertyType === 'int'">
-                                    <h3>选项</h3>
-                                    <div class="from-common-item mr0">
-                                        <label class="from-common-label">类型</label>
-                                        <div class="from-common-content interior-width-control">
+                                <h3>{{$t('ModelManagement["选项"]')}}</h3>
+                                <div class="clearfix">
+                                    <div class="form-common-item mr0">
+                                        <label class="form-common-label">{{$t('ModelManagement["类型"]')}}</label>
+                                        <div class="form-common-content interior-width-control">
                                             <div class="select-content tc">
                                                 <bk-select
                                                     :selected.sync="newFieldInfo.propertyType"
                                                     @on-selected="fieldTypeChange">
                                                     <bk-select-option
                                                         v-for="(option, index) of fieldTypeList"
-                                                        :key="index"
+                                                        :key="option.value"
                                                         :value="option.value"
                                                         :label="option.label">
                                                     </bk-select-option>
@@ -612,318 +570,116 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="from-common-item from-common-item2 pl30">
+                                    <div class="form-common-item form-common-item2 pl30">
                                         <div class="from-selcet-wrapper mr30">
                                             <label class="bk-form-checkbox bk-checkbox-small">
-                                                <i class="bk-checkbox-text mr5">是否可编辑</i>
+                                                <i class="bk-checkbox-text mr5">{{$t('ModelManagement["是否可编辑"]')}}</i>
                                                 <input type="checkbox" name="checkbox1" v-model="newFieldInfo.editable">
                                             </label>
                                         </div>
-                                        <div class="from-selcet-wrapper mr30">
+                                        <div class="from-selcet-wrapper mr30" v-if="isShowRequired(newFieldInfo.propertyType)">
                                             <label class="bk-form-checkbox bk-checkbox-small">
-                                                <i class="bk-checkbox-text mr5">是否必填</i>
+                                                <i class="bk-checkbox-text mr5">{{$t('ModelManagement["是否必填"]')}}</i>
                                                 <input type="checkbox" name="checkbox1" v-model="newFieldInfo.isRequired">
                                             </label>
                                         </div>
-                                        <div class="from-selcet-wrapper">
+                                        <div class="from-selcet-wrapper" v-if="isShowOnly(newFieldInfo.propertyType)">
                                             <label class="bk-form-checkbox bk-checkbox-small">
-                                                <i class="bk-checkbox-text">是否唯一</i>
+                                                <i class="bk-checkbox-text">{{$t('ModelManagement["是否唯一"]')}}</i>
                                                 <input type="checkbox" name="checkbox1" v-model="newFieldInfo['isonly']">
                                             </label>
                                         </div>
                                     </div>
-                                    <div class="from-common-item mt20">
-                                        <label class="from-common-label">最小值</label>
-                                        <div class="from-common-content interior-width-control">
-                                            <input type="number" class="from-input" name="" placeholder="请输入最小值" v-model="newFieldInfo.option.min">
+                                </div>
+
+                                <!-- 数字 -->
+                                <div class="clearfix" v-show="newFieldInfo.propertyType === 'int'">
+                                    <div class="form-common-item mt20">
+                                        <label class="form-common-label">{{$t('ModelManagement["最小值"]')}}</label>
+                                        <div class="form-common-content interior-width-control">
+                                            <input type="text" maxlength="11" class="from-input" name="" :placeholder="$t('ModelManagement[\'请输入最小值\']')" v-model.trim="newFieldInfo.option.min">
+                                            <span class="error-msg" v-show="isIntErrorShow.min">{{$t('Common["内容不合法"]')}}</span>
                                         </div>
                                     </div>
-                                    <div class="from-common-item  mt20 tr">
-                                        <label class="from-common-label">最大值</label>
-                                        <div class="from-common-content interior-width-control">
-                                            <input type="number" class="from-input" name="" placeholder="请输入最大值" v-model="newFieldInfo.option.max">
+                                    <div class="form-common-item  mt20 tr">
+                                        <label class="form-common-label">{{$t('ModelManagement["最大值"]')}}</label>
+                                        <div class="form-common-content interior-width-control tl">
+                                            <input type="text" maxlength="11" class="from-input" name="" :placeholder="$t('ModelManagement[\'请输入最大值\']')" v-model.trim="newFieldInfo.option.max">
+                                            <span class="error-msg" v-show="isIntErrorShow.max">{{$t('Common["内容不合法"]')}}</span>
                                         </div>
                                     </div>
                                 </div>
                                 <!-- 长字符 -->
-                                <div class="mt20 clearfix" v-show="newFieldInfo.propertyType === 'longchar'">
-                                    <h3>选项</h3>
-                                    <div class="from-common-item mr0">
-                                        <label class="from-common-label">类型</label>
-                                        <div class="from-common-content interior-width-control">
-                                            <div class="select-content tc">
-                                                <bk-select
-                                                    :selected.sync="newFieldInfo.propertyType"
-                                                    @on-selected="fieldTypeChange">
-                                                    <bk-select-option
-                                                        v-for="(option, index) of fieldTypeList"
-                                                        :key="index"
-                                                        :value="option.value"
-                                                        :label="option.label">
-                                                    </bk-select-option>
-                                                </bk-select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="from-common-item from-common-item2 pl30">
-                                        <div class="from-selcet-wrapper mr30">
-                                            <label class="bk-form-checkbox bk-checkbox-small">
-                                                <i class="bk-checkbox-text mr5">是否可编辑</i>
-                                                <input type="checkbox" name="checkbox1" v-model="newFieldInfo.editable">
-                                            </label>
-                                        </div>
-                                        <div class="from-selcet-wrapper mr30">
-                                            <label class="bk-form-checkbox bk-checkbox-small">
-                                                <i class="bk-checkbox-text mr5">是否必填</i>
-                                                <input type="checkbox" name="checkbox1" v-model="newFieldInfo.isRequired">
-                                            </label>
-                                        </div>
-                                        <div class="from-selcet-wrapper">
-                                            <label class="bk-form-checkbox bk-checkbox-small">
-                                                <i class="bk-checkbox-text mr5">是否唯一</i>
-                                                <input type="checkbox" name="checkbox1" v-model="newFieldInfo['isonly']">
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="from-common-item mt20">
-                                        <label class="from-common-label">正则验证</label>
-                                        <div class="from-common-content reg-verification ">
+                                <div class="clearfix" v-show="newFieldInfo.propertyType === 'longchar'">
+                                    <div class="form-common-item mt20">
+                                        <label class="form-common-label">{{$t('Common["正则验证"]')}}</label>
+                                        <div class="form-common-content reg-verification ">
                                             <input type="text" class="from-input" name="" placeholder="" v-model.trim="newFieldInfo.option">
                                         </div>
                                     </div>
                                 </div>
                                 <!-- 短字符 -->
-                                <div class="mt20 clearfix" v-show="newFieldInfo.propertyType === 'singlechar'">
-                                    <h3>选项</h3>
-                                    <div class="from-common-item mr0">
-                                        <label class="from-common-label">类型</label>
-                                        <div class="from-common-content interior-width-control">
-                                            <div class="select-content tc">
-                                                <bk-select
-                                                    :selected.sync="newFieldInfo.propertyType"
-                                                    @on-selected="fieldTypeChange">
-                                                    <bk-select-option
-                                                        v-for="(option, index) of fieldTypeList"
-                                                        :key="index"
-                                                        :value="option.value"
-                                                        :label="option.label">
-                                                    </bk-select-option>
-                                                </bk-select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="from-common-item from-common-item2 pl30">
-                                        <div class="from-selcet-wrapper mr30">
-                                            <label class="bk-form-checkbox bk-checkbox-small">
-                                                <i class="bk-checkbox-text mr5">是否可编辑</i>
-                                                <input type="checkbox" name="checkbox1" v-model="newFieldInfo.editable">
-                                            </label>
-                                        </div>
-                                        <div class="from-selcet-wrapper mr30">
-                                            <label class="bk-form-checkbox bk-checkbox-small">
-                                                <i class="bk-checkbox-text mr5">是否必填</i>
-                                                <input type="checkbox" name="checkbox1" v-model="newFieldInfo.isRequired">
-                                            </label>
-                                        </div>
-                                        <div class="from-selcet-wrapper">
-                                            <label class="bk-form-checkbox bk-checkbox-small">
-                                                <i class="bk-checkbox-text mr5">是否唯一</i>
-                                                <input type="checkbox" name="checkbox1" v-model="newFieldInfo['isonly']">
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="from-common-item mt20">
-                                        <label class="from-common-label">正则验证</label>
-                                        <div class="from-common-content reg-verification ">
+                                <div class="clearfix" v-show="newFieldInfo.propertyType === 'singlechar'">
+                                    <div class="form-common-item mt20">
+                                        <label class="form-common-label">{{$t('Common["正则验证"]')}}</label>
+                                        <div class="form-common-content reg-verification ">
                                             <input type="text" class="from-input" name="" placeholder="" v-model.trim="newFieldInfo.option">
                                         </div>
                                     </div>
                                 </div>
                                 <!-- 枚举 -->
-                                <div class="mt20 clearfix" v-if="newFieldInfo.propertyType === 'enum'">
-                                    <h3>选项</h3>
-                                    <div class="from-common-item mr0">
-                                        <label class="from-common-label">类型</label>
-                                        <div class="from-common-content interior-width-control">
-                                            <div class="select-content tc">
-                                                <bk-select
-                                                    :selected.sync="newFieldInfo.propertyType"
-                                                    @on-selected="fieldTypeChange">
-                                                    <bk-select-option
-                                                        v-for="(option, index) of fieldTypeList"
-                                                        :key="index"
-                                                        :value="option.value"
-                                                        :label="option.label">
-                                                    </bk-select-option>
-                                                </bk-select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="from-common-item from-common-item2 pl30">
-                                        <div class="from-selcet-wrapper mr30">
-                                            <label class="bk-form-checkbox bk-checkbox-small">
-                                                <i class="bk-checkbox-text mr5">是否可编辑</i>
-                                                <input type="checkbox" name="checkbox1" v-model="newFieldInfo.editable">
-                                            </label>
-                                        </div>
-                                        <div class="from-selcet-wrapper mr30">
-                                            <label class="bk-form-checkbox bk-checkbox-small">
-                                                <i class="bk-checkbox-text mr5">是否必填</i>
-                                                <input type="checkbox" name="checkbox1" v-model="newFieldInfo.isRequired">
-                                            </label>
-                                        </div>
-                                        <div class="from-selcet-wrapper">
-                                            <label class="bk-form-checkbox bk-checkbox-small">
-                                                <i class="bk-checkbox-text mr5">是否唯一</i>
-                                                <input type="checkbox" name="checkbox1" v-model="newFieldInfo['isonly']">
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div v-pre class="clearfix"></div>
-                                    <div v-if="newFieldInfo.propertyType === 'enum'">
+                                <div class="clearfix form-option" v-if="newFieldInfo.propertyType === 'enum'">
+                                    
+                                    <!-- <div v-pre class="clearfix"></div> -->
+                                    <div class="form-enum-box clearfix" v-if="newFieldInfo.propertyType === 'enum'">
                                         <div class="form-enum-wrapper" v-for="(field, fieldIndex) in newFieldInfo.option.list">
                                             <span class="span-enum-radio" @click="newFieldInfo.option.defaultIndex = fieldIndex" title="设置为默认值" :class="{'active': fieldIndex === newFieldInfo.option.defaultIndex}"></span>
-                                            <input type="text" placeholder="请输入名称英文数字"
-                                                v-model.trim="field.name"
-                                                maxlength="15"
-                                                data-parsley-required="true"
-                                                data-parsley-required-message="该字段是必填项"
-                                                data-parsley-maxlength="15"
-                                                :data-parsley-pattern="enumReg"
-                                                data-parsley-pattern-message="包含了非法字符"
-                                                data-parsley-trigger="blur"
-                                                data-parsley-no-repeat="new"
-                                                :data-parsley-errors-container="'#newEnumError'+fieldIndex"
-                                                @input="forceUpdate('new')"
-                                            >
-                                            <!-- <button class="bk-icon icon-arrows-up"
-                                                :disabled="fieldIndex === 0"
-                                                @click.prevent="enumUp('new',fieldIndex)"
-                                            ></button>
-                                            <button class="bk-icon icon-arrows-down"
-                                                :disabled="fieldIndex === newFieldInfo.option.list.length - 1"
-                                                @click.prevent="enumDown('new',fieldIndex)"
-                                            ></button> -->
+                                            <div class="enum-id">
+                                                <input type="text" :placeholder="$t('ModelManagement[\'请输入ID\']')"
+                                                    v-model.trim="field.id"
+                                                    maxlength="15"
+                                                    data-parsley-required="true"
+                                                    :data-parsley-required-message="$t('ModelManagement[\'该字段是必填项\']')"
+                                                    data-parsley-pattern="^[a-zA-Z0-9_]{1,20}$"
+                                                    :data-parsley-pattern-message="$t('ModelManagement[\'包含了非法字符\']')"
+                                                    data-parsley-trigger="blur"
+                                                    data-parsley-no-repeat="newId"
+                                                    @input="forceUpdate('newId')"
+                                                >
+                                            </div>
+                                            <div class="enum-name">
+                                                <input type="text" :placeholder="$t('ModelManagement[\'请输入名称英文数字\']')"
+                                                    v-model.trim="field.name"
+                                                    maxlength="15"
+                                                    data-parsley-required="true"
+                                                    :data-parsley-required-message="$t('ModelManagement[\'该字段是必填项\']')"
+                                                    data-parsley-maxlength="15"
+                                                    :data-parsley-pattern="reg"
+                                                    :data-parsley-pattern-message="$t('ModelManagement[\'包含了非法字符\']')"
+                                                    data-parsley-trigger="blur"
+                                                    data-parsley-no-repeat="new"
+                                                    :data-parsley-errors-container="'#newEnumError'+fieldIndex"
+                                                    @input="forceUpdate('new')"
+                                                >
+                                                <div class="form-enum-error" :id="'newEnumError'+fieldIndex"></div>
+                                            </div>
                                             <button class="bk-icon"
                                                 :disabled="newFieldInfo.option.list.length === 1"
                                                 @click.prevent="deleteEnum('new',fieldIndex)"
                                             ><i class="icon-cc-del"></i></button>
                                             <button class="bk-icon icon-plus" @click.prevent="addEnum('new',fieldIndex)" v-if="fieldIndex === (newFieldInfo.option.list.length -1)"></button>
                                             <!-- 表单验证错误信息容器 -->
-                                            <div class="form-enum-error" :id="'newEnumError'+fieldIndex"></div>
                                             <!-- 拖拽标识点，暂未实现，隐藏 -->
                                             <i class="form-enum-wrapper-dot" hidden></i>
                                         </div>
                                     </div>
-                                    <div class="select-error tc" v-if="isEnumErrorShow&&!newFieldInfo.option.list.length">请先设置枚举内容</div>
-                                </div>
-                                <!-- 日期 -->
-                                <div class="mt20 clearfix" v-show="newFieldInfo.propertyType === 'date'">
-                                    <h3>选项</h3>
-                                    <div class="from-common-item mr0">
-                                        <label class="from-common-label">类型</label>
-                                        <div class="from-common-content interior-width-control">
-                                            <div class="select-content tc">
-                                                <bk-select
-                                                    :selected.sync="newFieldInfo.propertyType"
-                                                    @on-selected="fieldTypeChange">
-                                                    <bk-select-option
-                                                        v-for="(option, index) of fieldTypeList"
-                                                        :key="index"
-                                                        :value="option.value"
-                                                        :label="option.label">
-                                                    </bk-select-option>
-                                                </bk-select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="from-common-item from-common-item2 pl30">
-                                        <div class="from-selcet-wrapper mr30">
-                                            <label class="bk-form-checkbox bk-checkbox-small">
-                                                <i class="bk-checkbox-text mr5">是否可编辑</i>
-                                                <input type="checkbox" name="checkbox1" v-model="newFieldInfo.editable">
-                                            </label>
-                                        </div>
-                                        <div class="from-selcet-wrapper mr30">
-                                            <label class="bk-form-checkbox bk-checkbox-small">
-                                                <i class="bk-checkbox-text mr5">是否必填</i>
-                                                <input type="checkbox" name="checkbox1" v-model="newFieldInfo.isRequired">
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- 时间 -->
-                                <div class="mt20 clearfix" v-show="newFieldInfo.propertyType === 'time'">
-                                    <h3>选项</h3>
-                                    <div class="from-common-item mr0">
-                                        <label class="from-common-label">类型</label>
-                                        <div class="from-common-content interior-width-control">
-                                            <div class="select-content tc">
-                                                <bk-select
-                                                    :selected.sync="newFieldInfo.propertyType"
-                                                    @on-selected="fieldTypeChange">
-                                                    <bk-select-option
-                                                        v-for="(option, index) of fieldTypeList"
-                                                        :key="index"
-                                                        :value="option.value"
-                                                        :label="option.label">
-                                                    </bk-select-option>
-                                                </bk-select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="from-common-item from-common-item2 pl30">
-                                        <div class="from-selcet-wrapper mr30">
-                                            <label class="bk-form-checkbox bk-checkbox-small">
-                                                <i class="bk-checkbox-text mr5">是否可编辑</i>
-                                                <input type="checkbox" name="checkbox1" v-model="newFieldInfo.editable">
-                                            </label>
-                                        </div>
-                                        <div class="from-selcet-wrapper mr30">
-                                            <label class="bk-form-checkbox bk-checkbox-small">
-                                                <i class="bk-checkbox-text mr5">是否必填</i>
-                                                <input type="checkbox" name="checkbox1" v-model="newFieldInfo.isRequired">
-                                            </label>
-                                        </div>
-                                    </div>
+                                    <div class="select-error tc" v-if="isEnumErrorShow&&!newFieldInfo.option.list.length">{{$t('ModelManagement["请先设置枚举内容"]')}}</div>
                                 </div>
                                 <!-- 单关联 -->
-                                <div class="mt20 clearfix" v-show="newFieldInfo.propertyType === 'singleasst'">
-                                    <h3>选项</h3>
-                                    <div class="from-common-item mr0">
-                                        <label class="from-common-label">类型</label>
-                                        <div class="from-common-content interior-width-control">
-                                            <div class="select-content tc">
-                                                <bk-select
-                                                    :selected.sync="newFieldInfo.propertyType"
-                                                    @on-selected="fieldTypeChange">
-                                                    <bk-select-option
-                                                        v-for="(option, index) of fieldTypeList"
-                                                        :key="index"
-                                                        :value="option.value"
-                                                        :label="option.label">
-                                                    </bk-select-option>
-                                                </bk-select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="from-common-item from-common-item2 pl30">
-                                        <div class="from-selcet-wrapper mr30">
-                                            <label class="bk-form-checkbox bk-checkbox-small">
-                                                <i class="bk-checkbox-text mr5">是否可编辑</i>
-                                                <input type="checkbox" name="checkbox1" v-model="newFieldInfo.editable">
-                                            </label>
-                                        </div>
-                                        <div class="from-selcet-wrapper mr30">
-                                            <label class="bk-form-checkbox bk-checkbox-small">
-                                                <i class="bk-checkbox-text mr5">是否必填</i>
-                                                <input type="checkbox" name="checkbox1" v-model="newFieldInfo.isRequired">
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="from-common-item mt20">
-                                        <label class="from-common-label">关联模型</label>
-                                        <div class="from-common-content selcet-width-control">
+                                <div class="clearfix" v-show="newFieldInfo.propertyType === 'singleasst'">
+                                    <div class="form-common-item mt20">
+                                        <label class="form-common-label">{{$t('ModelManagement["关联模型"]')}}</label>
+                                        <div class="form-common-content selcet-width-control">
                                             <bk-select
                                                 ref="singleasstSelect"
                                                 :selected="''"
@@ -940,60 +696,15 @@
                                                     </bk-select-option>
                                                 </bk-option-group>
                                             </bk-select>
-                                            <span class="select-error" v-if="isSelectErrorShow">请选择关联模型</span>
+                                            <span class="select-error" v-if="isSelectErrorShow">{{$t('ModelManagement["请选择关联模型"]')}}</span>
                                         </div>
                                     </div>
-                                    <!-- <div class="from-common-item mt20" style="width: 40%;">
-                                        <label class="from-common-label pl5">关联层级</label>
-                                        <div class="from-selcet-wrapper">
-                                            <label class="bk-form-radio bk-radio-small">
-                                                <input type="radio" name="radio1" value="1" checked="checked" v-model="newFieldInfo.asstForward">
-                                                <i class="bk-radio-text">向上关联</i>
-                                            </label>
-                                            <label class="bk-form-radio bk-radio-small">
-                                                <input type="radio" name="radio1" value="2" checked="checked" v-model="newFieldInfo.asstForward">
-                                                <i class="bk-radio-text">向下关联</i>
-                                            </label>
-                                        </div>
-                                    </div> -->
                                 </div>
                                 <!-- 多关联 -->
-                                <div class="mt20 clearfix" v-show="newFieldInfo.propertyType === 'multiasst'">
-                                    <h3>选项</h3>
-                                    <div class="from-common-item mr0">
-                                        <label class="from-common-label">类型</label>
-                                        <div class="from-common-content interior-width-control">
-                                            <div class="select-content tc">
-                                                <bk-select
-                                                    :selected.sync="newFieldInfo.propertyType"
-                                                    @on-selected="fieldTypeChange">
-                                                    <bk-select-option
-                                                        v-for="(option, index) of fieldTypeList"
-                                                        :key="index"
-                                                        :value="option.value"
-                                                        :label="option.label">
-                                                    </bk-select-option>
-                                                </bk-select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="from-common-item from-common-item2 pl30">
-                                        <div class="from-selcet-wrapper mr30">
-                                            <label class="bk-form-checkbox bk-checkbox-small">
-                                                <i class="bk-checkbox-text mr5">是否可编辑</i>
-                                                <input type="checkbox" name="checkbox1" v-model="newFieldInfo.editable">
-                                            </label>
-                                        </div>
-                                        <div class="from-selcet-wrapper mr30">
-                                            <label class="bk-form-checkbox bk-checkbox-small">
-                                                <i class="bk-checkbox-text mr5">是否必填</i>
-                                                <input type="checkbox" name="checkbox1" v-model="newFieldInfo.isRequired">
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="from-common-item mt20">
-                                        <label class="from-common-label">关联模型</label>
-                                        <div class="from-common-content selcet-width-control tc">
+                                <div class="clearfix" v-show="newFieldInfo.propertyType === 'multiasst'">
+                                    <div class="form-common-item mt20">
+                                        <label class="form-common-label">{{$t('ModelManagement["关联模型"]')}}</label>
+                                        <div class="form-common-content selcet-width-control tc">
                                             <bk-select
                                                 ref="multiasstSelect"
                                                 :selected="''"
@@ -1010,136 +721,29 @@
                                                     </bk-select-option>
                                                 </bk-option-group>
                                             </bk-select>
-                                            <span class="select-error" v-if="isSelectErrorShow">请选择关联模型</span>
+                                            <span class="select-error" v-if="isSelectErrorShow">{{$t('ModelManagement["请选择关联模型"]')}}</span>
                                         </div>
                                     </div>
                                 </div>
-                                <!-- 用户 -->
-                                <div class="mt20 clearfix" v-show="newFieldInfo.propertyType === 'objuser'">
-                                    <h3>选项</h3>
-                                    <div class="from-common-item mr0">
-                                        <label class="from-common-label">类型</label>
-                                        <div class="from-common-content interior-width-control">
-                                            <div class="select-content tc">
-                                                <bk-select
-                                                    :selected.sync="newFieldInfo.propertyType"
-                                                    @on-selected="fieldTypeChange">
-                                                    <bk-select-option
-                                                        v-for="(option, index) of fieldTypeList"
-                                                        :key="index"
-                                                        :value="option.value"
-                                                        :label="option.label">
-                                                    </bk-select-option>
-                                                </bk-select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="from-common-item from-common-item2 pl30">
-                                        <div class="from-selcet-wrapper mr30">
-                                            <label class="bk-form-checkbox bk-checkbox-small">
-                                                <i class="bk-checkbox-text mr5">是否可编辑</i>
-                                                <input type="checkbox" name="checkbox1" v-model="newFieldInfo.editable">
-                                            </label>
-                                        </div>
-                                        <div class="from-selcet-wrapper mr30">
-                                            <label class="bk-form-checkbox bk-checkbox-small">
-                                                <i class="bk-checkbox-text mr5">是否必填</i>
-                                                <input type="checkbox" name="checkbox1" v-model="newFieldInfo.isRequired">
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- 时区 -->
-                                <div class="mt20 clearfix" v-show="newFieldInfo.propertyType === 'timezone'">
-                                    <h3>选项</h3>
-                                    <div class="from-common-item mr0">
-                                        <label class="from-common-label">类型</label>
-                                        <div class="from-common-content interior-width-control">
-                                            <div class="select-content tc">
-                                                <bk-select
-                                                    :selected.sync="newFieldInfo.propertyType"
-                                                    @on-selected="fieldTypeChange">
-                                                    <bk-select-option
-                                                        v-for="(option, index) of fieldTypeList"
-                                                        :key="index"
-                                                        :value="option.value"
-                                                        :label="option.label">
-                                                    </bk-select-option>
-                                                </bk-select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="from-common-item from-common-item2 pl30">
-                                        <div class="from-selcet-wrapper mr30">
-                                            <label class="bk-form-checkbox bk-checkbox-small">
-                                                <i class="bk-checkbox-text mr5">是否可编辑</i>
-                                                <input type="checkbox" name="checkbox1" v-model="newFieldInfo.editable">
-                                            </label>
-                                        </div>
-                                        <div class="from-selcet-wrapper mr30">
-                                            <label class="bk-form-checkbox bk-checkbox-small">
-                                                <i class="bk-checkbox-text mr5">是否必填</i>
-                                                <input type="checkbox" name="checkbox1" v-model="newFieldInfo.isRequired">
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- bool -->
-                                <div class="mt20 clearfix" v-show="newFieldInfo.propertyType === 'bool'">
-                                    <h3>选项</h3>
-                                    <div class="from-common-item mr0">
-                                        <label class="from-common-label">类型</label>
-                                        <div class="from-common-content interior-width-control">
-                                            <div class="select-content tc">
-                                                <bk-select
-                                                    :selected.sync="newFieldInfo.propertyType"
-                                                    @on-selected="fieldTypeChange">
-                                                    <bk-select-option
-                                                        v-for="(option, index) of fieldTypeList"
-                                                        :key="index"
-                                                        :value="option.value"
-                                                        :label="option.label">
-                                                    </bk-select-option>
-                                                </bk-select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="from-common-item from-common-item2 pl30">
-                                        <div class="from-selcet-wrapper mr30">
-                                            <label class="bk-form-checkbox bk-checkbox-small">
-                                                <i class="bk-checkbox-text mr5">是否可编辑</i>
-                                                <input type="checkbox" name="checkbox1" v-model="newFieldInfo.editable">
-                                            </label>
-                                        </div>
-                                        <div class="from-selcet-wrapper mr30">
-                                            <label class="bk-form-checkbox bk-checkbox-small">
-                                                <i class="bk-checkbox-text mr5">是否必填</i>
-                                                <input type="checkbox" name="checkbox1" v-model="newFieldInfo.isRequired">
-                                            </label>
-                                        </div>
-                                    </div>
+                                <!-- 保存取消按钮 -->
+                                <div class="button-wraper">
+                                    <bk-button type="primary" class="save-btn main-btn mr10" :loading="$loading('saveNew')" @click="saveNewField">
+                                        {{$t('Common["保存"]')}}
+                                    </bk-button>
+                                    <bk-button type="default" class="cancel-btn vice-btn" @click="closeAddFieldBox">
+                                        {{$t('Common["取消"]')}}
+                                    </bk-button>
                                 </div>
                             </form>
-                            <!-- 保存取消按钮 -->
-                            <div class="button-wraper">
-                                <a class="save-btn main-btn mr10" @click="saveNewField">
-                                    保存
-                                </a>
-                                <a class="cancel-btn vice-btn" @click="closeAddFieldBox">
-                                    取消
-                                </a>
-                            </div>
                         </div>
                     </div>
                 </div>
             </form>
         </div>
     </div>
-   
 </template>
 
 <script type="text/javascript">
-    import Vue from 'vue'
     import $ from 'jquery'
     import Parsley from 'parsleyjs'
     import vBaseInfo from './baseInfo'
@@ -1183,6 +787,35 @@
             vBaseInfo
         },
         watch: {
+            'newFieldInfo.isonly' (isonly) {
+                if (isonly) {
+                    this.newFieldInfo.isRequired = true
+                }
+            },
+            'newFieldInfo.isRequired' (isRequired) {
+                if (!isRequired) {
+                    this.newFieldInfo.isonly = false
+                }
+            },
+            'curFieldInfo.isonly' (isonly) {
+                if (isonly) {
+                    this.curFieldInfo.isrequired = true
+                }
+            },
+            'curFieldInfo.isrequired' (isrequired) {
+                if (!isrequired) {
+                    this.curFieldInfo.isonly = false
+                }
+            },
+            'newFieldInfo.option': {
+                handler (newOption, oldOption) {
+                    if (this.newFieldInfo.propertyType === 'int') {
+                        this.isIntErrorShow.min = false
+                        this.isIntErrorShow.max = false
+                    }
+                },
+                deep: true
+            },
             objId () {
                 if (this.objId === '') {
                     this.$refs.baseInfo.clearData()
@@ -1201,13 +834,24 @@
                     this.$refs.multiasstSelect.curValue = ''
                     this.$refs.multiasstSelect.model = ''
                 }
+            },
+            language (lang) {
+                if (lang === 'zh_cn') {
+                    this.fieldTypeList = this.fieldTypeListForZh
+                } else {
+                    this.fieldTypeList = this.fieldTypeListForEn
+                }
             }
         },
         data () {
             return {
-                enumReg: '^([a-zA-Z0-9_]||[\u4e00-\u9fa5]|[\uac00-\ud7ff]|[\u0800-\u4e00]|[,，；;“”‘’。."\' +-]){1,15}$',
+                reg: '^([a-zA-Z0-9_]|[\u4e00-\u9fa5]|[()+-《》,，；;“”‘’。."\' \\/:]){1,15}$',
                 isSelectErrorShow: false,       // 关联模型为空时的提示状态
                 isEnumErrorShow: false,         // 枚举内容为空是的提示状态
+                isIntErrorShow: {
+                    min: false,
+                    max: false
+                },
                 tips: {
                     innerField: {
                         isShow: false,
@@ -1216,61 +860,17 @@
                     }
                 },
                 isLoading: false,           // 是否处于加载列表状态
-                fieldTypeList: [
-                    {
-                        value: 'singlechar',
-                        label: '短字符'
-                    },
-                    {
-                        value: 'int',
-                        label: '数字'
-                    },
-                    {
-                        value: 'enum',
-                        label: '枚举'
-                    },
-                    {
-                        value: 'date',
-                        label: '日期'
-                    },
-                    {
-                        value: 'time',
-                        label: '时间'
-                    },
-                    {
-                        value: 'longchar',
-                        label: '长字符'
-                    },
-                    {
-                        value: 'singleasst',
-                        label: '单关联'
-                    },
-                    {
-                        value: 'multiasst',
-                        label: '多关联'
-                    },
-                    {
-                        value: 'objuser',
-                        label: '用户'
-                    },
-                    {
-                        value: 'timezone',
-                        label: '时区'
-                    },
-                    {
-                        value: 'bool',
-                        label: 'bool'
-                    }
-                ],
                 fieldList: [],          // 字段配置列表
                 defaultModel: '',
                 curFieldInfo: {         // 当前改动项
-                    bk_property_name: '',
-                    isrequired: false,
-                    isonly: false
+                    isonly: false,
+                    isrequired: false
+                },
+                curFieldInfoCopy: {
+                    isonly: false,
+                    isrequired: false
                 },
                 newFieldInfo: {
-                    asstForward: '2',
                     propertyName: '',       // 字段名称
                     propertyId: '',         // API标识
                     propertyType: 'singlechar',      // 字段类型
@@ -1301,19 +901,70 @@
                     },
                     option: []
                 },
+                newFieldInfoCopy: {},
                 modelList: [],          // 模型分类及附属模型信息列表
                 curModelType: '',
                 curIndex: 0,            // 当前展开项索引
-                isAddFieldShow: false,
-                maxValue: '',
-                minValue: '',
-                isIconDrop: false            // 选择图标下拉框
+                isAddFieldShow: false
             }
         },
         computed: {
             ...mapGetters([
-                'bkSupplierAccount'
+                'bkSupplierAccount',
+                'language'
             ]),
+            fieldTypeList () {
+                let list = [
+                    {
+                        value: 'singlechar',
+                        label: this.$t('ModelManagement["短字符"]')
+                    },
+                    {
+                        value: 'int',
+                        label: this.$t('ModelManagement["数字"]')
+                    },
+                    {
+                        value: 'enum',
+                        label: this.$t('ModelManagement["枚举"]')
+                    },
+                    {
+                        value: 'date',
+                        label: this.$t('ModelManagement["日期"]')
+                    },
+                    {
+                        value: 'time',
+                        label: this.$t('ModelManagement["时间"]')
+                    },
+                    {
+                        value: 'longchar',
+                        label: this.$t('ModelManagement["长字符"]')
+                    },
+                    {
+                        value: 'singleasst',
+                        label: this.$t('ModelManagement["单关联"]')
+                    },
+                    {
+                        value: 'multiasst',
+                        label: this.$t('ModelManagement["多关联"]')
+                    },
+                    {
+                        value: 'objuser',
+                        label: this.$t('ModelManagement["用户"]')
+                    },
+                    {
+                        value: 'timezone',
+                        label: this.$t('ModelManagement["时区"]')
+                    },
+                    {
+                        value: 'bool',
+                        label: 'bool'
+                    }
+                ]
+                if (this.isMainLine) {
+                    list.splice(6, 2)
+                }
+                return list
+            },
             exportUrl () {
                 return `${window.siteUrl}object/owner/${this.bkSupplierAccount}/object/${this.objId}/export`
             },
@@ -1322,6 +973,74 @@
             }
         },
         methods: {
+            isShowRequired (type) {
+                switch (type) {
+                    case 'singlechar':
+                    case 'int':
+                    case 'date':
+                    case 'time':
+                    case 'longchar':
+                    case 'objuser':
+                    case 'timezone':
+                        return true
+                    default:
+                        return false
+                }
+            },
+            isShowOnly (type) {
+                switch (type) {
+                    case 'singlechar':
+                    case 'int':
+                    case 'longchar':
+                        return true
+                    default:
+                        return false
+                }
+            },
+            addTableList (index, option) {
+                if (this.isAddFieldShow) { // 新增
+                    this.newFieldInfo.option.splice(index + 1, 0, {
+                        list_header_name: '',
+                        list_header_describe: '',
+                        isEditDesc: false,
+                        isEditName: false,
+                        errorMsg: ''
+                    })
+                } else {
+                    option.splice(index + 1, 0, {
+                        list_header_name: '',
+                        list_header_describe: '',
+                        isEditDesc: false,
+                        isEditName: false,
+                        errorMsg: ''
+                    })
+                }
+            },
+            deleteTableList (index, option) {
+                if (this.isAddFieldShow) {
+                    this.newFieldInfo.option.splice(index, 1)
+                } else {
+                    option.splice(index, 1)
+                }
+            },
+            listViewEdit (opt, view, isEdit) {
+                this.$set(opt, view, isEdit)
+                this.$forceUpdate()
+            },
+            isCloseConfirmShow () {
+                // 校验字段
+                if (this.isAddFieldShow) {
+                    if (JSON.stringify(this.newFieldInfoCopy) !== JSON.stringify(this.newFieldInfo)) {
+                        return true
+                    }
+                } else {
+                    if (JSON.stringify(this.curFieldInfo) !== JSON.stringify(this.curFieldInfoCopy)) {
+                        return true
+                    }
+                }
+                // 校验模型名
+                return this.$refs.baseInfo.isCloseConfirmShow()
+            },
             handleFile (e) {
                 this.isLoading = true
                 let files = e.target.files
@@ -1335,7 +1054,7 @@
                         } else if (data.hasOwnProperty('update_failed')) {
                             this.$alertMsg(data['update_failed'][0])
                         } else {
-                            this.$alertMsg('导入成功', 'success')
+                            this.$alertMsg(this.$t('ModelManagement["导入成功"]'), 'success')
                             this.getModelField()
                         }
                     } else {
@@ -1344,13 +1063,10 @@
                     this.$refs.fileInput.value = ''
                     this.isLoading = false
                 }).catch(reject => {
-                    this.$alertMsg('导入失败')
+                    this.$alertMsg(this.$t('ModelManagement["导入失败"]'))
                     this.$refs.fileInput.value = ''
                     this.isLoading = false
                 })
-            },
-            closePop () {
-                this.$refs.baseInfo.closeDrop()
             },
             /*
                 保存基本信息成功
@@ -1371,7 +1087,7 @@
                     }
                 } else {
                     item.option.max = event.target.value
-                    this.$set(item.option.max, event.target.value)
+                    this.$set(item.option, 'max', event.target.value)
                 }
             },
             inputOptionMax (item) {
@@ -1408,25 +1124,22 @@
                 let opt = null
                 switch (type) {
                     case 'int':
-                        opt = JSON.stringify({
+                        opt = {
                             min: option.min,
                             max: option.max
-                        })
-                        break
-                    case 'longchar':
-                        opt = option
-                        break
-                    case 'singlechar':
-                        opt = option
+                        }
                         break
                     case 'enum':
-                        // opt = JSON.stringify(option)
-                        option.list[option.defaultIndex]['is_default'] = true
-                        opt = JSON.stringify(option.list)
+                        option.list.map((item, index) => {
+                            item['is_default'] = index === option.defaultIndex
+                        })
+                        opt = option.list
                         break
+                    case 'longchar':
+                    case 'singlechar':
                     case 'singleasst':
                     case 'multiasst':
-                        opt = JSON.stringify(option)
+                        opt = option
                         break
                 }
                 return opt
@@ -1443,16 +1156,15 @@
                     case 'singleasst':
                     case 'multiasst':
                         if (item['Option'] !== 'undefined') {
-                            option = JSON.parse(item['Option'])
+                            option = item['Option']
                         }
                         break
                     case 'enum':
                         if (item['Option'] !== 'undefined') {
-                            let opt = JSON.parse(item['Option'])
+                            let opt = item['Option']
                             let defaultIndex = ''
                             for (let i = 0; i < opt.length; i++) {
-                                if (opt[i].hasOwnProperty('is_default')) {
-                                    delete opt[i]['is_default']
+                                if (opt[i].hasOwnProperty('is_default') && opt[i]['is_default']) {
                                     defaultIndex = i
                                     break
                                 }
@@ -1461,7 +1173,6 @@
                                 list: opt,
                                 defaultIndex: defaultIndex
                             }
-                            // option = JSON.parse(item['Option'])
                         }
                         break
                     case 'longchar':
@@ -1469,7 +1180,30 @@
                         option = item['Option']
                         break
                 }
-                this.fieldList[index].option = option
+                this.fieldList[index].option = this.$deepClone(option)
+            },
+            formatAttrOption (data) {
+                data.map(item => {
+                    switch (item['bk_property_type']) {
+                        case 'int':
+                            if (item.option === null) {
+                                item.option = {
+                                    min: '',
+                                    max: ''
+                                }
+                            }
+                            break
+                        case 'enum':
+                            if (!Array.isArray(item.option) || (Array.isArray(item.option) && !item.option.length)) {
+                                item.option = [{
+                                    id: '',
+                                    name: '',
+                                    is_default: true
+                                }]
+                            }
+                            break
+                    }
+                })
             },
             /*
                 获取字段配置
@@ -1481,8 +1215,9 @@
                 }
                 this.isAddFieldShow = false
                 this.isLoading = true
-                this.$axios.post('object/attr/search', params).then(res => {
+                this.$store.dispatch('object/getAttribute', {objId: this.objId, force: true}).then(res => {
                     if (res.result) {
+                        this.formatAttrOption(res.data)
                         for (var i = 0; i < this.fieldList.length; i++) {
                             this.fieldList[i]['isShow'] = false
                         }
@@ -1498,13 +1233,6 @@
                         for (let item of res.data) {
                             // 解决后端变量与前端重名问题
                             item.Option = item.option
-                            // delete item.option
-                            // 注释暂时不删
-                            // if (item.IsPre) {
-                            //     this.fieldList.unshift(item)
-                            // } else {
-                            //     this.fieldList.push(item)
-                            // }
                             if (item['isonly'] && item['isrequired']) {
                                 haveValue.unshift(item)
                             } else if (item['isonly']) {
@@ -1515,7 +1243,6 @@
                                 empty.push(item)
                             }
                             this.fieldList = haveValue.concat(empty)
-                            // console.log(this.fieldList, 'item')
                         }
                     } else {
                         this.$alertMsg(res['bk_error_msg'])
@@ -1532,9 +1259,8 @@
             */
             toggleDetailShow (item, index) {
                 $('#validate-form-change').parsley().reset()
-                // if (item.IsPre) {
-                //     return
-                // }
+                this.isIntErrorShow.min = false
+                this.isIntErrorShow.max = false
                 if (!this.fieldList[index].isShow) {
                     this.parseFieldOption(item, index)
                     this.curFieldInfo['bk_property_name'] = item['bk_property_name']
@@ -1544,15 +1270,17 @@
                     this.curFieldInfo['placeholder'] = item['placeholder']
                     this.curFieldInfo['unit'] = item['unit']
                     this.curFieldInfo['bk_asst_forward'] = ''
-                    // this.curFieldInfo['bk_asst_forward'] = item['bk_asst_forward']
+                } else {
+                    this.curFieldInfo = {}
                 }
+                this.curFieldInfoCopy = this.$deepClone(this.curFieldInfo)
                 for (var i = 0; i < this.fieldList.length; i++) {
                     if (index === i) {
                         this.fieldList[i].isShow = !this.fieldList[i].isShow
                         this.curIndex = index
                         // 处理单关联和多关联两种特殊情况
                         if (this.fieldList[i]['bk_property_type'] === 'singleasst' || this.fieldList[i]['bk_property_type'] === 'multiasst') {
-                            this.curModelType = this.fieldList[i].option.label
+                            this.curModelType = this.fieldList[i]['bk_asst_obj_id']
                         }
                     } else {
                         this.fieldList[i].isShow = false
@@ -1571,38 +1299,42 @@
                 清空新增字段内容
             */
             resetNewField () {
+                $('#validate-form-new').parsley().reset()
                 this.isSelectErrorShow = false
                 this.isEnumErrorShow = false
-                this.newFieldInfo = {
-                    propertyName: '',       // 字段名称
-                    propertyId: '',         // API标识
-                    propertyType: 'singlechar',      // 字段类型
-                    isRequired: false,      // 是否必填
-                    isReadOnly: false,
-                    editable: true,
-                    propertyGroup: 'default',
-                    isOnly: false,          // 是否唯一
-                    enumList: [],            // 枚举列表
-                    fieldType: {
-                        int: {
-                            min: '',
-                            max: ''
+                this.newFieldInfo.propertyType = 'bool'
+                this.$nextTick(() => {
+                    this.newFieldInfo = {
+                        propertyName: '',       // 字段名称
+                        propertyId: '',         // API标识
+                        propertyType: 'singlechar',      // 字段类型
+                        isRequired: false,      // 是否必填
+                        isReadOnly: false,
+                        editable: true,
+                        propertyGroup: 'default',
+                        isOnly: false,          // 是否唯一
+                        enumList: [],            // 枚举列表
+                        fieldType: {
+                            int: {
+                                min: '',
+                                max: ''
+                            },
+                            longchar: {
+                                reg: ''
+                            },
+                            singlechar: {
+                                reg: ''
+                            },
+                            enum: {
+    
+                            },
+                            singleasst: {
+                                type: ''
+                            }
                         },
-                        longchar: {
-                            reg: ''
-                        },
-                        singlechar: {
-                            reg: ''
-                        },
-                        enum: {
-
-                        },
-                        singleasst: {
-                            type: ''
-                        }
-                    },
-                    option: ''
-                }
+                        option: ''
+                    }
+                })
             },
             /*
                 删除字段
@@ -1631,7 +1363,7 @@
                 switch (type) {
                     case 'delete':
                         this.$bkInfo({
-                            title: '确定删除字段？',
+                            title: this.$t('ModelManagement["确定删除字段？"]'),
                             confirmFn () {
                                 self.deleteField(params.id, params.index)
                             }
@@ -1644,7 +1376,7 @@
             */
             checkParams () {
                 if (this.newFieldInfo.propertyType === 'singleasst' || this.newFieldInfo.propertyType === 'multiasst') {
-                    if (this.newFieldInfo.option.value === '') {
+                    if (this.newFieldInfo['bk_asst_obj_id'] === '') {
                         this.isSelectErrorShow = true
                         return false
                     }
@@ -1655,6 +1387,19 @@
                         return false
                     }
                 }
+                if (this.newFieldInfo.propertyType === 'int') {
+                    this.isIntErrorShow.min = !/^(-)?[0-9]*$/.test(this.newFieldInfo.option.min)
+                    this.isIntErrorShow.max = !/^(-)?[0-9]*$/.test(this.newFieldInfo.option.max)
+                    if (this.isIntErrorShow.min || this.isIntErrorShow.max) {
+                        return false
+                    }
+                    if (parseInt(this.newFieldInfo.option.min) > parseInt(this.newFieldInfo.option.max)) {
+                        this.isIntErrorShow.min = true
+                        return false
+                    }
+                }
+                this.isIntErrorShow.min = false
+                this.isIntErrorShow.max = false
                 this.isSelectErrorShow = false
                 this.isEnumErrorShow = false
                 return true
@@ -1664,7 +1409,7 @@
             */
             checkChangeParams (item, index) {
                 if (item['bk_property_type'] === 'singleasst' || item['bk_property_type'] === 'multiasst') {
-                    if (!item.option.value) {
+                    if (!item['bk_asst_obj_id']) {
                         this.isSelectErrorShow = true
                         return false
                     }
@@ -1675,6 +1420,19 @@
                         return false
                     }
                 }
+                if (item['bk_property_type'] === 'int') {
+                    this.isIntErrorShow.min = !/^(-)?[0-9]*$/.test(item.option.min)
+                    this.isIntErrorShow.max = !/^(-)?[0-9]*$/.test(item.option.max)
+                    if (this.isIntErrorShow.min || this.isIntErrorShow.max) {
+                        return false
+                    }
+                    if (parseInt(item.option.min) > parseInt(item.option.max)) {
+                        this.isIntErrorShow.min = true
+                        return false
+                    }
+                }
+                this.isIntErrorShow.min = false
+                this.isIntErrorShow.max = false
                 this.isSelectErrorShow = false
                 this.isEnumErrorShow = false
                 return true
@@ -1689,7 +1447,7 @@
                     return
                 }
                 let params = {
-                    creator: 'user',
+                    creator: window.userName,
                     isonly: this.newFieldInfo['isonly'],
                     isreadonly: false,
                     isrequired: this.newFieldInfo.isRequired,
@@ -1703,10 +1461,9 @@
                     editable: this.newFieldInfo.editable,
                     placeholder: this.newFieldInfo.placeholder,
                     unit: this.newFieldInfo.unit,
-                    bk_asst_obj_id: this.newFieldInfo.option.value,
-                    bk_asst_forward: ''
+                    bk_asst_obj_id: this.newFieldInfo['bk_asst_obj_id']
                 }
-                this.$axios.post('object/attr', params).then(res => {
+                this.$axios.post('object/attr', params, {id: 'saveNew'}).then(res => {
                     if (res.result) {
                         this.getModelField()
                         this.closeAddFieldBox()
@@ -1743,23 +1500,14 @@
                         break
                     case 'enum':
                         this.newFieldInfo.option = {
-                            list: [{name: ''}],
+                            list: [{id: '', name: ''}],
                             defaultIndex: 0
                         }
-                        // this.newFieldInfo.option = [{name: '', is_default: 0}]
                         break
                     case 'singleasst':
-                        this.newFieldInfo.asstForward = '2'
-                        this.newFieldInfo.option = {
-                            label: '',
-                            value: ''
-                        }
-                        break
                     case 'multiasst':
-                        this.newFieldInfo.option = {
-                            label: '',
-                            value: ''
-                        }
+                        this.newFieldInfo.option = ''
+                        this.newFieldInfo['bk_asst_obj_id'] = ''
                 }
             },
             /*
@@ -1792,15 +1540,16 @@
                 // 只有关联类型才添加以下三个参数
                 if (item['bk_property_type'] === 'singleasst' || item['bk_property_type'] === 'multiasst') {
                     if (option !== 'undefined') {
-                        params['bk_asst_obj_id'] = JSON.parse(option).value
+                        params['bk_asst_obj_id'] = option.value
                     }
                     params['bk_property_id'] = item['bk_property_id']
                     params['bk_obj_id'] = this.objId
                     params['bk_supplier_account'] = this.bkSupplierAccount
                 }
-                this.$axios.put(`object/attr/${item['id']}`, params).then(res => {
+                this.$axios.put(`object/attr/${item['id']}`, params, {id: 'saveChange'}).then(res => {
                     if (res.result) {
                         this.getModelField()
+                        this.curFieldInfoCopy = this.$deepClone(this.curFieldInfo)
                     } else {
                         this.$alertMsg(res['bk_error_msg'])
                     }
@@ -1932,7 +1681,7 @@
                                     }
                                 }
                                 // 去掉临时不显示的内容后长度不为0时才添加到列表中
-                                if (val['bk_objects'].length) {
+                                if (val['bk_objects'].length && val['bk_classification_id'] !== 'bk_biz_topo') {
                                     this.modelList.push(val)
                                 }
                             }
@@ -1947,7 +1696,8 @@
             },
             modelSelected (item) {
                 this.isSelectErrorShow = false
-                this.newFieldInfo.option = item
+                this.newFieldInfo['bk_asst_obj_id'] = item.value
+                // this.newFieldInfo.option = item
             },
             /*
                 页面初始化
@@ -1976,7 +1726,7 @@
                         },
                         messages: {
                             'en': 'This value should not be repeated',
-                            'zh-cn': '重复的值'
+                            'zh-cn': this.$t('Common["重复的值"]')
                         }
                     })
                 }
@@ -1995,6 +1745,13 @@
                     }
                     this.forceValidate(type)
                 })
+            }
+        },
+        directives: {
+            focus: {
+                inserted: function (el) {
+                    el.focus()
+                }
             }
         },
         mounted () {
@@ -2016,7 +1773,8 @@
     $primaryColor: #f9f9f9; //主要
     $fnMainColor: #bec6de; //文案主要颜色
     $primaryHoverColor: #6b7baa; // 主要颜色
-    .select-error{
+    .select-error,
+    .error-msg{
         font-size: 12px;
         color: #ff3737;
     }
@@ -2176,29 +1934,31 @@
                     padding:0;
                     margin:0;
                     >li{
-                      float:left;
-                      height:40px;
-                      line-height:40px;
-                      background:#ffffff;
-                      text-align:center;
-                      border-bottom:1px solid $borderColor;
-                      &:nth-child(1){
-                        width:80px;
-                        border-left:1px solid $borderColor;
-                    }
-                    &:nth-child(2){
-                        width:80px;
-                    }
-                    &:nth-child(3){
-                        width:148px;
-                    }
-                    &:nth-child(4){
-                        width:287px;
-                    }
-                    &:nth-child(5){
-                        width:105px;
-                        border-right:1px solid $borderColor;
-                    }
+                        float:left;
+                        height:40px;
+                        line-height:40px;
+                        background:#ffffff;
+                        text-align:center;
+                        border-bottom:1px solid $borderColor;
+                        text-overflow: ellipsis;
+                        overflow: hidden;
+                        &:nth-child(1){
+                            width:80px;
+                            border-left:1px solid $borderColor;
+                        }
+                        &:nth-child(2){
+                            width:80px;
+                        }
+                        &:nth-child(3){
+                            width:148px;
+                        }
+                        &:nth-child(4){
+                            width:287px;
+                        }
+                        &:nth-child(5){
+                            width:105px;
+                            border-right:1px solid $borderColor;
+                        }
                     }
                 }
                 .list-content-hidden{
@@ -2216,7 +1976,7 @@
                             bottom: 0;
                         }
                     }
-                    .from-common{
+                    .form-common{
                         width: 700px;
                         /*background: #f9f9f9;*/
                         padding: 30px 19px 30px 17px;
@@ -2229,26 +1989,26 @@
                             margin:0;
                             margin-bottom:10px;
                         }
-                        .from-common-item{
+                        .form-common-item{
                             width:213px;
                             margin-right:0;
-                            &.from-common-item2{
+                            &.form-common-item2{
                                 width: 66.7%;
                             }
                             &.block{
                                 width: 100%;
-                                .from-common-content{
+                                .form-common-content{
                                     width: calc(100% - 92px);
                                 }
                             }
-                            .from-common-label{
+                            .form-common-label{
                                 display: inline-block;
-                                width:63px;
+                                width:75px;
                                 vertical-align: top;
                                 line-height: 30px;
                                 text-align:right;
                             }
-                            .from-common-content{
+                            .form-common-content{
                                 // margin-left:5px;
                                 width:128px;
                                 input{
@@ -2316,6 +2076,7 @@
             .border-control{
                 padding:0 40px 0 40px ;
                 min-height: 400px;
+                height: calc(100% - 30px);
             }
             .content-replace{
                 display:none;
@@ -2328,12 +2089,19 @@
                     line-height:1;
                 }
             }
-            .from-common{
+            .form-common{
                 width: 661px;
                 margin-top: 20px;
-                .from-common-item{
-                    .from-common-label{
-                        width: 63px;
+                height: calc(100% - 20px);
+                .form-option {
+                    margin-top: 10px;
+                    overflow: auto;
+                    max-height: calc(100% - 254px);
+                    @include scrollbar;
+                }
+                .form-common-item{
+                    .form-common-label{
+                        width: 75px;
                         display: inline-block;
                         text-align: right;
                         vertical-align: top;
@@ -2343,8 +2111,8 @@
                 }
             }
             .button-wraper{
-                margin-left: 70px;
-                a{
+                margin-left: 82px;
+                .bk-button{
                     height: 30px;
                     line-height: 28px;
                     border-radius: 2px;
@@ -2359,7 +2127,7 @@
             }
         }
     }
-    .from-common{
+    .form-common{
         color: $primaryHoverColor;
         h3{
             font-size:14px;
@@ -2374,16 +2142,25 @@
         .bk-form-radio{
             margin-right: 10px;
         }
-        .from-common-item{
+        .form-common-item{
             width: 33.3%;
             float:left;
-            &.from-common-item2{
+            .icon-info-png{
+                position: absolute;
+                display: inline-block;
+                top: 7px;
+                right: -20px;
+                width: 16px;
+                height: 16px;
+                background: url(../../../common/images/icon/icon-info.png);
+            }
+            &.form-common-item2{
                 width: 66.7%;
             }
             &.block{
                 width: 100%;
-                .from-common-content{
-                    width: calc(100% - 70px);
+                .form-common-content{
+                    width: calc(100% - 83px);
                     input{
                         width: 100% !important;
                     }
@@ -2404,12 +2181,12 @@
                     font-style: normal;
                 }
             }
-            .from-common-label{
+            .form-common-label{
                 span{
                     color:#f05d5d;
                 }
             }
-            .from-common-content{
+            .form-common-content{
                 display:inline-block;
                 margin-left:2px;
                 width: 130px;
@@ -2444,8 +2221,8 @@
             }
         }
         .submit-btn{
-            margin-left: 70px;
-            a{
+            margin-left: 82px;
+            .bk-button{
                 height: 30px;
                 line-height: 28px;
                 border-radius: 2px;
@@ -2495,6 +2272,67 @@
             }
         }
     }
+    .list-wrapper{
+        margin: 20px 0 0 69px;
+        border-top: 1px solid #dde4eb;
+        border-left: 1px solid #dde4eb;
+        color: #737987;
+        .list-item{
+            position: relative;
+            font-size: 0;
+            line-height: 40px;
+            display: flex;
+            &:first-child{
+                background: #fafbfd;
+                color: #333948;
+            }
+            .icon{
+                position: absolute;
+                font-size: 16px;
+                left: -25px;
+                top: 13px;
+                color: #ff5656;
+            }
+            div{
+                text-align: center;
+                font-size: 14px;
+                border-right: 1px solid #dde4eb;
+                border-bottom: 1px solid #dde4eb;
+                text-overflow: ellipsis;
+                overflow: hidden;
+                &:not(:last-child) {
+                    flex: 2;
+                }
+                &:last-child{
+                    flex: 1;
+                }
+                .add{
+                    cursor: pointer;
+                    &:hover{
+                        color: #3c96ff;
+                    }
+                }
+                .delete{
+                    margin-left: 8px;
+                    .icon-cc-del{
+                        color: #737987;
+                        &:hover{
+                            color: #ff3737;
+                        }
+                    }
+                    cursor: pointer;
+                }
+                .list-view{
+                    cursor: pointer;
+                    display: inline-block;
+                    padding: 0 10px;
+                    width: 100%;
+                    height: 40px;
+                    vertical-align: bottom;
+                }
+            }
+        }
+    }
 </style>
 
 <style>
@@ -2503,16 +2341,37 @@
     }
 </style>
 <style lang="scss" scoped>
+    .form-enum-box {
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+    }
     .form-enum-wrapper{
         margin-top: 10px;
-        margin-left: 69px;
+        margin-left: 82px;
         font-size: 0;
         position: relative;
         float: left;
+        // width: calc(100% - 82px);
+        .enum-id{
+            float: left;
+            width: 90px;
+            margin-right: 10px;
+            input{
+                width: 90px;
+            }
+        }
+        .enum-name{
+            float: left;
+            width: 250px;
+            input{
+                width: 250px;
+            }
+        }
         input {
             font-size: 12px;
             vertical-align: middle;
-            width: 350px;
+            // width: 350px;
             height: 30px;
             border-radius: 2px;
             border: 1px solid #bec6de;

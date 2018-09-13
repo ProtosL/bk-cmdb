@@ -13,12 +13,13 @@
 package params
 
 import (
-	"configcenter/src/common"
-	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
 	"strings"
+
+	"configcenter/src/common"
+	"configcenter/src/common/metadata"
 )
 
 //common search struct
@@ -37,45 +38,43 @@ type CommonResult struct {
 	Data    interface{} `json:"data"`
 }
 
-func ParseCommonParams(input []interface{}, output map[string]interface{}) error {
+func ParseCommonParams(input []metadata.ConditionItem, output map[string]interface{}) error {
 	for _, i := range input {
-		j, ok := i.(map[string]interface{})
-		if false == ok {
-			return errors.New("condition error")
-		}
-		field, ok := j["field"].(string)
-		if false == ok {
-			return errors.New("condition error")
-		}
-		operator, ok := j["operator"].(string)
-		if false == ok {
-			return errors.New("condition error")
-		}
-		value := j["value"]
-		switch operator {
+		switch i.Operator {
 		case common.BKDBEQ:
-			objtype := reflect.TypeOf(value)
-			switch objtype.Kind() {
-			case reflect.Int:
-				output[field] = value
-			case reflect.Float64:
-				output[field] = value
-			case reflect.Float32:
-				output[field] = value
-			default:
-				d := make(map[string]interface{})
-				d[common.BKDBLIKE] = value
-				output[field] = d
+			if reflect.TypeOf(i.Value).Kind() == reflect.String {
+				output[i.Field] = SpeceialCharChange(i.Value.(string))
+			} else {
+				output[i.Field] = i.Value
 			}
 
 		default:
 			d := make(map[string]interface{})
-			d[operator] = value
-			output[field] = d
+			if reflect.TypeOf(i.Value).Kind() == reflect.String {
+				d[i.Operator] = SpeceialCharChange(i.Value.(string))
+			} else {
+				d[i.Operator] = i.Value
+			}
+			output[i.Field] = d
 		}
-
 	}
 	return nil
+}
+
+func SpeceialCharChange(targetStr string) string {
+
+	re := regexp.MustCompile(`([\^\$\(\)\*\+\?\.\\\|\[\]\{\}])`)
+	delItems := re.FindAllString(targetStr, -1)
+	tmp := map[string]struct{}{}
+	for _, target := range delItems {
+		if _, ok := tmp[target]; ok {
+			continue
+		}
+		tmp[target] = struct{}{}
+		targetStr = strings.Replace(targetStr, target, fmt.Sprintf(`\%s`, target), -1)
+	}
+
+	return targetStr
 }
 
 func ParseAppSearchParams(input map[string]interface{}) map[string]interface{} {
@@ -86,12 +85,7 @@ func ParseAppSearchParams(input map[string]interface{}) map[string]interface{} {
 		case reflect.String:
 			d := make(map[string]interface{})
 			targetStr := j.(string)
-			re := regexp.MustCompile("([\\^\\$\\(\\)\\*\\+\\?\\.\\\\\\|\\[\\]\\{\\}])")
-			delItems := re.FindAllString(targetStr, -1)
-			for _, target := range delItems {
-				targetStr = strings.Replace(targetStr, target, fmt.Sprintf("\\\\%s", target), -1)
-			}
-			d[common.BKDBLIKE] = targetStr
+			d[common.BKDBLIKE] = SpeceialCharChange(targetStr)
 			output[i] = d
 		default:
 			output[i] = j

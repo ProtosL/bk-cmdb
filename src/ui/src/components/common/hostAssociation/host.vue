@@ -1,20 +1,20 @@
 <template>
     <div>
-        <input class="bk-form-input selected-host" type="text" readonly :value="localSelected.join(',')" @click="isSelectBoxShow = !isSelectBoxShow">
+        <input class="bk-form-input selected-host" type="text" readonly :value="localSelected.join(',')" @click="showSelectBox">
+        <i class="bk-icon icon-close bk-selector-icon clear-icon" @click.stop="clear" v-show="localSelected.length"></i>
         <div class="selectbox-wrapper" v-show="isSelectBoxShow" @click.self="handleCancel">
             <div class="selectbox-box">
                 <div class="top-box">
-                    <p class="content-title">变更关联</p>
+                    <p class="content-title">{{$t("Hosts['变更关联']")}}</p>
                     <div class="content-box">
                         <template>
                             <div class="operation-group clearfix">
-                                <bk-button type="primary" :disabled="!ready" @click.stop="setCurrentPage(1)">刷新查询</bk-button>
+                                <bk-button type="primary" :disabled="!ready" @click.stop="setCurrentPage(1)">
+                                    {{$t("Common['刷新查询']")}}
+                                </bk-button>
                                 <div class="fr">
                                     <bk-button type="default" class="btn-small" @click.stop="resetFilterParams">
-                                        <i class="icon icon-cc-clear"></i>清空
-                                    </bk-button>
-                                    <bk-button type="default" class="btn-small" hidden>
-                                        <i class="icon icon-cc-setting"></i>列表
+                                        <i class="icon icon-cc-clear"></i>{{$t("Hosts['清空']")}}
                                     </bk-button>
                                 </div>
                             </div>
@@ -25,29 +25,28 @@
                                     :attribute="attribute"
                                     @filterChange="setFilterParams">
                                 </v-filter>
-                                <v-table
-                                    :tableHeader="table.header"
-                                    :tableList="table.list"
+                                <v-table class="asst-host-table"
+                                    :header="table.header"
+                                    :list="table.list"
                                     :defaultSort="table.defaultSort"
-                                    :pagination="table.pagination"
-                                    :chooseId.sync="table.chooseId"
-                                    :isLoading="table.isLoading"
-                                    :maxHeight="'auto'"
+                                    :pagination.sync="table.pagination"
+                                    :checked.sync="table.chooseId"
+                                    :loading="table.isLoading"
                                     :multipleCheck="multiple"
-                                    @handlePageTurning="setCurrentPage"
-                                    @handlePageSizeChange="setCurrentSize"
-                                    @handleTableSortClick="setCurrentSort"
-                                    @handleTableAllCheck="checkAllHost">
+                                    :emptyHeight="160"
+                                    :maxHeight="202"
+                                    @handlePageChange="setCurrentPage"
+                                    @handleSizeChange="setCurrentSize"
+                                    @handleSortChange="setCurrentSort"
+                                    @handleCheckAll="checkAllHost">
                                     <template v-for="({id, name, property}, index) in table.header" :slot="id" slot-scope="{ item }">
-                                        <td v-if="id === 'bk_host_id'" style="width: 50px;" class="checkbox-wrapper">
-                                            <label class="bk-form-checkbox bk-checkbox-small" @click.stop>
-                                                <input type="checkbox" 
-                                                    :value="item['host']['bk_host_id']"
-                                                    :checked="table.chooseId.indexOf(item['host']['bk_host_id']) !== -1"
-                                                    @change="setChoose(item['host']['bk_host_id'])">
-                                            </label>
-                                        </td>
-                                        <td v-else>{{getCellValue(property, item)}}</td>
+                                        <label v-if="id === 'bk_host_id'" style="width: 50px;text-align:center;" class="bk-form-checkbox bk-checkbox-small" @click.stop>
+                                            <input type="checkbox"
+                                                :value="item['host']['bk_host_id']"
+                                                :checked="table.chooseId.indexOf(item['host']['bk_host_id']) !== -1"
+                                                @change="setChoose(item['host']['bk_host_id'])">
+                                        </label>
+                                        <template v-else>{{getCellValue(property, item)}}</template>
                                     </template>
                                 </v-table>
                             </div>
@@ -56,8 +55,8 @@
                 </div>
                 <div class="bottom-box">
                     <div class="btn-group">
-                        <bk-button type="primary" class="btn" @click="handleConfirm">确认</bk-button>
-                        <bk-button type="default" class="btn" @click="handleCancel">取消</bk-button>
+                        <bk-button type="primary" class="btn" @click="handleConfirm">{{$t("Common['确认']")}}</bk-button>
+                        <bk-button type="default" class="btn" @click="handleCancel">{{$t("Common['取消']")}}</bk-button>
                     </div>
                 </div>
             </div>
@@ -76,13 +75,13 @@
                     return Array.isArray(selected) || typeof selected === 'string' || typeof selected === 'undefined' || selected === null
                 }
             },
-            multiple: Boolean
+            multiple: Boolean,
+            isSelectBoxShow: Boolean
         },
         data () {
             return {
                 ready: false,
                 localSelected: [],
-                isSelectBoxShow: false,
                 table: {
                     header: [],
                     list: [],
@@ -91,7 +90,8 @@
                     pagination: {
                         current: 1,
                         size: 10,
-                        count: 0
+                        count: 0,
+                        sizeDirection: 'top'
                     },
                     chooseId: [],
                     allHost: null,
@@ -99,19 +99,19 @@
                 },
                 attribute: [{
                     'bk_obj_id': 'host',
-                    'bk_obj_name': '主机',
+                    'bk_obj_name': this.$t("Hosts['主机']"),
                     'properties': []
                 }, {
                     'bk_obj_id': 'module',
-                    'bk_obj_name': '模块',
+                    'bk_obj_name': this.$t("Hosts['模块']"),
                     'properties': []
                 }, {
                     'bk_obj_id': 'set',
-                    'bk_obj_name': '集群',
+                    'bk_obj_name': this.$t("Hosts['集群']"),
                     'properties': []
                 }, {
                     'bk_obj_id': 'biz',
-                    'bk_obj_name': '业务',
+                    'bk_obj_name': this.$t("Common['业务']"),
                     'properties': []
                 }],
                 filter: {
@@ -155,12 +155,13 @@
             },
             isSelectBoxShow (isSelectBoxShow) {
                 if (isSelectBoxShow) {
+                    this.resetFilterParams()
                     this.initChoosed()
                 } else {
                     this.table.chooseId = []
                 }
             },
-            selected () {
+            selected (selected) {
                 this.initLocalSelected()
             }
         },
@@ -168,9 +169,15 @@
             this.initLocalSelected()
         },
         methods: {
+            showSelectBox () {
+                this.$emit('update:isSelectBoxShow', true)
+            },
             initLocalSelected () {
                 if (Array.isArray(this.selected)) {
-                    this.localSelected = this.selected.map(({bk_inst_name: bkInstName}) => bkInstName)
+                    let availableSelected = this.selected.filter(({id}) => id !== '')
+                    this.localSelected = availableSelected.map(({bk_inst_name: bkInstName}) => bkInstName)
+                    let hostId = availableSelected.map(({id}) => id)
+                    this.$emit('update:selected', hostId.join(','))
                 }
             },
             initChoosed () {
@@ -230,25 +237,30 @@
                 this.table.header = [{
                     id: 'bk_host_id',
                     name: 'bk_host_id',
-                    type: 'checkbox'
+                    type: 'checkbox',
+                    width: 50
                 }].concat(columns.map(column => {
+                    const property = this.getColumnProperty(column['bk_property_id'], column['bk_obj_id'])
                     return {
                         id: column['bk_property_id'],
-                        name: column['bk_property_name'],
-                        property: column
+                        name: property ? property['bk_property_name'] : column['bk_property_name'],
+                        property: property
                     }
                 }))
             },
             setQueryColumns () {
+                let bkOsType = this.allProperties.find(({bk_property_id: bkPropertyId}) => {
+                    return bkPropertyId === 'bk_os_type'
+                })
                 this.filter.queryColumns = [{
                     bk_property_id: 'bk_host_name',
-                    bk_property_name: '主机名称',
+                    bk_property_name: this.$t("Hosts['主机名称']"),
                     bk_property_type: 'singlechar',
                     bk_obj_id: 'host'
                 }, {
-                    bk_option: '[{"name":"Linux", "type":"text"},{"name":"Windows", "type":"text"}]',
+                    bk_option: bkOsType.option,
                     bk_property_id: 'bk_os_type',
-                    bk_property_name: '操作系统类型',
+                    bk_property_name: this.$t("Hosts['操作系统类型']"),
                     bk_property_type: 'enum',
                     bk_obj_id: 'host'
                 }]
@@ -313,8 +325,14 @@
                 })
             },
             getTableList () {
+                let params = this.$deepClone(this.filter.params)
+                params.page = {
+                    start: (this.table.pagination.current - 1) * this.table.pagination.size,
+                    limit: this.table.pagination.size,
+                    sort: this.table.sort
+                }
                 this.table.isLoading = true
-                this.$axios.post('hosts/search', this.filter.params).then(res => {
+                this.$axios.post('hosts/search', params).then(res => {
                     this.table.isLoading = false
                     if (res.result) {
                         this.table.pagination.count = res.data.count
@@ -340,6 +358,9 @@
                         }
                     })
                     value = tempValue.join(',')
+                } else if (property['bk_property_type'] === 'enum' && Array.isArray(property.option)) {
+                    let option = property.option.find(({id}) => id === value)
+                    value = option ? option.name : ''
                 }
                 return value
             },
@@ -357,16 +378,24 @@
                 })
             },
             handleConfirm () {
-                this.isSelectBoxShow = false
+                this.$emit('update:isSelectBoxShow', false)
                 this.setLocalSelected()
-                this.$emit('update:selected', this.table.chooseId.join(','))
+                let availableId = this.table.chooseId.filter(id => {
+                    return !!this.table.allHost.find(({bk_host_id: bkHostId}) => bkHostId === id)
+                })
+                this.$emit('update:selected', availableId.join(','))
             },
             setLocalSelected () {
                 let selectedHost = this.table.allHost.filter(({bk_host_id: bkHostId}) => this.table.chooseId.indexOf(bkHostId) !== -1)
                 this.localSelected = selectedHost.map(({bk_host_innerip: bkHostInnerip}) => bkHostInnerip)
             },
             handleCancel () {
-                this.isSelectBoxShow = false
+                this.$emit('update:isSelectBoxShow', false)
+                this.initLocalSelected()
+            },
+            clear () {
+                this.table.chooseId = []
+                this.handleConfirm()
             }
         },
         components: {
@@ -396,11 +425,12 @@
         z-index: 999;
         .selectbox-box{
             position: absolute;
-            right: 32px;
+            left: 50%;
             top: 50%;
-            width: 735px;
+            width: 736px;
             height: 526px;
-            transform: translate(0, -50%);
+            line-height: normal;
+            transform: translate3d(-50%, -50%, 0);
             box-shadow: 0 2px 9.6px 0.4px rgba(0, 0, 0, .4);
             background: $white;
         }
@@ -452,6 +482,25 @@
                     &:first-child{
                         margin-right: 10px;
                     }
+                }
+            }
+        }
+    }
+</style>
+<style lang="scss">
+    .asst-host-table{
+        .table-pagination{
+            padding: 0 6px !important;
+            .bk-page{
+                height: 26px;
+                margin: 8px 0;
+                ul{
+                    height: 26px;
+                }
+                .page-item{
+                    min-width: 26px;
+                    height: 26px;
+                    line-height: 26px;
                 }
             }
         }

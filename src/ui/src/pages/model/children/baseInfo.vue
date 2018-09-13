@@ -12,54 +12,68 @@
     <div class="tab-content">
         <form class="bk-form" id="validate_form">
             <div class="bk-form-item">
-                <div class="from-common-item">
-                    <label class="from-common-label">图标选择<span class=""> * </span></label>
+                <div class="form-common-item">
+                    <label class="form-common-label">{{$t('ModelManagement["图标选择"]')}}<span class=""> * </span></label>
                     <div class="form-contain">
                         <div class="select-icon-content">
                             <div class="select-icon-show" @click.stop.prevent="toggleDrop" :class="{'active':isIconDrop}">
                                 <div class="icon-content" >
-                                    <!-- <i :class="list[nowIndex].value"></i> -->
                                     <i :class="baseInfo['bk_obj_icon']"></i>
                                 </div>
                                 <span class="arrow"><i class="bk-icon icon-angle-down"></i></span>
                             </div>
+                            <div class="select-icon-mask" v-show="isIconDrop" @click="closeDrop"></div>
                             <div class="select-icon-list" v-show="isIconDrop">
-                                <ul>
-                                    <li v-for="(item,index) in list" @click.stop.prevent="chooseIcon(index, item)">
+                                <ul class="clearfix icon-list">
+                                    <li v-tooltip="{content: language === 'zh-cn' ? item.nameZh : item.nameEn}" v-for="(item,index) in curIconList" :class="{'active': item.value === baseInfo['bk_obj_icon']}" @click.stop.prevent="chooseIcon(index, item)">
                                         <i :class="item.value"></i>
                                     </li>
                                 </ul>
+                                <div class="page-wrapper clearfix">
+                                    <div class="input-wrapper">
+                                        <input type="text" v-model="icon.searchText" :placeholder="$t('ModelManagement[\'请输入关键词\']')">
+                                        <i class="bk-icon icon-search"></i>
+                                    </div>
+                                    <ul class="clearfix page">
+                                        <li v-for="page in icon.totalPage"
+                                        class="page-item" :class="{'cur-page': icon.curPage === page}"
+                                        @click="icon.curPage = page"
+                                        >
+                                            {{page}}
+                                        </li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="from-common-item">
-                    <label class="from-common-label">中文名称<span class=""> * </span></label>
-                    <div class="from-common-content interior-width-control">
+                <div class="form-common-item">
+                    <label class="form-common-label">{{$t('ModelManagement["中文名称"]')}}<span class=""> * </span></label>
+                    <div class="form-common-content interior-width-control">
                         <input type="text" name="" value=""
                             maxlength="20"
-                            :disabled="isReadOnly"
+                            :disabled="isReadOnly || baseInfo.ispre"
                             name="validation_name"
-                            placeholder="请填写模型名"
+                            :placeholder="$t('ModelManagement[\'请填写模型名\']')"
                             :data-parsley-required="true"
-                            data-parsley-required-message="该字段是必填项"
+                            :data-parsley-required-message="$t('ModelManagement[\'该字段是必填项\']')"
                             data-parsley-maxlength="20"
                             data-parsley-trigger="input blur"
                             v-model.trim="baseInfo['bk_obj_name']">
                     </div>
                 </div>
-                <div class="from-common-item" style="padding-right: 0">
-                    <label class="from-common-label">英文名称<span class=""> * </span></label>
-                    <div class="from-common-content interior-width-control">
+                <div class="form-common-item">
+                    <label class="form-common-label">{{$t('ModelManagement["英文名称"]')}}<span class=""> * </span></label>
+                    <div class="form-common-content interior-width-control">
                         <input type="text" name="" value=""
-                            placeholder="下划线，数字，英文小写的组合"
+                            :placeholder="$t('ModelManagement[\'下划线，数字，英文小写的组合\']')"
                             :class="{'is-danger': !baseInfoVerify['bk_obj_id']}" :disabled="type==='change'"
                             :data-parsley-required="true"
                             maxlength="20"
-                            data-parsley-required-message="该字段是必填项"
+                            :data-parsley-required-message="$t('ModelManagement[\'该字段是必填项\']')"
                             data-parsley-maxlength="20"
                             data-parsley-pattern="[a-z\d_]+"
-                            data-parsley-pattern-message="格式不正确，只能包含下划线，数字，英文小写"
+                            :data-parsley-pattern-message="$t('ModelManagement[\'格式不正确，只能包含下划线，数字，英文小写\']')"
                             data-parsley-trigger="input blur"
                             v-model.trim="baseInfo['bk_obj_id']">
                     </div>
@@ -67,8 +81,8 @@
             </div>
         </form>
         <div class="base-info" v-if="!isReadOnly">
-            <bk-button type="primary" @click="saveBaseInfo">确认</bk-button>
-            <button class="btn vice-btn cancel-btn-sider" type="default" title="取消" @click="cancel">取消</button>
+            <bk-button type="primary" @click="saveBaseInfo" :loading="$loading('saveBaseInfo')">{{$t('Common["确定"]')}}</bk-button>
+            <button class="btn vice-btn cancel-btn-sider" type="default" :title="$t('Common[\'取消\']')" @click="cancel">{{$t('Common["取消"]')}}</button>
         </div>
     </div>
 </template>
@@ -131,8 +145,9 @@
                     bk_obj_id: '',                // API标识
                     bk_classification_id: '',
                     bk_supplier_account: 0,
-                    bk_obj_icon: 'icon-cc-business'
+                    bk_obj_icon: 'icon-cc-default'
                 },
+                baseInfoCopy: {},
                 baseInfoVerify: {
                     bk_obj_name: true,             // true: 成功 false 失败
                     bk_obj_id: true
@@ -140,14 +155,33 @@
                 nowIndex: 0,                   // 选择图标下拉框当前index
                 isIconDrop: false,             // 选择图标下拉框
                 isChoose: true,                // 判断编辑分类的时候是否选择了icon
-                iconValue: 'icon-cc-business', // 选择icon的值
-                list: []                        // icon 的值
+                iconValue: 'icon-cc-default', // 选择icon的值
+                icon: {
+                    searchText: '',
+                    list: [],
+                    count: 0,
+                    curPage: 1,
+                    totalPage: 0,
+                    size: 24
+                }
             }
         },
         computed: {
             ...mapGetters([
-                'bkSupplierAccount'
-            ])
+                'bkSupplierAccount',
+                'language'
+            ]),
+            curIconList () {
+                let list = this.icon.list
+                if (this.icon.searchText.length) {
+                    list = this.icon.list.filter(icon => {
+                        return icon.nameZh.toLowerCase().indexOf(this.icon.searchText.toLowerCase()) > -1 || icon.nameEn.toLowerCase().indexOf(this.icon.searchText.toLowerCase()) > -1
+                    })
+                }
+                this.icon.count = list.length
+                this.icon.totalPage = Math.ceil(list.length / this.icon.size)
+                return list.slice((this.icon.curPage - 1) * this.icon.size, this.icon.curPage * this.icon.size)
+            }
         },
         watch: {
             isShow (val) {
@@ -160,9 +194,24 @@
                         this.getBaseInfo(this.objId)
                     }
                 }
+            },
+            'icon.searchText' () {
+                this.icon.curPage = 1
             }
         },
         methods: {
+            isCloseConfirmShow () {
+                if (this.type === 'new') {
+                    if (this.baseInfo['bk_obj_id'] !== '' || this.baseInfo['bk_obj_name'] !== '' || this.baseInfo['bk_obj_icon'] !== 'icon-cc-default') {
+                        return true
+                    }
+                } else {
+                    if (this.baseInfo['bk_obj_name'] !== this.baseInfoCopy['bk_obj_name'] || this.baseInfo['bk_obj_icon'] !== this.baseInfoCopy['bk_obj_icon']) {
+                        return true
+                    }
+                }
+                return false
+            },
             /*
                 点击出现选中icon下拉框
             */
@@ -195,9 +244,9 @@
                     bk_obj_id: '',
                     bk_classification_id: '',
                     bk_supplier_account: this.bkSupplierAccount,
-                    bk_obj_icon: 'icon-cc-business'
+                    bk_obj_icon: 'icon-cc-default'
                 }
-                this.iconValue = 'icon-cc-business'
+                this.iconValue = 'icon-cc-default'
                 this.baseInfoVerify = {
                     bk_obj_name: true,          // true: 成功 false 失败
                     bk_obj_id: true
@@ -213,6 +262,7 @@
                 this.$axios.post('objects', params).then(res => {
                     if (res.result) {
                         this.baseInfo = res.data[0]
+                        this.baseInfoCopy = this.$deepClone(res.data[0])
                     } else {
                         this.$alertMsg(res['bk_error_msg'])
                     }
@@ -225,8 +275,8 @@
                 $('#validate_form').parsley().validate()
                 if (!$('#validate_form').parsley().isValid()) return
                 let params = {
-                    bk_creator: window.userName,
-                    bk_modifier: window.userName,
+                    creator: window.userName,
+                    modifier: window.userName,
                     bk_classification_id: this.classificationId,
                     bk_obj_name: this.baseInfo['bk_obj_name'],
                     bk_supplier_account: this.bkSupplierAccount,
@@ -242,7 +292,7 @@
                             bk_supplier_account: this.bkSupplierAccount,
                             bk_asst_obj_id: this.associationId,
                             bk_obj_icon: this.iconValue
-                        }).then(res => {
+                        }, {id: 'saveBaseInfo'}).then(res => {
                             if (res.result) {
                                 this.$emit('baseInfoSuccess', {
                                     bk_obj_name: this.baseInfo['bk_obj_name'],
@@ -250,11 +300,11 @@
                                     id: res.data['id']
                                 })
                             } else {
-                                this.$alertMsg('创建模型失败')
+                                this.$alertMsg(res['bk_error_msg'])
                             }
                         })
                     } else {
-                        this.$axios.post('object', params).then(res => {
+                        this.$axios.post('object', params, {id: 'saveBaseInfo'}).then(res => {
                             if (res.result) {
                                 this.$emit('baseInfoSuccess', {
                                     bk_obj_name: this.baseInfo['bk_obj_name'],
@@ -268,28 +318,40 @@
                         })
                     }
                 } else if (this.type === 'change') {
-                    params['bk_ispre'] = this.baseInfo['bk_ispre']
-                    this.$axios.put(`object/${this.baseInfo['id']}`, params).then(res => {
-                        if (res.result) {
-                            this.$alertMsg('修改成功', 'success')
-                            this.$emit('confirm', {
-                                bk_obj_name: this.baseInfo['bk_obj_name'],
-                                bk_obj_id: this.baseInfo['bk_obj_id']
-                            })
-                            this.$store.commit('updateClassify', {
-                                bk_classification_id: this.classificationId,
-                                bk_obj_id: this.baseInfo['bk_obj_id'],
-                                bk_obj_name: this.baseInfo['bk_obj_name']
-                            })
-                        } else {
-                            this.$alertMsg(res['bk_error_msg'])
-                        }
-                    })
+                    if (this.baseInfo['bk_obj_name'] === this.baseInfoCopy['bk_obj_name'] && this.baseInfo['bk_obj_icon'] === this.baseInfoCopy['bk_obj_icon']) {
+                        this.cancel()
+                    } else {
+                        params['bk_ispre'] = this.baseInfo['bk_ispre']
+                        this.$axios.put(`object/${this.baseInfo['id']}`, params, {id: 'saveBaseInfo'}).then(res => {
+                            if (res.result) {
+                                this.$alertMsg(this.$t('ModelManagement["修改成功"]'), 'success')
+                                this.$emit('confirm', {
+                                    bk_obj_name: this.baseInfo['bk_obj_name'],
+                                    bk_obj_id: this.baseInfo['bk_obj_id']
+                                })
+                                this.$store.commit('navigation/updateModel', {
+                                    bk_classification_id: this.classificationId,
+                                    bk_obj_id: this.baseInfo['bk_obj_id'],
+                                    bk_obj_name: this.baseInfo['bk_obj_name']
+                                })
+                            } else {
+                                this.$alertMsg(res['bk_error_msg'])
+                            }
+                        })
+                    }
                 }
             }
         },
         mounted () {
             this.list = iconList
+            this.icon = {
+                list: iconList,
+                count: this.list.length,
+                searchText: '',
+                curPage: 1,
+                totalPage: Math.ceil(this.list.length / 24),
+                size: 24
+            }
         }
     }
 </script>
@@ -308,13 +370,15 @@
                 display: table;
                 width: 100%;
             }
-            .from-common-item{
-                // width:240px;
-                padding-right: 46px;
-                margin-right:0;
+            .form-common-item{
+                position: relative;
+                margin-right: 46px;
                 float: left;
                 font-size: 0;
-                .from-common-label{
+                &:last-child{
+                    margin-right: 0;
+                }
+                .form-common-label{
                     display: inline-block;
                     width: 70px;
                     vertical-align: top;
@@ -327,7 +391,7 @@
                         padding-left: 3px;
                     }
                 }
-                .from-common-content{
+                .form-common-content{
                     width:158px;
                     height: 36px;
                     display: inline-block;
@@ -411,7 +475,13 @@
             display: inline-block;
             position: relative;
             border: 1px solid #c3cdd7;
-
+            .select-icon-mask{
+                position: fixed;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                right: 0;
+            }
             .select-icon-show{
                 height: 34px;
                 line-height: 34px;
@@ -429,7 +499,7 @@
                     // border-right: 1px solid $borderColor;
                     text-align: center;
                     >i{
-                        color: #498fe0;
+                        color: #3c96ff;
                         vertical-align: middle;
                         font-size: 24px;
                     }
@@ -452,14 +522,18 @@
                 top: 44px;
                 left: 0;
                 width: 382px;
-                min-height: 206px;
+                height: 248px;
                 border: 1px solid #bec6de;
                 z-index: 500;
                 background: #fff;
                 box-shadow: 0 2px 2px rgba(0,0,0,.1);
-                ul{
+                overflow: auto;
+                @include scrollbar;
+                .icon-list{
                     padding: 0;
                     margin: 0;
+                    width: 360px;
+                    height: 184px;
                     li{
                         width: 60px;
                         height: 46px;
@@ -467,6 +541,10 @@
                         line-height: 46px;
                         float: left;
                         cursor: pointer;
+                        &.active{
+                            color: #3c96ff;
+                            background: #e2efff;
+                        }
                         i{
                             font-size: 24px;
                         }
@@ -475,6 +553,52 @@
                         }
                         &:nth-child(6n){
                             margin-right: 0;
+                        }
+                    }
+                }
+                .page-wrapper {
+                    padding: 15px 18px 5px;
+                    .input-wrapper {
+                        float: left;
+                        position: relative;
+                        vertical-align: bottom;
+                        font-size: 12px;
+                        color: #c3cdd7;
+                        input {
+                            width: 116px;
+                            height: 22px;
+                            padding: 0 25px 0 5px;
+                            border: 1px solid #c3cdd7;
+                            border-radius: 2px;
+                        }
+                        .bk-icon {
+                            position: absolute;
+                            top: 5px;
+                            right: 8px;
+                        }
+                    }
+                }
+                .page{
+                    float: right;
+                    li{
+                        text-align: center;
+                        float: left;
+                        margin-right: 5px;
+                        width: 22px;
+                        height: 22px;
+                        line-height: 20px;
+                        border-radius: 2px;
+                        font-size: 12px;
+                        cursor: pointer;
+                        color: #737987;
+                        border: 1px solid #c3cdd7;
+                        &.cur-page{
+                            color: #fff;
+                            background: #3c96ff;
+                            border-color: #3c96ff;
+                        }
+                        &:last-child{
+                            margin: 0;
                         }
                     }
                 }

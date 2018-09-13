@@ -25,6 +25,9 @@
             },
             selected: {
                 default: ''
+            },
+            property: {
+                type: Object
             }
         },
         data () {
@@ -33,14 +36,17 @@
                     'default': '$eq,$ne',
                     'singlechar': '$regex,$eq,$ne',
                     'longchar': '$regex,$eq,$ne',
-                    'objuser': '$regex,$eq,$ne'
+                    'objuser': '$regex,$eq,$ne',
+                    'singleasst': '$regex,$eq,$ne',
+                    'multiasst': '$regex,$eq,$ne',
+                    'name': '$in,$eq,$ne'
                 },
                 operatorMap: {
-                    '$nin': '不包含',
-                    '$in': '包含',
-                    '$regex': '包含',
-                    '$eq': '等于',
-                    '$ne': '不等于'
+                    '$nin': this.$t("Common['不包含']"),
+                    '$in': 'IN',
+                    '$regex': this.$t("Common['包含']"),
+                    '$eq': this.$t("Common['等于']"),
+                    '$ne': this.$t("Common['不等于']")
                 }
             }
         },
@@ -48,7 +54,9 @@
             operatorList () {
                 let list = []
                 let operators = null
-                if (this.typeMap.hasOwnProperty(this.type)) {
+                if (this.property['bkPropertyId'] === 'bk_module_name' || this.property['bkPropertyId'] === 'bk_set_name') {
+                    operators = this.typeMap['name'].split(',')
+                } else if (this.typeMap.hasOwnProperty(this.type)) {
                     operators = this.typeMap[this.type].split(',')
                 } else {
                     operators = this.typeMap['default'].split(',')

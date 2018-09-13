@@ -18,7 +18,10 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
+
+	"configcenter/src/common/blog"
 )
 
 // ccErrorHelper CC 错误处理接口的实现
@@ -44,16 +47,18 @@ func (cli *ccLanguageHelper) Language(language string, key string) string {
 
 // Languagef returns an langauge that adapt to the language interface which accepts arguments
 func (cli *ccLanguageHelper) Languagef(language string, key string, args ...interface{}) string {
-	return cli.languageStrf(language, key, args)
+	return cli.languageStrf(language, key, args...)
 }
 
 // load load language package file from dir
 func (cli *ccLanguageHelper) Load(lang map[string]LanguageMap) {
+	// blog.V(3).Infof("loaded language resource: %#v", lang)
 	cli.lang = lang
 }
 
 // LoadLanguageResourceFromDir  load language resource from file
 func LoadLanguageResourceFromDir(dir string) (map[string]LanguageMap, error) {
+	blog.Infof("loading language from %s\n", dir)
 	// read all language file from dir
 	var langMap = map[string]LanguageMap{}
 	walkerr := filepath.Walk(dir, func(path string, f os.FileInfo, err error) error {
@@ -73,22 +78,21 @@ func LoadLanguageResourceFromDir(dir string) (map[string]LanguageMap, error) {
 		language := items[len(items)-2 : len(items)-1]
 
 		// analysis language package file
-		fmt.Printf("loading language from %s\n", path)
 		data, rerr := ioutil.ReadFile(path)
 		if nil != rerr {
-			return rerr
+			return fmt.Errorf("read language file %v, error: %v", path, rerr)
 		}
 
 		res := LanguageMap{}
 		jsErr := json.Unmarshal(data, &res)
 		if nil != jsErr {
-			return jsErr
+			return fmt.Errorf("unmarshal language file %v, error: %v", path, jsErr)
 		}
 
 		// will not check language validity, subject to language package file
 		for key, val := range res {
 			if _, ok := langMap[language[0]][key]; ok && key != "" {
-				fmt.Printf("the error code[%s] repeated\n", key)
+				fmt.Printf("the language code[%s] repeated\n", key)
 			}
 
 			if nil == langMap[language[0]] {
@@ -96,10 +100,10 @@ func LoadLanguageResourceFromDir(dir string) (map[string]LanguageMap, error) {
 			}
 			langMap[language[0]][key] = val
 		}
-
 		return nil
 
 	})
+	// blog.Infof("loaded language from dir %v", langMap)
 
 	if walkerr != nil {
 		return nil, walkerr
@@ -128,33 +132,45 @@ func (cli *ccLanguageHelper) getLanguageKey(language string) LanguageMap {
 // getLanguageStr get errors string interface
 func (cli *ccLanguageHelper) getLanguageStr(codemgr LanguageMap, key string) string {
 
-	reset := false
-RESET:
 	errstr, errOk := codemgr[key]
 	if !errOk {
 		// when the specified language not found, find it from default language package
-		if !reset {
-			reset = true
-			codemgr = cli.getLanguageKey(defaultLanguage)
-			if nil != codemgr {
-				goto RESET
-			}
+		codemgr = cli.getLanguageKey(defaultLanguage)
+		if nil != codemgr {
+			errstr = codemgr[key]
 		}
-		return fmt.Sprintf(UnknownTheKeyStrf, key)
 	}
 
 	return errstr
 }
+
+var replayHolderReg = regexp.MustCompile(`\[(.*?)\]`)
 
 // errorStr 错误码转换成错误信息，此方法适合不需要动态填充参数的错误信息
 func (cli *ccLanguageHelper) languageStr(language, key string) string {
 
 	// find language package form resource cache
 	codemgr := cli.getLanguageKey(language)
+
 	if nil == codemgr {
 		return fmt.Sprintf(UnknownTheLanguageStrf, language)
 	}
 
+	ms := replayHolderReg.FindAllString(key, -1)
+	// blog.Infof("key %s match %v", key, ms)
+	if len(ms) > 0 {
+		fmt.Printf("ms: %s\n", ms)
+		key = replayHolderReg.ReplaceAllString(key, "[]")
+		fmt.Printf("key: {%s}\n", key)
+		text := cli.getLanguageStr(codemgr, key)
+		if text != "" {
+			mm := []interface{}{}
+			for _, s := range ms {
+				mm = append(mm, strings.TrimSuffix(strings.TrimPrefix(s, "["), "]"))
+			}
+			return fmt.Sprintf(text, mm...)
+		}
+	}
 	// find error string from language language package
 	return cli.getLanguageStr(codemgr, key)
 }

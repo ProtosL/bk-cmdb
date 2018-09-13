@@ -10,17 +10,18 @@
 
 <template lang="html">
     <v-table class="module-table"
-        :tableHeader="table.header"
-        :tableList="table.list"
-        :isLoading="table.isLoading"
-        :maxHeight="table.maxHeight"
+        :header="table.header"
+        :list="table.list"
+        :loading="table.isLoading"
+        :width="754"
+        :wrapperMinusHeight="150"
         :sortable="false">
-        <td slot="is_bind" slot-scope="{ item }">
-            <button @click="changeBinding(item)" 
+        <template slot="is_bind" slot-scope="{ item }">
+            <bk-button :type="item['is_bind'] ? 'primary' : 'default'" :loading="$loading(`${item['bk_module_name']}Bind`)" @click="changeBinding(item)" 
                 :class="item['is_bind'] ? 'main-btn' : 'vice-btn'">
-                {{item['is_bind'] ? '已绑定' : '未绑定'}}
-            </button>
-        </td>    
+                {{item['is_bind'] ? $t("ProcessManagement['已绑定']") : $t("ProcessManagement['未绑定']")}}
+            </bk-button>
+        </template>
     </v-table>
 </template>
 
@@ -41,13 +42,13 @@
                 table: {
                     header: [{
                         id: 'bk_module_name',
-                        name: '模块名'
+                        name: this.$t("ProcessManagement['模块名']")
                     }, {
                         id: 'set_num',
-                        name: '所属集群数'
+                        name: this.$t("ProcessManagement['所属集群数']")
                     }, {
                         id: 'is_bind',
-                        name: '状态'
+                        name: this.$t("ProcessManagement['状态']")
                     }],
                     list: [],
                     isLoading: false,
@@ -60,28 +61,30 @@
         },
         watch: {
             bkProcessId (bkProcessId) {
-                this.getModuleList()
+                if (bkProcessId) {
+                    this.getModuleList()
+                }
             }
         },
         methods: {
             changeBinding (item) {
                 let moduleName = item['bk_module_name'].replace(' ', '')
                 if (item['is_bind'] === 0) {
-                    this.$axios.put(`proc/module/${this.bkSupplierAccount}/${this.bkBizId}/${this.bkProcessId}/${moduleName}`).then((res) => {
+                    this.$axios.put(`proc/module/${this.bkSupplierAccount}/${this.bkBizId}/${this.bkProcessId}/${moduleName}`, {}, {id: `${item['bk_module_name']}Bind`}).then((res) => {
                         if (res.result) {
-                            this.$alertMsg('绑定进程到该模块成功', 'success')
-                            this.getModuleList()
+                            this.$alertMsg(this.$t("ProcessManagement['绑定进程到该模块成功']"), 'success')
+                            item['is_bind'] = 1
                         } else {
-                            this.$alertMsg('绑定进程到该模块失败')
+                            this.$alertMsg(this.$t("ProcessManagement['绑定进程到该模块失败']"))
                         }
                     })
                 } else {
-                    this.$axios.delete(`proc/module/${this.bkSupplierAccount}/${this.bkBizId}/${this.bkProcessId}/${moduleName}`).then(res => {
+                    this.$axios.delete(`proc/module/${this.bkSupplierAccount}/${this.bkBizId}/${this.bkProcessId}/${moduleName}`, {id: `${item['bk_module_name']}Bind`}).then(res => {
                         if (res.result) {
-                            this.$alertMsg('解绑进程模块成功', 'success')
-                            this.getModuleList()
+                            this.$alertMsg(this.$t("ProcessManagement['解绑进程模块成功']"), 'success')
+                            item['is_bind'] = 0
                         } else {
-                            this.$alertMsg('解绑进程模块失败')
+                            this.$alertMsg(this.$t("ProcessManagement['解绑进程模块失败']"))
                         }
                     })
                 }
@@ -90,7 +93,7 @@
                 this.isLoading = true
                 this.$axios.get(`proc/module/${this.bkSupplierAccount}/${this.bkBizId}/${this.bkProcessId}`).then((res) => {
                     if (res.result) {
-                        this.table.list = res.data
+                        this.table.list = this.sortModule(res.data)
                     } else {
                         this.$alertMsg(res['bk_error_msg'])
                     }
@@ -99,6 +102,20 @@
                 }).catch(() => {
                     this.isLoading = false
                 })
+            },
+            sortModule (data) {
+                let bindedModule = []
+                let unbindModule = []
+                data.forEach(module => {
+                    module['is_bind'] ? bindedModule.push(module) : unbindModule.push(module)
+                })
+                bindedModule.sort((moduleA, moduleB) => {
+                    return moduleA['bk_module_name'].localeCompare(moduleB['bk_module_name'])
+                })
+                unbindModule.sort((moduleA, moduleB) => {
+                    return moduleA['bk_module_name'].localeCompare(moduleB['bk_module_name'])
+                })
+                return [...bindedModule, ...unbindModule]
             },
             calcMaxHeight () {
                 this.table.maxHeight = document.body.getBoundingClientRect().height - 160
@@ -111,10 +128,17 @@
 </script>
 <style lang="scss" scoped>
     .module-table{
-        padding: 20px 0 0 0;
+        height: calc(100% - 20px);
+        margin: 20px 0 0 0;
         .btn{
             width: 52px;
             height: 25px;
+        }
+        .bk-button {
+            padding: 1px 7px 2px;
+            height: 22px;
+            line-height: 20px;
+            font-size: 12px;
         }
     }
 </style>

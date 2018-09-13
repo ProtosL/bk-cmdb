@@ -15,19 +15,28 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import common from './modules/common'
+import main from './modules/main'
 import process from './modules/process'
 import index from './modules/index'
 import hostTransferPop from './modules/hostTransferPop'
 import hostSnapshot from './modules/hostSnapshot'
-
+import usercustom from './modules/usercustom'
+import navigation from './modules/navigation'
+import object from './modules/object'
+import association from './modules/association'
 Vue.use(Vuex)
 
 export default new Vuex.Store({
     modules: {
         common,
+        main,
         process,
         index,
         hostTransferPop,
-        hostSnapshot
+        hostSnapshot,
+        usercustom,
+        navigation,
+        object,
+        association
     }
 })

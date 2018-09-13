@@ -12,7 +12,8 @@
                 :disabled="disabled"
                 v-model="model"
             >
-            <i class="bk-icon icon-angle-down bk-select-icon"></i>
+            <i class="bk-icon icon-close bk-select-clear" v-if="showClear && isSelected" @click.stop="clear"></i>
+            <i class="bk-icon icon-angle-down bk-select-icon" v-show="!showClear || (showClear && !isSelected)"></i>
         </div>
         <transition name="toggle-slide">
             <div class="bk-select-list"
@@ -86,6 +87,10 @@
                 default () {
                     return []
                 }
+            },
+            showClear: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
@@ -157,6 +162,16 @@
 
                     this.setSelected(value)
                 })
+            },
+            localOptions (localOptions) {
+                this.$nextTick(() => {
+                    this.setSelected(this.selected)
+                })
+            }
+        },
+        computed: {
+            isSelected () {
+                return ![null, undefined, ''].includes(this.selected)
             }
         },
         methods: {
@@ -168,7 +183,7 @@
             },
             close () {
                 this.open = false
-
+                this.$emit('on-toggle', false)
                 if (this.filterable) {
                     setTimeout(() => {
                         this.filter = ''
@@ -203,6 +218,11 @@
                 let index = this.localOptions.indexOf(el)
 
                 index > -1 && this.localOptions.splice(index, 1)
+            },
+            updateOption (optIndex, opt) {
+                this.model = opt.localData.label
+                this.curLabel = opt.localData.label
+                this.localOptions.splice(optIndex, 1, opt)
             },
             // 点击选项后的handler
             optionClickHandlder (child, index) {
@@ -342,11 +362,26 @@
                     }
                 }
 
-                this.model = this.curLabel || this.curValue
+                this.model = this.curLabel
+            },
+            clear () {
+                this.$emit('update:selected', '')
+                this.$emit('on-selected', '', undefined)
             }
         },
         mounted () {
             this.selected.length ? this.setSelected(this.selected) : ''
+        },
+        beforeDestroy () {
+            this.open = false,
+            this.curValue = this.multiple ? [] : '',
+            this.curLabel = this.multiple ? [] : '',
+            this.model = '',
+            this.localOptions = [],
+            this.localOptionsLoaded = false,
+            this.filter = '',
+            this.create = true,
+            this.isEmptyMark = true
         }
     }
 </script>

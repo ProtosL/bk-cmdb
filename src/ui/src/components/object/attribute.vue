@@ -11,18 +11,19 @@
 <template>
     <div class="attribute-wrapper">
         <template v-if="displayType === 'list'">
+            <slot name="list"></slot>
             <template v-for="propertyGroup in groupOrder" v-if="bkPropertyGroups.hasOwnProperty(propertyGroup)">
                 <div class="attribute-group" v-show="!(propertyGroup === 'none' && isNoneGroupHide)">
-                    <h3 class="title">{{propertyGroup === 'none' ? '更多属性' : bkPropertyGroups[propertyGroup]['bkPropertyGroupName']}}</h3>
+                    <h3 class="title">{{propertyGroup === 'none' ? $t("Common['更多属性']") : bkPropertyGroups[propertyGroup]['bkPropertyGroupName']}}</h3>
                     <ul class="clearfix attribute-list">
                         <template v-for="(property, propertyIndex) in bkPropertyGroups[propertyGroup]['properties']">
                             <li class="attribute-item fl" v-if="!property['bk_isapi']" :key="propertyIndex">
                                 <template v-if="property['bk_property_type'] !== 'bool'">
-                                    <span class="attribute-item-label">{{property['bk_property_name']}} :</span>
-                                    <span class="attribute-item-value" :title="getFieldValue(property)">{{getFieldValue(property)}}</span>
+                                    <span class="attribute-item-label has-colon" :title="property['bk_property_name']">{{property['bk_property_name']}}</span>
+                                    <span class="attribute-item-value" :title="getFieldValue(property)">{{getFieldValue(property) === '' ? '--' : getFieldValue(property)}}</span>
                                 </template>
                                 <template v-else>
-                                    <span class="attribute-item-label">{{property['bk_property_name']}}</span>
+                                    <span class="attribute-item-label" :title="property['bk_property_name']">{{property['bk_property_name']}}</span>
                                     <span class="attribute-item-value bk-form-checkbox">
                                         <input type="checkbox" :checked="getFieldValue(property)" disabled>
                                     </span>
@@ -32,7 +33,7 @@
                     </ul>
                 </div>
                  <div class="attribute-group-more" v-if="propertyGroup === 'none'">
-                    <a href="javascript:void(0)" class="group-more-link" :class="{'open': !isNoneGroupHide}" @click="isNoneGroupHide = !isNoneGroupHide">更多属性</a>
+                    <a href="javascript:void(0)" class="group-more-link" :class="{'open': !isNoneGroupHide}" @click="isNoneGroupHide = !isNoneGroupHide">{{$t("Common['更多属性']")}}</a>
                 </div>
             </template>
         </template>
@@ -41,14 +42,14 @@
                 <template v-for="propertyGroup in groupOrder">
                     <template v-if="checkIsShowGroup(propertyGroup)">
                         <div class="attribute-group" v-show="!(propertyGroup === 'none' && isNoneGroupHide)">
-                            <h3 class="title">{{propertyGroup === 'none' ? '更多属性' : bkPropertyGroups[propertyGroup]['bkPropertyGroupName']}}</h3>
+                            <h3 class="title">{{propertyGroup === 'none' ? $t("Common['更多属性']") : bkPropertyGroups[propertyGroup]['bkPropertyGroupName']}}</h3>
                                 <ul class="clearfix attribute-list edit">
                                     <template v-for="(property, propertyIndex) in bkPropertyGroups[propertyGroup]['properties']">
                                         <li class="attribute-item fl" :class="property['bk_property_type']" :key="propertyIndex"
                                             v-if="checkIsShowField(property)">
                                             <div>
                                                 <label :class="[{'required': property['isrequired']}]" class="bk-form-checkbox bk-checkbox-small">
-                                                    <input type="checkbox" v-if="isMultipleUpdate && property['bk_property_type'] !== 'bool'" 
+                                                    <input type="checkbox" v-if="isMultipleUpdate" 
                                                         v-model="multipleEditableFields[property['bk_property_id']]"
                                                         @change="clearFieldValue(property)">
                                                     <span>{{property['bk_property_name']}}</span>
@@ -99,8 +100,10 @@
                                                         type="checkbox"
                                                         v-model="localValues[property['bk_property_id']]"
                                                         :disabled="checkIsFieldDisabled(property)">
-                                                    </input>
                                                 </span>
+                                                <input type="text" class="bk-form-input" v-else-if="property['bk_property_type'] === 'int'"
+                                                    :disabled="checkIsFieldDisabled(property)" maxlength="11" 
+                                                    v-model.trim.number="localValues[property['bk_property_id']]">
                                                 <input v-else
                                                     type="text" class="bk-form-input"
                                                     :disabled="checkIsFieldDisabled(property)" 
@@ -118,24 +121,31 @@
                                 </ul>
                         </div>
                         <div class="attribute-group-more" v-if="propertyGroup === 'none'">
-                            <a href="javascript:void(0)" class="group-more-link" :class="{'open': !isNoneGroupHide}" @click="isNoneGroupHide = !isNoneGroupHide">更多属性</a>
+                            <a href="javascript:void(0)" class="group-more-link" :class="{'open': !isNoneGroupHide}" @click="isNoneGroupHide = !isNoneGroupHide">{{$t("Common['更多属性']")}}</a>
                         </div>
                     </template>
                 </template>
             </form>
             <div v-else>
-                <p class="attribute-no-multiple">无可编辑属性</p>
+                <p class="attribute-no-multiple">{{$t("Common['无可编辑属性']")}}</p>
             </div>
         </template>
         <template v-if="showBtnGroup">
             <div class="attribute-btn-group" v-if="displayType==='list' && type === 'update'">
-                <bk-button type="primary" class="bk-button main-btn" @click.prevent="changeDisplayType('form')" :disabled="unauthorized.update">属性编辑</bk-button>
-                <button v-if="type==='update' && showDelete && !isMultipleUpdate" class="bk-button del-btn" @click.prevent="deleteObject" :disabled="unauthorized.delete">删除</button>
+                <bk-button type="primary" class="bk-button main-btn" @click.prevent="changeDisplayType('form')" :disabled="unauthorized.update">{{$t("Common['属性编辑']")}}</bk-button>
+                <bk-button type="default" :loading="$loading('instDelete')" v-if="type==='update' && showDelete && !isMultipleUpdate" class="del-btn" @click.prevent="deleteObject" :disabled="unauthorized.delete">
+                    <template v-if="objId !== 'biz'">
+                        {{$t("Common['删除']")}}
+                    </template>
+                    <template v-else>
+                        {{$t("Inst['归档']")}}
+                    </template>
+                </bk-button>
             </div>
             <div class="attribute-btn-group" v-else-if="!isMultipleUpdate || isMultipleUpdate && hasEditableProperties">
-                <bk-button type="primary" v-if="type==='create'" class="main-btn" @click.prevent="submit" :disabled="errors.any() || !Object.keys(formData).length || unauthorized.create">保存</bk-button>
-                <bk-button type="primary" v-if="type==='update'" class="main-btn" @click.prevent="submit" :disabled="errors.any() || !Object.keys(formData).length || unauthorized.update">保存</bk-button>
-                <bk-button type="default" v-if="type==='update'" class="vice-btn" @click.prevent="changeDisplayType('list')">取消</bk-button>
+                <bk-button type="primary" :loading="$loading('editAttr')" v-if="type==='create'" class="main-btn" @click.prevent="submit" :disabled="errors.any() || !Object.keys(formData).length || unauthorized.update">{{$t("Common['保存']")}}</bk-button>
+                <bk-button type="primary" :loading="$loading('editAttr')" v-if="type==='update'" class="main-btn" @click.prevent="submit" :disabled="errors.any() || !Object.keys(formData).length || unauthorized.update">{{$t("Common['保存']")}}</bk-button>
+                <bk-button type="default" v-if="type==='update'" class="vice-btn" @click.prevent="changeDisplayType('list')">{{$t("Common['取消']")}}</bk-button>
             </div>
         </template>
     </div>
@@ -205,10 +215,17 @@
         },
         computed: {
             ...mapGetters(['bkSupplierAccount']),
+            localFormFields () {
+                let formFields = this.$deepClone(this.formFields)
+                formFields.sort((objA, objB) => {
+                    return objA['bk_property_index'] - objB['bk_property_index']
+                })
+                return formFields
+            },
             //  属性分组:根据formFields中各property.PropertyGroup 进行属性分组，为'隐藏分组(none)'时，放入更多属性中
             bkPropertyGroups () {
                 let bkPropertyGroups = {}
-                this.formFields.map(property => {
+                this.localFormFields.filter(property => !['singleasst', 'multiasst'].includes(property['bk_property_type'])).map(property => {
                     let {
                         bk_property_group: bkPropertyGroup,
                         bk_property_group_name: bkPropertyGroupName
@@ -232,7 +249,13 @@
                 this.groupOrder.map(group => {
                     if (this.bkPropertyGroups.hasOwnProperty(group)) {
                         groupEditable[group] = this.bkPropertyGroups[group]['properties'].some(property => {
-                            return property['editable'] && !property['bk_isapi']
+                            if (this.isMultipleUpdate) {
+                                return property['editable'] && !property['bk_isapi'] && !property['isonly']
+                            } else if (this.type === 'create') {
+                                return !property['bk_isapi']
+                            } else {
+                                return property['editable'] && !property['bk_isapi']
+                            }
                         })
                     }
                 })
@@ -253,7 +276,7 @@
                     'enum': null,
                     'timezone': null
                 }
-                this.formFields.map(property => {
+                this.localFormFields.map(property => {
                     let {
                         bk_property_id: bkPropertyId,
                         bk_property_type: bkPropertyType,
@@ -299,6 +322,7 @@
                         }
                     }
                 }
+                
                 return formData
             }
         },
@@ -323,10 +347,15 @@
                 } else if (this.type === 'update') {
                     this.setUpdateInitData()
                 }
+                if (displayType === 'form') {
+                    this.$validator.validateAll().then(() => {
+                        this.errors.clear()
+                    })
+                }
             },
             isMultipleUpdate (isMultipleUpdate) {
                 if (isMultipleUpdate) {
-                    this.formFields.map(property => {
+                    this.localFormFields.map(property => {
                         let {
                             bk_property_type: bkPropertyType,
                             bk_property_id: bkPropertyId
@@ -353,6 +382,54 @@
             }
         },
         methods: {
+            isCloseConfirmShow () {
+                let isConfirmShow = false
+                if (this.displayType === 'list') {
+                    return false
+                }
+                if (this.type === 'create') {
+                    for (let key in this.formData) {
+                        let property = this.localFormFields.find(({bk_property_type: bkPropertyType, bk_property_id: bkPropertyId}) => {
+                            return bkPropertyId === key
+                        })
+                        if (property['bk_property_type'] === 'enum') {
+                            let enumProperty = property.option.find(({id}) => {
+                                return id === this.formData[key]
+                            })
+                            if (enumProperty && !enumProperty['is_default']) {
+                                isConfirmShow = true
+                                break
+                            }
+                        } else {
+                            if (this.formData[key] !== null && this.formData[key].length) {
+                                isConfirmShow = true
+                                break
+                            }
+                        }
+                    }
+                } else {
+                    for (let key in this.formData) {
+                        let property = this.localFormFields.find(({bk_property_type: bkPropertyType, bk_property_id: bkPropertyId}) => {
+                            return bkPropertyId === key
+                        })
+                        let value = this.formValues[key]
+                        if (property['bk_property_type'] === 'singleasst' || property['bk_property_type'] === 'multiasst') {
+                            value = []
+                            if (this.formValues.hasOwnProperty(key)) {
+                                this.formValues[key].map(formValue => {
+                                    value.push(formValue['bk_inst_id'])
+                                })
+                            }
+                            value = value.join(',')
+                        }
+                        if (value !== this.formData[key] && !(this.formData[key] === '' && !this.formValues.hasOwnProperty(key))) {
+                            isConfirmShow = true
+                            break
+                        }
+                    }
+                }
+                return isConfirmShow
+            },
             confirmHost (hostInfo) {
                 this.hideSelectHost()
             },
@@ -415,22 +492,33 @@
                     bk_property_type: bkPropertyType
                 } = property
                 let value = this.formValues[bkPropertyId]
-                if (property['bk_asst_obj_id']) {
-                    let associateName = []
-                    if (Array.isArray(value)) {
-                        value.map(({bk_inst_name: bkInstName}) => {
-                            if (bkInstName) {
-                                associateName.push(bkInstName)
-                            }
+                if (value !== undefined) {
+                    if (property['bk_asst_obj_id']) {
+                        let associateName = []
+                        if (Array.isArray(value)) {
+                            value.map(({bk_inst_name: bkInstName}) => {
+                                if (bkInstName) {
+                                    associateName.push(bkInstName)
+                                }
+                            })
+                        }
+                        return associateName.join(',')
+                    } else if (bkPropertyType === 'date') {
+                        return this.$formatTime(value, 'YYYY-MM-DD')
+                    } else if (bkPropertyType === 'time') {
+                        return this.$formatTime(value)
+                    } else if (bkPropertyType === 'enum') {
+                        let obj = property.option.find(({id}) => {
+                            return id === value
                         })
+                        if (obj) {
+                            return obj.name
+                        } else {
+                            return ''
+                        }
+                    } else {
+                        return value
                     }
-                    return associateName.join(',')
-                } else if (bkPropertyType === 'date') {
-                    return this.$formatTime(value, 'YYYY-MM-DD')
-                } else if (bkPropertyType === 'time') {
-                    return this.$formatTime(value)
-                } else {
-                    return value
                 }
             },
             // 判断是否可编辑
@@ -440,7 +528,9 @@
                     bk_property_type: bkPropertyType,
                     editable
                 } = property
-                if (this.isMultipleUpdate && bkPropertyType !== 'bool') {
+                if (bkPropertyId === 'bk_biz_name' && this.formValues[bkPropertyId] === '蓝鲸') {
+                    return true
+                } else if (this.isMultipleUpdate) {
                     return !this.multipleEditableFields[bkPropertyId]
                 } else if (this.type === 'create') {
                     return false
@@ -461,7 +551,7 @@
             filterValues () {
                 let filteredValues = {}
                 Object.keys(this.formValues).map(formPropertyId => {
-                    let fieldProperty = this.formFields.find(property => {
+                    let fieldProperty = this.localFormFields.find(property => {
                         return formPropertyId === property['bk_property_id']
                     })
                     if (fieldProperty) {
@@ -485,6 +575,7 @@
             resetData () {
                 this.displayType = 'list'
                 this.localValues = {}
+                this.multipleEditableFields = {}
                 this.$forceUpdate()
             },
             getValidateRules (property) {
@@ -494,24 +585,26 @@
                     option,
                     isrequired
                 } = property
-                if (isrequired) {
+                if (isrequired && !this.isMultipleUpdate) {
                     rules['required'] = true
                 }
                 if (property.hasOwnProperty('option') && option) {
                     if (bkPropertyType === 'int') {
-                        option = JSON.parse(option)
                         if (option.hasOwnProperty('min') && option.min) {
                             rules['min_value'] = option.min
                         }
                         if (option.hasOwnProperty('max') && option.max) {
                             rules['max_value'] = option.max
                         }
-                    } else if (bkPropertyType === 'singlechar' || bkPropertyType === 'longchar') {
+                    } else if ((bkPropertyType === 'singlechar' || bkPropertyType === 'longchar') && option !== null) {
                         rules['regex'] = option
                     }
                 }
-                if (bkPropertyType === 'singlechar' || bkPropertyType === 'longchar') {
-                    rules['char'] = true
+                if (bkPropertyType === 'singlechar') {
+                    rules['singlechar'] = true
+                }
+                if (bkPropertyType === 'longchar') {
+                    rules['longchar'] = true
                 }
                 if (bkPropertyType === 'int') {
                     rules['regex'] = '^(0|[1-9][0-9]*|-[1-9][0-9]*)$'
@@ -524,8 +617,6 @@
                         if (Object.keys(this.formData).length) {
                             this.$emit('submit', this.formData, Object.assign({}, this.formValues))
                         }
-                    } else {
-                        this.$alertMsg(this.errors.first(Object.keys(this.errors.collect())[0]))
                     }
                 })
             },
@@ -564,21 +655,30 @@
             margin: 12px 0 0 0;
             white-space: nowrap;
             .attribute-item-label{
-                width: 100px;
-                // color: #737987;
-                color: #6b7baa;
+                width: 116px;
+                color: #737987;
+                // color: #6b7baa;
                 text-align: right;
                 display: inline-block;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 margin-right: 10px;
+                padding-right: 6px;
+                position: relative;
+                &.has-colon:after{
+                    content: ":";
+                    position: absolute;
+                    right: 0;
+                    top: 0;
+                    line-height: 14px;
+                }
             }
             .attribute-item-value{
-                max-width: 230px;
+                max-width: calc(100% - 130px);
                 display: inline-block;
                 overflow: hidden;
                 text-overflow: ellipsis;
-                color: #4d597d;
+                color: #333948;
             }
             .attribute-item-value.bk-form-checkbox{
                 padding: 0;
@@ -627,6 +727,7 @@
                 width: 310px;
                 white-space: normal;
                 position: relative;
+                color: #333948;
                 .bk-date{
                     width: 100%;
                 }
@@ -646,7 +747,7 @@
             }
             .attribute-item-field{
                 display: inline-block;
-                margin-left: 24px;
+                height: 36px;
             }
         }
     }

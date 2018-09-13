@@ -1,29 +1,76 @@
 /*
  * Tencent is pleased to support the open source community by making 蓝鲸 available.
  * Copyright (C) 2017-2018 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except 
+ * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
  * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- * either express or implied. See the License for the specific language governing permissions and 
+ * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 package redisclient
 
 import (
-	"configcenter/src/common"
-	"configcenter/src/common/blog"
-	"configcenter/src/common/util"
-	"configcenter/src/storage"
 	"errors"
 	"strconv"
 	"strings"
 	"time"
 
+	"configcenter/src/common"
+	"configcenter/src/common/blog"
+	"configcenter/src/common/util"
+	"configcenter/src/storage"
+
 	redis "gopkg.in/redis.v5"
 )
+
+type RedisConfig struct {
+	Address    string
+	User       string
+	Password   string
+	Database   string
+	Port       string
+	MasterName string
+}
+
+func NewFromConfig(cfg RedisConfig) (*redis.Client, error) {
+	dbNum, err := strconv.Atoi(cfg.Database)
+	if nil != err {
+		return nil, err
+	}
+	var client *redis.Client
+	if cfg.MasterName == "" {
+		if !strings.Contains(cfg.Address, ":") {
+			cfg.Address = cfg.Address + ":" + cfg.Port
+		}
+		option := &redis.Options{
+			Addr:     cfg.Address,
+			Password: cfg.Password,
+			DB:       dbNum,
+			PoolSize: 100,
+		}
+		client = redis.NewClient(option)
+	} else {
+		hosts := strings.Split(cfg.Address, ",")
+		option := &redis.FailoverOptions{
+			MasterName:    cfg.MasterName,
+			SentinelAddrs: hosts,
+			Password:      cfg.Password,
+			DB:            dbNum,
+			PoolSize:      100,
+		}
+		client = redis.NewFailoverClient(option)
+	}
+
+	err = client.Ping().Err()
+	if err != nil {
+		return nil, err
+	}
+
+	return client, err
+}
 
 type Redis struct {
 	host    string
@@ -64,6 +111,11 @@ func (r *Redis) Open() error {
 	r.session = redisClient
 
 	return nil
+}
+
+// Ping will ping the db server
+func (m *Redis) Ping() error {
+	return m.session.Ping().Err()
 }
 
 // GetSession
@@ -360,9 +412,19 @@ func (r *Redis) GetType() string {
 	return storage.DI_REDIS
 }
 
-//close con
+// Close close session
 func (r *Redis) Close() {
 	if r.session != nil {
 		r.session.Close()
 	}
+}
+
+// IsDuplicateErr returns whether err is duplicate error
+func (r *Redis) IsDuplicateErr(err error) bool {
+	return false
+}
+
+// IsNotFoundErr returns whether err is not found error
+func (r *Redis) IsNotFoundErr(err error) bool {
+	return redis.Nil == err
 }

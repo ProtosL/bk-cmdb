@@ -15,7 +15,7 @@
 	"1101014": "Delete Model Failed",
 	"1101015": "Update model failed",
 	"1101016": "Query model failed",
-	"1101017": "Failed to create a model instance",
+	"1101017": "Failed to create a model properties",
 	"1101018": "Failed to delete model properties",
 	"1101019": "Failed to update model properties",
 	"1101020": "Query Model Property Failed",
@@ -46,10 +46,18 @@
 	"1001046": "Query User Group Permissions",
 	"1001047": "Query User Rights",
 	"1001048": "Create Role Rights",
-	
+	"1001049": "There is an instance of a heavy name at this level, and the deletion failed.",
+	"1001050": "Host not allowed cross-business transfer",
+	"1001051": "search topo graphics failed",
+	"1001052": "update topo graphics failed",
 	"1101080": "The module does not exist, please refresh the page",
-	"":""
-	
-	}
-
-	
+	"1101081": "blueking business does not allow deletion",
+	"1101031": "query cloud area failed, %s",
+	"1101032": "cloud area does not exist",
+	"1101033": "query business failed,%s",
+	"1101034": "query module failed,%s",
+	"1101035": "Business topology level exceeds the limit",
+	"1101036": "the instance has been associated by [%s], coule not be delete or archived",
+	"1101037": "the object [%s] has been instantiated and cannot be deleted",
+	"": "" 
+}

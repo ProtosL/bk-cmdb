@@ -1,27 +1,27 @@
 /*
  * Tencent is pleased to support the open source community by making 蓝鲸 available.
  * Copyright (C) 2017-2018 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except 
+ * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
  * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- * either express or implied. See the License for the specific language governing permissions and 
+ * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 package RegisterDiscover
 
 import (
-	"configcenter/src/common/blog"
-	//"bcs/bcs-common/common/blog"
-	"configcenter/src/common/zkclient"
 	"context"
 	"fmt"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"configcenter/src/common/blog"
+	"configcenter/src/common/zkclient"
 )
 
 //ZkRegDiscv do register and discover by zookeeper
@@ -39,6 +39,11 @@ func NewZkRegDiscv(serv string, timeOut time.Duration) *ZkRegDiscv {
 		zkcli:          zkclient.NewZkClient(zkservs),
 		sessionTimeOut: timeOut,
 	}
+}
+
+// Ping to ping server
+func (zkRD *ZkRegDiscv) Ping() error {
+	return zkRD.zkcli.Ping()
 }
 
 //Start used to run register and discover server
@@ -64,12 +69,6 @@ func (zkRD *ZkRegDiscv) Stop() error {
 	zkRD.cancel()
 
 	return nil
-}
-
-//Register create ephemeral node for the service
-func (zkRD *ZkRegDiscv) Register(path string, data []byte) error {
-	//blog.Info("register server. path(%s), data(%s)", path, string(data))
-	return zkRD.zkcli.CreateEphAndSeq(path, data)
 }
 
 //RegisterAndWatch create ephemeral node for the service and watch it. if it exit, register again
@@ -106,6 +105,11 @@ func (zkRD *ZkRegDiscv) RegisterAndWatch(path string, data []byte) error {
 
 	fmt.Printf("finish register server node(%s) and watch it\n", path)
 	return nil
+}
+
+// GetServNodes get server nodes by path
+func (zkRD *ZkRegDiscv) GetServNodes(path string) ([]string, error) {
+	return zkRD.zkcli.GetChildren(path)
 }
 
 //Discover watch the children

@@ -1,5 +1,6 @@
 <template id="">
     <li class="bk-select-list-item"
+        :title="localLabel"
         :class="{
             selected: selected,
             disabled: disabled}"
@@ -56,12 +57,21 @@
             selected: {
                 get () {
                     if (this.$parent.multiple) {
-                        return isInArray(this.$parent.curValue, this.value).result || isInArray(this.$parent.curLabel, this.label).result
+                        return isInArray(this.$parent.curValue, this.value).result
                     } else {
-                        return this.value === this.$parent.curValue || this.label === this.$parent.curLabel
+                        return this.value === this.$parent.curValue
                     }
                 },
                 set () {}
+            }
+        },
+        watch: {
+            value (value) {
+                this.$parent.updateOption(this.optIndex, this)
+            },
+            label (label) {
+                this.localData.label = label
+                this.$parent.updateOption(this.optIndex, this)
             }
         },
         methods: {

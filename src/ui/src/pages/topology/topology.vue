@@ -2,7 +2,7 @@
     <div class="topo-wrapper clearfix">
         <div class="topo-tree-ctn fl">
             <div class="biz-selector-ctn">
-                <v-application-selector :selected.sync="tree.bkBizId"></v-application-selector>
+                <v-application-selector :selected.sync="tree.bkBizId" @on-selected="handleBizSelected" :filterable="true"></v-application-selector>
             </div>
             <div class="topo-options-ctn" hidden>
                 <i class="topo-option-del icon-cc-del fr" v-if="isShowOptionDel && Object.keys(tree.treeData).length" @click="deleteNode"></i>
@@ -20,12 +20,19 @@
         </div>
         <div class="topo-view-ctn">
             <bk-tab :active-name="view.tab.active" @tab-changed="tabChanged" class="topo-view-tab">
-                <bk-tabpanel name="host" title="主机调配">
-                    <v-index ref="index" :outerParams="searchParams" :isShowRefresh="true" :outerLoading="tree.loading">
+                <bk-tabpanel name="host" :title="$t('BusinessTopology[\'主机调配\']')">
+                    <v-hosts ref="hosts"
+                        :outerParams="searchParams"
+                        :isShowRefresh="true"
+                        :outerLoading="tree.loading"
+                        :isShowCrossImport="authority['is_host_cross_biz'] && attributeBkObjId === 'module'"
+                        :tableVisible="view.tab.active === 'host'"
+                        :wrapperMinusHeight="210"
+                        @handleCrossImport="handleCrossImport">
                         <div slot="filter"></div>
-                    </v-index>
+                    </v-hosts>
                 </bk-tabpanel>
-                <bk-tabpanel name="attribute" title="节点属性" :show="isShowAttribute">
+                <bk-tabpanel name="attribute" :title="$t('BusinessTopology[\'节点属性\']')" :show="isShowAttribute">
                     <v-attribute ref="topoAttribute"
                         :bkObjId="attributeBkObjId" 
                         :bkBizId="tree.bkBizId" 
@@ -35,31 +42,53 @@
                         :type="view.attribute.type"
                         :active="view.tab.active === 'attribute'"
                         :isLoading="view.attribute.isLoading"
+                        :editable="tree.bkBizName !== '蓝鲸'"
                         @submit="submitNode"
                         @delete="deleteNode"
                         @cancel="cancelCreate"></v-attribute>
                 </bk-tabpanel>
+                <bk-tabpanel name="process" :title="$t('ProcessManagement[\'进程信息\']')" 
+                    :show="attributeBkObjId === 'module' && ![1,2].includes(tree.activeNode.default)">
+                    <v-process
+                        :isShow="view.tab.active === 'process'"
+                        :bizId="tree.bkBizId"
+                        :moduleName="attributeBkObjId === 'module' ? tree.activeNode['bk_inst_name'] : ''"
+                    >
+                    </v-process>
+                </bk-tabpanel>
             </bk-tab>
         </div>
+        <bk-dialog :is-show.sync="view.crossImport.isShow" :quick-close="false" :has-header="false" :has-footer="false" :width="700" :padding="0">
+            <v-cross-import  slot="content"
+                :is-show.sync="view.crossImport.isShow"
+                :bizId="tree.bkBizId"
+                :moduleId="tree.activeNode['bk_inst_id']"
+                @handleCrossImportSuccess="setSearchParams">
+            </v-cross-import>
+        </bk-dialog>
     </div>
 </template>
 <script>
     import vApplicationSelector from '@/components/common/selector/application'
     import vTree from '@/components/tree/tree.v2'
-    import vIndex from '@/pages/index/index'
+    import vHosts from '@/pages/hosts/hosts'
     import vAttribute from './children/attribute'
+    import vProcess from './children/process'
+    import vCrossImport from './children/crossImport'
     import { mapGetters } from 'vuex'
     export default {
         data () {
             return {
                 tree: {
                     bkBizId: -1,
+                    bkBizName: '',
                     treeData: {},
                     model: [],
                     activeNode: {},
+                    activeNodeOptions: {},
                     activeParentNode: {},
                     initNode: {},
-                    loading: true
+                    loading: false
                 },
                 view: {
                     tab: {
@@ -69,6 +98,9 @@
                         type: 'update',
                         formValues: {},
                         isLoading: true
+                    },
+                    crossImport: {
+                        isShow: false
                     }
                 },
                 nodeToggleRecord: {},
@@ -77,6 +109,7 @@
         },
         computed: {
             ...mapGetters(['bkSupplierAccount']),
+            ...mapGetters('navigation', ['authority']),
             /* 获取当前属性表单对应的属性obj_id */
             attributeBkObjId () {
                 let bkObjId
@@ -128,7 +161,7 @@
             },
             /* 当前节点发生变化且属性修改面板激活时，加载当前节点的具体属性 */
             'tree.activeNode' () {
-                if (!this.isShowAttribute) {
+                if (!this.isShowAttribute || (this.attributeBkObjId !== 'module' && this.view.tab.active === 'process')) {
                     this.tabChanged('host')
                 }
                 if (this.view.tab.active === 'attribute') {
@@ -154,6 +187,9 @@
             }
         },
         methods: {
+            handleBizSelected (data) {
+                this.tree.bkBizName = data.label
+            },
             /* 获取最大展开层级 */
             getLevel (node) {
                 let level = node.level
@@ -168,7 +204,7 @@
                     return res
                 }).catch(e => {
                     if (e.response && e.response.status === 403) {
-                        this.$alertMsg('您没有当前业务的权限')
+                        this.$alertMsg(this.$t('Common[\'您没有当前业务的权限\']'))
                     }
                 })
             },
@@ -178,7 +214,7 @@
                     return res
                 }).catch(e => {
                     if (e.response && e.response.status === 403) {
-                        this.$alertMsg('您没有当前业务的权限')
+                        this.$alertMsg(this.$t('Common[\'您没有当前业务的权限\']'))
                     }
                 })
             },
@@ -199,9 +235,9 @@
                     if (instRes.result && internalRes.result) {
                         let internalModule = internalRes.data.module.map(module => {
                             return {
-                                'default': module['bk_module_name'] === '空闲机' ? 1 : 2,
+                                'default': module['bk_module_name'] === '空闲机' || module['bk_module_name'] === 'idle machine' ? 1 : 2,
                                 'bk_obj_id': 'module',
-                                'bk_obj_name': '模块',
+                                'bk_obj_name': this.$t('Hosts[\'模块\']'),
                                 'bk_inst_id': module['bk_module_id'],
                                 'bk_inst_name': module['bk_module_name'],
                                 'isFolder': false
@@ -297,11 +333,12 @@
                 this.$axios({
                     url: url,
                     method: method,
-                    data: formData
+                    data: formData,
+                    id: 'editAttr'
                 }).then(res => {
                     if (res.result) {
                         this.updateTopoTree(this.view.attribute.type, res.data, formData)
-                        this.$alertMsg(`${submitType === 'create' ? '新建' : '修改'}成功`, 'success')
+                        this.$alertMsg(submitType === 'create' ? this.$t('Common[\'新建成功\']') : this.$t('Common[\'修改成功\']'), 'success')
                         if (this.view.attribute.type === 'create') {
                             this.view.tab.active = 'host'
                         } else {
@@ -346,13 +383,15 @@
             /* 删除拓扑节点 */
             deleteNode () {
                 this.$bkInfo({
-                    title: `确定删除${this.tree.activeNode['bk_inst_name']}?`,
+                    title: `${this.$t('Common[\'确定删除\']')} ${this.tree.activeNode['bk_inst_name']}?`,
+                    content: this.tree.activeNode['bk_obj_id'] === 'module'
+                        ? this.$t('Common["请先转移其下所有的主机"]')
+                        : this.$t('Common[\'下属层级都会被删除，请先转移其下所有的主机\']'),
                     confirmFn: () => {
                         let url
                         let {
                             bk_obj_id: bkObjId,
-                            bk_inst_id: bkInstId,
-                            index: nodeIndex
+                            bk_inst_id: bkInstId
                         } = this.tree.activeNode
                         if (bkObjId === 'set') {
                             url = `set/${this.tree.bkBizId}/${bkInstId}`
@@ -361,17 +400,17 @@
                         } else {
                             url = `inst/${this.bkSupplierAccount}/${bkObjId}/${bkInstId}`
                         }
-                        this.$axios.delete(url).then(res => {
+                        this.$axios.delete(url, {id: 'deleteAttr'}).then(res => {
                             if (res.result) {
                                 this.view.tab.active = 'host'
-                                this.tree.activeParentNode.child.splice(nodeIndex, 1)
+                                this.tree.activeParentNode.child.splice(this.tree.activeNodeOptions.index, 1)
                                 this.tree.initNode = {
                                     level: 1,
                                     open: true,
                                     active: true,
                                     bk_inst_id: this.tree.treeData['bk_inst_id']
                                 }
-                                this.$alertMsg('删除成功', 'success')
+                                this.$alertMsg(this.$t('Common[\'删除成功\']'), 'success')
                             } else {
                                 this.$alertMsg(res['bk_error_msg'])
                             }
@@ -380,15 +419,16 @@
                 })
             },
             /* 点击节点，设置查询参数 */
-            handleNodeClick (activeNode, activeParentNode) {
-                this.$refs.index.clearChooseId()
+            handleNodeClick (activeNode, nodeOptions) {
+                this.$refs.hosts.clearChooseId()
                 this.tree.activeNode = activeNode
-                this.tree.activeParentNode = activeParentNode
+                this.tree.activeNodeOptions = nodeOptions
+                this.tree.activeParentNode = nodeOptions.parent
                 this.view.attribute.type = 'update'
                 this.setSearchParams()
             },
             /* node节点展开时，判断是否加载下级节点 */
-            handleNodeToggle (isOpen, node, parentNode, rootNode, level, nodeId) {
+            handleNodeToggle (isOpen, node, nodeOptions) {
                 if (!node.child || !node.child.length) {
                     this.$set(node, 'isLoading', true)
                     this.$axios.get(`topo/inst/child/${this.bkSupplierAccount}/${node['bk_obj_id']}/${this.tree.bkBizId}/${node['bk_inst_id']}`).then(res => {
@@ -446,6 +486,9 @@
                 })
                 this.searchParams = params
             },
+            handleCrossImport () {
+                this.view.crossImport.isShow = true
+            },
             tabChanged (active) {
                 this.view.tab.active = active
                 this.view.attribute.formValues = {}
@@ -463,8 +506,10 @@
         components: {
             vApplicationSelector,
             vTree,
-            vIndex,
-            vAttribute
+            vCrossImport,
+            vHosts,
+            vAttribute,
+            vProcess
         }
     }
 </script>
@@ -475,6 +520,7 @@
             width: 280px;
             height: 100%;
             border-right: 1px solid #e7e9ef;
+            background: #fafbfd;
         }
         .topo-view-ctn{
             height: 100%;
@@ -484,7 +530,6 @@
     }
     .biz-selector-ctn{
         padding: 20px;
-        background: #606e8e;
     }
     .topo-options-ctn{
         height: 44px;
@@ -513,7 +558,7 @@
         border: none;
     }
     .tree-list-ctn{
-        padding: 20px 0 0 20px;
+        padding: 0 0 0 20px;
         max-height: calc(100% - 120px);
         overflow: auto;
         @include scrollbar;
@@ -530,6 +575,17 @@
         }
         .bk-tab2-content{
             height: calc(100% - 80px);
+            section.active{
+                height: 100%;
+            }
+        }
+    }
+    .topo-wrapper .hosts-wrapper{
+        .table-container{
+            padding: 20px 0;
+        }
+        .breadcrumbs{
+            display: none;
         }
     }
 </style>

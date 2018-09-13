@@ -17,8 +17,6 @@ def generate_config_file(rd_server_v,db_name_v,redis_ip_v,redis_port_v,redis_use
 
     # apiserver.conf
     apiserver_file_template_str ='''
-    [errors]
-    res=conf/errors
     '''
 
     template = FileTemplate(apiserver_file_template_str)
@@ -36,8 +34,6 @@ def generate_config_file(rd_server_v,db_name_v,redis_ip_v,redis_port_v,redis_use
     port = $mongo_port
     maxOpenConns = 3000
     maxIdleConns = 1000
-    [errors]
-    res=conf/errors
     '''
     template = FileTemplate(auditcontroller_file_template_str)
     result = template.substitute(dict(db=db_name_v,mongo_user=mongo_user_v,mongo_host=mongo_ip_v,mongo_pass=mongo_pass_v,mongo_port=mongo_port_v))
@@ -56,6 +52,18 @@ def generate_config_file(rd_server_v,db_name_v,redis_ip_v,redis_port_v,redis_use
     maxIdleConns = 1000
 
     [snap-redis]
+    host = $redis_host
+    usr = $redis_user
+    pwd = $redis_pass
+    database = 0
+
+    [discover-redis]
+    host = $redis_host
+    usr = $redis_user
+    pwd = $redis_pass
+    database = 0
+
+    [discover-redis]
     host = $redis_host
     usr = $redis_user
     pwd = $redis_pass
@@ -92,8 +100,6 @@ def generate_config_file(rd_server_v,db_name_v,redis_ip_v,redis_port_v,redis_use
     port=$redis_port
     maxOpenConns=3000
     maxIDleConns=1000
-    [errors]
-    res=conf/errors
     '''
     
     template = FileTemplate(eventserver_file_template_str)
@@ -107,8 +113,6 @@ def generate_config_file(rd_server_v,db_name_v,redis_ip_v,redis_port_v,redis_use
     addr=$rd_server
     user=bkzk
     pwd=L%blKas
-    [errors]
-    res=conf/errors
     '''
     template = FileTemplate(host_file_template_str)
     result = template.substitute(dict(rd_server=rd_server_v))
@@ -133,8 +137,6 @@ def generate_config_file(rd_server_v,db_name_v,redis_ip_v,redis_port_v,redis_use
     port=$redis_port
     maxOpenConns=3000
     maxIDleConns=1000
-    [errors]
-    res=conf/errors
     '''
 
     template = FileTemplate(hostcontroller_file_template_str)
@@ -144,8 +146,6 @@ def generate_config_file(rd_server_v,db_name_v,redis_ip_v,redis_port_v,redis_use
 
     # migrate.conf
     migrate_file_template_str='''
-    [errors]
-    res=conf/errors
     [config-server]
     addrs=$rd_server
     usr=
@@ -166,6 +166,10 @@ def generate_config_file(rd_server_v,db_name_v,redis_ip_v,redis_port_v,redis_use
 
     [confs]
     dir = $configures_dir
+    [errors]
+    res=conf/errors
+    [language]
+    res=conf/language
     '''
 
     template = FileTemplate(migrate_file_template_str)
@@ -191,8 +195,6 @@ def generate_config_file(rd_server_v,db_name_v,redis_ip_v,redis_port_v,redis_use
     port=$redis_port
     maxOpenConns=3000
     maxIDleConns=1000
-    [errors]
-    res=conf/errors
     '''
 
     template = FileTemplate(objectcontroller_file_template_str)
@@ -202,8 +204,6 @@ def generate_config_file(rd_server_v,db_name_v,redis_ip_v,redis_port_v,redis_use
 
     # proc.conf
     proc_file_template_str='''
-    [errors]
-    res=conf/errors
     '''
     template = FileTemplate(proc_file_template_str)
     result = template.substitute()
@@ -228,8 +228,6 @@ def generate_config_file(rd_server_v,db_name_v,redis_ip_v,redis_port_v,redis_use
     port=$redis_port
     maxOpenConns=3000
     maxIDleConns=1000
-    [errors]
-    res=conf/errors
     '''
 
     template = FileTemplate(proccontroller_file_template_str)
@@ -247,8 +245,6 @@ def generate_config_file(rd_server_v,db_name_v,redis_ip_v,redis_port_v,redis_use
     port=$mongo_port
     maxOpenConns=3000
     maxIDleConns=1000
-    [errors]
-    res=conf/errors
     '''
 
     template = FileTemplate(topo_file_template_str)
@@ -263,6 +259,7 @@ def generate_config_file(rd_server_v,db_name_v,redis_ip_v,redis_port_v,redis_use
     [session]
     name=cc3
     skip=1
+    defaultlanguage=zh-cn
     host=$redis_host
     port=$redis_port
     secret=$redis_pass
@@ -275,8 +272,6 @@ def generate_config_file(rd_server_v,db_name_v,redis_ip_v,redis_port_v,redis_use
     bk_account_url=${paas_url}/login/accounts/get_all_user/?bk_token=%s
     resources_path=/tmp/
     html_root=$ui_root
-    [errors]
-    res=conf/errors
     [app]
     agent_app_url=${agent_url}/console/?app=bk_agent_setup
     '''

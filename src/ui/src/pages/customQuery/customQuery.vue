@@ -19,11 +19,11 @@
                 </div>
             </div>
             <div class="options-btn-group fl ml10">
-                <bk-button type="primary" class="options-btn mr10" style="display: none">新增指引</bk-button>
-                <bk-button type="primary" @click="showUserAPISlider('create')">新增查询</bk-button>
+                <bk-button type="primary" class="options-btn mr10" style="display: none">{{$t("CustomQuery['新增指引']")}}</bk-button>
+                <bk-button type="primary" @click="showUserAPISlider('create')">{{$t("CustomQuery['新增查询']")}}</bk-button>
             </div>
             <div class="options-search fr">
-                <input class="bk-form-input" type="text" placeholder="快速查询"
+                <input class="bk-form-input" type="text" :placeholder="$t('Inst[\'快速查询\']')"
                 v-model.trim="filter.name"
                     @keyup.enter="setCurrentPage(1)"
                 >
@@ -32,14 +32,15 @@
         </div>
         <div class="userAPI-table">
             <v-table ref="userAPITable"
-                :tableHeader="table.header"
-                :tableList="table.list"
+                :header="table.header"
+                :list="table.list"
                 :defaultSort="table.defaultSort"
-                :pagination="table.pagination"
-                :isLoading="table.isLoading"
-                @handlePageTurning="setCurrentPage"
-                @handlePageSizeChange="setCurrentSize"
-                @handleTableSortClick="setCurrentSort"
+                :pagination.sync="table.pagination"
+                :loading="table.isLoading"
+                :wrapperMinusHeight="150"
+                @handlePageChange="setCurrentPage"
+                @handleSizeChange="setCurrentSize"
+                @handleSortChange="setCurrentSort"
                 @handleRowClick="showUserAPIDetails">
             </v-table>
         </div>
@@ -48,8 +49,12 @@
                 :isShow.sync="slider.isShow"
                 :hasQuickClose="true"
                 :title="slider.title"
+                :hasCloseConfirm="true"
+                :isCloseConfirmShow="slider.isCloseConfirmShow"
+                @closeSlider="closeSliderConfirm"
                 @close="hideUserAPISlider">
                 <v-define slot="content" 
+                    ref="define"
                     :id="slider.id"
                     :bkBizId="filter.bkBizId"
                     :isShow="slider.isShow"
@@ -89,19 +94,19 @@
                         name: 'ID'
                     }, {
                         id: 'name',
-                        name: '查询名称'
+                        name: this.$t("CustomQuery['查询名称']")
                     }, {
                         id: 'create_user',
-                        name: '创建用户'
+                        name: this.$t("CustomQuery['创建用户']")
                     }, {
                         id: 'create_time',
-                        name: '创建时间'
+                        name: this.$t("CustomQuery['创建时间']")
                     }, {
                         id: 'modify_user',
-                        name: '修改人'
+                        name: this.$t("CustomQuery['修改人']")
                     }, {
                         id: 'last_time',
-                        name: '修改时间'
+                        name: this.$t("CustomQuery['修改时间']")
                     }],
                     list: [],
                     sort: '-last_time',
@@ -115,10 +120,11 @@
                 },
                 slider: {
                     isShow: false,
+                    isCloseConfirmShow: false,
                     type: 'create',
                     id: null,
                     title: {
-                        text: '查询定义',
+                        text: this.$t("CustomQuery['新增查询']"),
                         icon: 'icon-cc-edit'
                     }
                 }
@@ -144,6 +150,9 @@
             }
         },
         methods: {
+            closeSliderConfirm () {
+                this.slider.isCloseConfirmShow = this.$refs.define.isCloseConfirmShow()
+            },
             /* 获取自定义API列表 */
             getUserAPIList () {
                 this.table.isLoading = true
@@ -167,7 +176,7 @@
                     this.table.isLoading = false
                     this.table.list = []
                     if (e.response && e.response.status === 403) {
-                        this.$alertMsg('您没有当前业务的权限')
+                        this.$alertMsg(this.$t("Common['您没有当前业务的权限']"))
                     }
                 })
             },
@@ -181,6 +190,7 @@
                 this.slider.isShow = true
                 this.slider.type = 'update'
                 this.slider.id = userAPI['id']
+                this.slider.title.text = this.$t('CustomQuery["编辑查询"]')
             },
             /* 设置当前页码 */
             setCurrentPage (current) {
@@ -201,6 +211,7 @@
             showUserAPISlider (type) {
                 this.slider.isShow = true
                 this.slider.type = type
+                this.slider.title.text = this.$t("CustomQuery['新增查询']")
             },
             /* 隐藏自定义条件侧滑栏 */
             hideUserAPISlider () {
@@ -214,10 +225,9 @@
 <style lang="scss" scoped>
     .api-wrapper{
         height: 100%;
-        padding: 0 20px 20px;
+        padding: 20px;
     }
     .options{
-        padding: 20px 0;
         font-size: 14px;
         .bizbox{
             width: 170px;
@@ -241,5 +251,8 @@
     }
     .options-btn{
         width: 133px;
+    }
+    .userAPI-table{
+        margin-top: 20px;
     }
 </style>

@@ -13,102 +13,157 @@
         <div class="bottom-contain clearfix">
             <div class="btn-group fl">
                 <template v-if="objId!=='biz'">
-                    <form :action="exportUrl" ref="export" style="display: inline-block;" method="POST">
-                        <input type="hidden" :value="table.chooseId.join(',')" name="bk_inst_id">
-                        <button class="bk-button" :disabled="!table.chooseId.length">
-                            <i class="icon-cc-derivation"></i>
-                            <span>导出</span>
-                        </button>
-                    </form>
-                    <button class="bk-button" @click="importSlider.isShow = true">
-                        <i class="icon-cc-import"></i>
-                        <span>导入</span>
-                    </button>
+                    <bk-dropdown-menu ref="dropdown" class="mr10" :trigger="'click'">
+                        <bk-button class="dropdown-btn checkbox" type="default" slot="dropdown-trigger">
+                            <template v-if="table.chooseId.length">
+                                <i class="checkbox-btn" :class="{'checked': table.chooseId.length!==table.pagination.count, 'checked-all': table.chooseId.length===table.pagination.count}" @click.stop="tableChecked('cancel')"></i>
+                            </template>
+                            <template v-else>
+                                <i class="checkbox-btn" @click.stop="tableChecked('current')"></i>
+                            </template>
+                            <i :class="['bk-icon icon-angle-down',{'icon-flip': isDropdownShow}]"></i>
+                        </bk-button>
+                        <ul class="bk-dropdown-list" slot="dropdown-content">
+                            <li>
+                                <a href="javascript:;" @click="tableChecked('current')">{{$t("Common['全选本页']")}}</a>
+                            </li>
+                            <li>
+                                <a href="javascript:;" @click="tableChecked('all')">{{$t("Common['跨页全选']")}}</a>
+                            </li>
+                        </ul>
+                    </bk-dropdown-menu>
+                    <div class="bk-group bk-button-group mr10">
+                        <bk-button v-tooltip="$t('ModelManagement[\'导入\']')" type="default" class="bk-button vice-btn" @click="importSlider.isShow = true" :disabled="unauthorized.update">
+                            <i class="icon-cc-import"></i>
+                        </bk-button>
+                        <div class="btn-tooltip-wrapper" v-tooltip="$t('ModelManagement[\'导出\']')">
+                            <form :action="exportUrl" ref="export" style="display: inline-block;" method="POST">
+                                <input type="hidden" :value="table.chooseId.join(',')" name="bk_inst_id">
+                                <bk-button btnType="submit" class="bk-button vice-btn first" :disabled="!table.chooseId.length" title="test">
+                                    <i class="icon-cc-derivation"></i>
+                                </bk-button>
+                            </form>
+                        </div>
+                        <div class="btn-tooltip-wrapper" v-tooltip="$t('BusinessTopology[\'修改\']')">
+                            <bk-button type="default" class="vice-btn"
+                                :disabled="!table.chooseId.length" 
+                                @click="multipleUpdate">
+                                <i class="icon-cc-edit"></i>
+                            </bk-button>
+                        </div>
+                        <div class="btn-tooltip-wrapper" v-tooltip="$t('Common[\'删除\']')">
+                            <bk-button type="default" v-if="objId !== 'biz'" class="bk-button delete-button mr10" :disabled="!table.chooseId.length" @click="confirmBatchDel">
+                                <i class="icon-cc-del"></i>
+                            </bk-button>
+                        </div>
+                    </div>
                 </template>
-                <button class="bk-button bk-primary bk-button-componey create-btn" title="立即创建" @click="openObjectSlider('create')" :disabled="unauthorized.create">立即创建</button>
+                <button class="bk-button bk-primary bk-button-componey create-btn mr10" @click="openObjectSlider('create')" :disabled="unauthorized.update">{{$t("Inst['立即创建']")}}</button>
             </div>
-            <div class="fr btn-group">
-                <button class="bk-button setting" @click="filing.isShow = true" title="查看删除历史">
+            <div class="fr bk-group bk-button-group">
+                <bk-button v-if="objId !== 'biz'" class="bk-button ml10" @click="filing.isShow = true" v-tooltip="$t('Common[\'查看删除历史\']')">
                     <i class="icon-cc-history"></i>
-                </button>
-                <button class="bk-button setting" @click="settingSlider.isShow = true">
+                </bk-button>
+                <bk-button v-else class="bk-button ml10" @click="filing.isShow = true" v-tooltip="$t('Common[\'查看归档历史\']')">
+                    <i class="icon-cc-history2"></i>
+                </bk-button>
+                <bk-button class="bk-button " @click="settingSlider.isShow = true" v-tooltip="$t('BusinessTopology[\'列表显示属性配置\']')">
                     <i class="icon-cc-setting"></i>
-                </button>
+                </bk-button>
             </div>
             <div class="quick-search fr">
                 <div class="fl left-select">
                     <bk-select :selected.sync="filter.selected" ref="filterSelector" @on-selected="setFilterType">
                         <bk-select-option
-                            v-for="(option, index) of filteredList"
+                            v-for="(option, index) of filterList"
                             :key="option.id"
                             :value="option.id"
                             :label="option.name">
                         </bk-select-option>
                     </bk-select>
                 </div>
-                <input v-if="filter.type === 'int'" type="number" class="bk-form-input search-text" placeholder="快速查询" v-model.number="filter.value" @keyup.enter="setTablePage(1)">
-                <input v-else type="text" class="bk-form-input search-text" placeholder="快速查询" v-model.trim="filter.value" @keyup.enter="setTablePage(1)">
-                <i class="bk-icon icon-search" @click="setTablePage(1)"></i>
+                <template v-if="filter.type === 'enum'">
+                    <bk-select class="search-options fl" :selected.sync="filter.value" @on-selected="doFilter" :showClear="true">
+                        <bk-select-option v-for="option in getEnumOptions()"
+                            :key="option.id"
+                            :value="option.id"
+                            :label="option.name">
+                        </bk-select-option>
+                    </bk-select>
+                </template>
+                <template v-else>
+                    <input v-if="filter.type === 'int'" type="text" maxlength="11" class="bk-form-input search-text int" 
+                    :placeholder="$t('Common[\'快速查询\']')" v-model.number="filter.value" @keyup.enter="doFilter">
+                    <input v-else type="text" class="bk-form-input search-text" :placeholder="$t('Common[\'快速查询\']')" v-model.trim="filter.value" @keyup.enter="doFilter">
+                    <i class="bk-icon icon-search" @click="doFilter"></i>
+                </template>
             </div>
         </div>
         <div class="table-contain">
             <v-object-table
-                :tableHeader="table.header" 
-                :tableList="table.list" 
-                :pagination="table.pagination"
+                :header="table.header" 
+                :list="table.list" 
+                :pagination.sync="table.pagination"
                 :defaultSort="table.defaultSort"
-                :chooseId.sync="table.chooseId"
+                :checked.sync="table.chooseId"
+                :wrapperMinusHeight="150"
+                :loading="$loading('instSearch')"
+                :isCheckboxShow="false"
                 @handleRowClick="editObject"
-                @handleTableSortClick="setTableSort"
-                @handlePageTurning="setTablePage"
-                @handlePageSizeChange="setTableSize"
-                @handleTableAllCheck="getAllObjectId">
-                    <template v-for="({property,id,name}, index) in table.header" :slot="id" slot-scope="{ item }" 
-                    v-if="property.hasOwnProperty('bk_asst_obj_id') && property['bk_asst_obj_id'] !== ''">
-                        <td>{{getAssociateCell(item[id])}}</td>
+                @handleSortChange="setTableSort"
+                @handlePageChange="setTablePage"
+                @handleSizeChange="setTableSize"
+                @handleCheckAll="getAllObjectId">
+                <template v-for="({property, id}, index) in table.header.filter(head => head.type !== 'checkbox')" :slot="id" slot-scope="{item}">
+                    <template v-if="!!property['bk_asst_obj_id']">
+                        {{getAssociateCell(item[id])}}
                     </template>
+                    <template v-else-if="property['bk_property_type'] === 'enum'">
+                        {{getEnumCell(item[id], property)}}
+                    </template>
+                    <template v-else>{{item[id]}}</template>
+                </template>
             </v-object-table>
             <v-sideslider
                 :isShow.sync="slider.isShow"
-                :hasQuickClose="true"
+                :hasCloseConfirm="true"
+                :isCloseConfirmShow="slider.isCloseConfirmShow"
                 :title="slider.title"
-                @closeSlider="closeObjectSlider">
+                @closeSlider="closeObjectSliderConfirm">
                 <div class="slide-content" slot="content">
                     <bk-tab :active-name="tab.activeName" style="border: none;" @tab-changed="tabChanged">
-                        <bk-tabpanel name="attr" title="属性">
+                        <bk-tabpanel name="attr" :title="$t('Common[\'属性\']')">
                             <v-object-attr 
+                                ref="attribute"
                                 :formFields="attr.formFields" 
-                                :formValues="attr.formValues" 
+                                :formValues="attr.formValues"
+                                :showDelete="isShowDelete"
                                 :type="attr.type"
                                 :active="slider.isShow && tab.activeName === 'attr'"
                                 :objId="objId"
                                 :isBatchUpdate="false"
+                                :isMultipleUpdate="attr.isMultipleUpdate"
+                                @closeSlider="closeObjectSlider"
                                 @submit="saveObjectAttr"
                                 @delete="confirmDelete">
                             </v-object-attr>
                         </bk-tabpanel>
-                        <bk-tabpanel name="relevance" title="关联" :show="attr.type==='update'">
-                            <template v-if="objId!=='biz'">
-                                <v-relevance :isShow="tab.activeName==='relevance'" style="padding: 30px 0;"
-                                    :objId="objId"
-                                    :ObjectID="attr.formValues['bk_inst_id']"
-                                ></v-relevance>
-                            </template>
-                            <template v-else>
-                                <v-relevance :isShow="tab.activeName==='relevance'" style="padding: 30px 0;"
-                                    :objId="objId"
-                                    :ObjectID="attr.formValues['bk_biz_id']"
-                                ></v-relevance>
-                            </template>
+                        <bk-tabpanel name="relevance" :title="$t('HostResourcePool[\'关联\']')" :show="attr.type==='update'">
+                            <v-relevance :isShow="tab.activeName==='relevance'"
+                                :objId="objId"
+                                :ObjectID="objId !== 'biz' ? attr.formValues['bk_inst_id'] : attr.formValues['bk_biz_id']"
+                                :instance="attr.formValues"
+                                @handleUpdate="getTableList">
+                            </v-relevance>
                         </bk-tabpanel>
-                        <bk-tabpanel name="history" title="变更记录" :show="attr.type==='update'">
-                            <v-history :active="tab.activeName === 'history'" :type="objId" :instId="objId === 'biz' ? attr.formValues['bk_biz_id'] : attr.formValues['bk_inst_id']"></v-history>
+                        <bk-tabpanel name="history" :title="$t('HostResourcePool[\'变更记录\']')" :show="attr.type==='update'">
+                            <v-history v-if="attr.type !== 'create'" :active="tab.activeName === 'history'" :type="objId" :instId="objId === 'biz' ? attr.formValues['bk_biz_id'] : attr.formValues['bk_inst_id']"></v-history>
                         </bk-tabpanel>
                     </bk-tab>
                 </div>
             </v-sideslider>
         </div>
-        <v-sideslider :isShow.sync="importSlider.isShow" :hasQuickClose="true" :title="{icon: 'icon-cc-derivation',text: `导入${objName}`}" @closeSlider="closeImportSlider">
+        <v-sideslider :isShow.sync="importSlider.isShow" :hasQuickClose="true" :title="{icon: 'icon-cc-derivation',text: `${$t('ModelManagement[\'导入\']')} ${objName}`}" @closeSlider="closeImportSlider">
             <v-import v-if="importSlider.isShow" slot="content" 
                 :templateUrl="templateUrl" 
                 :importUrl="importUrl" 
@@ -117,11 +172,13 @@
         </v-sideslider>
         <v-sideslider :isShow.sync="settingSlider.isShow" :hasQuickClose="true" :width="600" :title="settingSlider.title">
             <v-config-field 
+                ref="configField"
                 slot="content"
                 :isShow="settingSlider.isShow"
                 :attrList="attr.formFields"
                 @apply="settingApply"
                 @cancel="settingSlider.isShow = false"
+                @resetFields="resetFields"
                 :objId="objId">
             </v-config-field>
         </v-sideslider>
@@ -134,6 +191,8 @@
 </template>
 
 <script>
+    import vAssociationList from '@/components/relevance/list'
+    import vNewAssociation from '@/components/relevance/new-association'
     import { mapGetters } from 'vuex'
     import vObjectTable from '@/components/table/table'
     import vObjectAttr from '@/components/object/attribute'
@@ -143,11 +202,12 @@
     import vImport from '@/components/import/import'
     import vSideslider from '@/components/slider/sideslider'
     import vConfigField from './children/configField'
-    import vDeleteHistory from '@/components/deleteHistory/deleteHistory'
+    import vDeleteHistory from '@/components/history/delete'
     export default {
         mixins: [Authority],
         data () {
             return {
+                isDropdownShow: false,
                 isSelectShow: false,
                 // 查询条件
                 filter: {
@@ -159,6 +219,7 @@
                 filterList: [],
                 // 表格数据
                 table: {
+                    loading: false,
                     header: [],
                     list: [],
                     chooseId: [],
@@ -167,7 +228,7 @@
                         size: 10,
                         current: 1
                     },
-                    defaultSort: '-bk_biz_id',
+                    defaultSort: '-bk_inst_id',
                     sort: ''
                 },
                 filing: {
@@ -176,6 +237,7 @@
                 // 侧滑状态
                 slider: {
                     isShow: false,
+                    isCloseConfirmShow: false,
                     title: {
                         icon: '',
                         text: ''
@@ -187,27 +249,30 @@
                 settingSlider: {
                     isShow: false,
                     title: {
-                        text: '编辑'
+                        text: this.$t("Common['编辑']")
                     }
                 },
                 // 属性展示界面状态
                 attr: {
                     type: 'update',
                     formFields: [],
-                    formValues: {}
+                    formValues: {},
+                    isMultipleUpdate: false
                 },
                 // 选项卡
                 tab: {
                     activeName: 'attr'
-                }
+                },
+                prevHistoryCount: 0
             }
         },
         computed: {
             ...mapGetters([
-                'allClassify',
                 'bkSupplierAccount',
                 'usercustom'
             ]),
+            
+            ...mapGetters('navigation', ['activeClassifications']),
             // 当前路由对应的模型ID
             objId () {
                 return this.$route.params.objId
@@ -215,16 +280,17 @@
             // 当前路由对应的模型名称
             objName () {
                 let objName = ''
-                this.allClassify.map(classify => {
-                    if (classify['bk_objects'] && classify['bk_objects'].length) {
-                        classify['bk_objects'].map(model => {
-                            if (model['bk_obj_id'] === this.objId) {
-                                objName = model['bk_obj_name']
-                            }
-                        })
-                    }
+                this.activeClassifications.map(classify => {
+                    classify['bk_objects'].map(model => {
+                        if (model['bk_obj_id'] === this.objId) {
+                            objName = model['bk_obj_name']
+                        }
+                    })
                 })
                 return objName
+            },
+            isShowDelete () {
+                return !(this.objId === 'biz' && this.attr.formValues['bk_biz_name'] === '蓝鲸')
             },
             // 表格查询需要的参数
             axiosConfig () {
@@ -236,20 +302,50 @@
                             limit: this.table.pagination.size,
                             sort: this.table.sort ? this.table.sort : this.table.defaultSort
                         },
-                        fields: [],
-                        condition: {}
+                        fields: this.objId === 'biz' ? [] : {},
+                        condition: this.objId === 'biz' ? {bk_data_status: {'$ne': 'disabled'}} : {}
                     }
                 }
                 if (this.objId === 'biz') {
                     config.url = `biz/search/${this.bkSupplierAccount}`
                 } else {
-                    config.url = `inst/search/${this.bkSupplierAccount}/${this.objId}`
+                    config.url = `inst/association/search/owner/${this.bkSupplierAccount}/object/${this.objId}`
                 }
-                if (this.filter.selected && this.filter.value) {
-                    if (this.filter.type === 'bool') {
-                        config.params.condition[this.filter.selected] = this.filter.value === 'true'
+                if (this.filter.selected && this.filter.value !== '') {
+                    if (this.objId === 'biz') {
+                        if (this.filter.type === 'bool' && ['true', 'false'].includes(this.filter.value)) {
+                            config.params.condition[this.filter.selected] = this.filter.value === 'true'
+                        } else {
+                            config.params.condition[this.filter.selected] = this.filter.value
+                        }
                     } else {
-                        config.params.condition[this.filter.selected] = this.filter.value
+                        const specialObj = {
+                            'host': 'bk_host_innerip',
+                            'biz': 'bk_biz_name',
+                            'plat': 'bk_cloud_name',
+                            'module': 'bk_module_name',
+                            'set': 'bk_set_name'
+                        }
+                        if (this.filter.type === 'singleasst' || this.filter.type === 'multiasst') {
+                            let bkAsstObjId = this.getProperty(this.filter.selected)['bk_asst_obj_id']
+                            config.params.condition[bkAsstObjId] = [{
+                                field: specialObj.hasOwnProperty(bkAsstObjId) ? specialObj[bkAsstObjId] : 'bk_inst_name',
+                                operator: '$regex',
+                                value: this.filter.value
+                            }]
+                        } else if (this.filter.type === 'bool') {
+                            config.params.condition[this.objId] = [{
+                                field: this.filter.selected,
+                                operator: '$eq',
+                                value: ['true', 'false'].includes(this.filter.value) ? this.filter.value === 'true' : this.filter.value
+                            }]
+                        } else {
+                            config.params.condition[this.objId] = [{
+                                field: this.filter.selected,
+                                operator: ['enum', 'int'].includes(this.filter.type) ? '$eq' : '$regex',
+                                value: this.filter.value
+                            }]
+                        }
                     }
                 }
                 return config
@@ -262,49 +358,69 @@
             },
             exportUrl () {
                 return `${window.siteUrl}insts/owner/${this.bkSupplierAccount}/object/${this.objId}/export`
-            },
-            filteredList () {
-                return this.filterList.filter(({id}) => {
-                    let property = this.getProperty(id)
-                    if (property) {
-                        return property['bk_property_type'] !== 'singleasst' && property['bk_property_type'] !== 'multiasst'
-                    }
-                    return false
-                })
             }
         },
         watch: {
+            'filing.isShow' (isShow) {
+                if (!isShow && this.objId === 'biz') {
+                    this.getTableList()
+                }
+                this.updateHistoryCount(isShow)
+            },
             // 切换模型时，重新初始化表格
             objId () {
                 // 页码调整到第一页
                 this.table.pagination.current = 1
                 this.filter.value = ''
+                this.table.chooseId = []
                 // 初始化表格
                 this.initTable()
             },
-            filteredList (filteredList) {
-                if (filteredList.length) {
-                    this.filter.type = this.getProperty(filteredList[0]['id'])['bk_property_type']
-                    this.filter.selected = filteredList.length ? filteredList[0]['id'] : ''
+            filterList (filterList) {
+                if (filterList.length) {
+                    this.filter.type = this.getProperty(filterList[0]['id'])['bk_property_type']
+                    this.filter.selected = filterList.length ? filterList[0]['id'] : ''
                 } else {
                     this.filter.type = ''
                     this.filter.selected = ''
                 }
             },
-            usercustom (usercustom) {
-                let columnKey = `${this.objId}DisplayColumn`
-                if (usercustom.hasOwnProperty(columnKey) && usercustom[columnKey].length) {
-                    this.filterList = usercustom[columnKey].map(property => {
-                        return {
-                            id: property['bk_property_id'],
-                            name: property['bk_property_name'],
-                            type: property['bk_property_type']
-                        }
-                    })
+            'slider.isShow' (isShow) {
+                if (!isShow) {
+                    this.closeObjectSlider()
                 }
+            },
+            'filter.selected' () {
+                this.filter.value = ''
             }
         },
         methods: {
+            tableChecked (type) {
+                if (type === 'all') {
+                    this.getAllObjectId(true)
+                } else if (type === 'cancel') {
+                    this.table.chooseId = []
+                } else {
+                    let chooseId = []
+                    this.table.list.map(({bk_inst_id: bkInstId}) => chooseId.push(bkInstId))
+                    this.table.chooseId = chooseId
+                }
+            },
+            async resetFields () {
+                await this.getTableHeader()
+                this.$refs.configField.getUserAttr()
+            },
+            multipleUpdate () {
+                this.tab.activeName = 'attr'
+                this.slider.isShow = true
+                this.slider.title.text = this.$t('Inst[\'批量更新\']')
+                this.attr.isMultipleUpdate = true
+                this.attr.formValues = {bk_inst_id: this.table.chooseId.join(',')}
+                this.attr.type = 'create'
+            },
+            closeObjectSliderConfirm () {
+                this.slider.isCloseConfirmShow = this.$refs.attribute.isCloseConfirmShow()
+            },
             getProperty (id) {
                 return this.attr.formFields.find(({bk_property_id: bkPropertyId}) => bkPropertyId === id)
             },
@@ -356,6 +472,13 @@
             initTable () {
                 this.getTableHeader().then(properties => {
                     this.attr.formFields = [...properties]
+                    this.filterList = properties.map(property => {
+                        return {
+                            id: property['bk_property_id'],
+                            name: property['bk_property_name'],
+                            type: property['bk_property_type']
+                        }
+                    })
                     this.getTableList()
                 })
             },
@@ -381,7 +504,6 @@
                     let header = []
                     let headerLead = []
                     let headerTail = []
-                    let filterList = []
                     if (res.result) {
                         await this.getUsercustom()
                         if (this.usercustom.hasOwnProperty(`${this.objId}DisplayColumn`) && this.usercustom[`${this.objId}DisplayColumn`].length) {
@@ -396,11 +518,9 @@
                                         break
                                     }
                                 }
-                                if (val['bk_property_type'] !== 'singleasst' || val['bk_property_type'] !== 'multiasst') {
-                                    filterList.push({
-                                        id: val['bk_property_id'],
-                                        name: val['bk_property_name'],
-                                        type: val['bk_property_type']
+                                if (val['bk_property_type'] !== 'singleasst' && val['bk_property_type'] !== 'multiasst') {
+                                    let property = res.data.find(({bk_property_id: bkPropertyId}) => {
+                                        return bkPropertyId === val['bk_property_id']
                                     })
                                 }
                             })
@@ -418,13 +538,6 @@
                                 } else {
                                     headerTail.push(headerObj)
                                 }
-                                if (attr['bk_property_type'] !== 'singleasst' || attr['bk_property_type'] !== 'multiasst') {
-                                    filterList.push({
-                                        id: attr['bk_property_id'],
-                                        name: attr['bk_property_name'],
-                                        type: attr['bk_property_type']
-                                    })
-                                }
                             })
                         }
                         if (this.objId === 'biz') {
@@ -437,6 +550,7 @@
                             headerLead.unshift({
                                 id: 'bk_inst_id',
                                 name: 'ID',
+                                width: 50,
                                 type: 'checkbox',
                                 property: {}
                             })
@@ -448,10 +562,6 @@
                             this.setUsercustom(header.slice(1, 7))
                             this.table.header = header.slice(0, 7)
                         }
-
-                        this.filter.list = filterList
-                        // this.filter.selected = filterList.length ? filterList[0]['id'] : ''
-                        this.filterList = filterList
                     } else {
                         this.$alertMsg(res['bk_error_msg'])
                     }
@@ -460,13 +570,14 @@
             },
             // 获取表格列表
             getTableList () {
-                return this.$axios.post(this.axiosConfig.url, this.axiosConfig.params).then(res => {
+                this.table.loading = true
+                return this.$axios.post(this.axiosConfig.url, this.axiosConfig.params, {id: 'instSearch'}).then(res => {
                     let data = {
                         count: 0,
                         info: []
                     }
                     if (res.result) {
-                        data.count = res.data.count
+                        data.count = res.data.count || 0
                         data.info = res.data.info || []
                     } else {
                         this.$alertMsg(res['bk_error_msg'])
@@ -476,14 +587,20 @@
                     return data
                 }).catch(e => {
                     if (e.response && e.response.status === 403) {
-                        this.$alertMsg('您没有当前模型的权限')
+                        this.$alertMsg(this.$t("Inst['您没有当前模型的权限']"))
                     }
+                }).finally(() => {
+                    this.table.loading = false
                 })
             },
             getAllObjectId (isAllCheck) {
                 if (isAllCheck) {
+                    this.table.loading = true
                     let idKey = this.objId === 'biz' ? 'bk_biz_id' : 'bk_inst_id'
-                    this.$axios.post(this.axiosConfig.url, {fields: [idKey]}).then(res => {
+                    let params = this.$deepClone(this.axiosConfig.params)
+                    params.page = {}
+                    this.objId === 'biz' ? void 0 : params.fields[this.objId] = [idKey]
+                    this.$axios.post(this.axiosConfig.url, params).then(res => {
                         if (res.result) {
                             let chooseId = []
                             res.data.info.map(attr => {
@@ -493,6 +610,8 @@
                         } else {
                             this.$alertMsg(res['bk_error_msg'])
                         }
+                    }).finally(() => {
+                        this.table.loading = false
                     })
                 } else {
                     this.table.chooseId = []
@@ -514,32 +633,81 @@
                 this.table.pagination.current = page
                 this.getTableList()
             },
+            doFilter () {
+                this.table.chooseId = []
+                this.setTablePage(1)
+            },
             // 保存新增/修改的属性
             saveObjectAttr (formData, {bk_biz_id: bizId, bk_inst_id: instId}) {
-                if (this.attr.type === 'update') {
-                    let updateUrl = this.objId === 'biz'
-                        ? `biz/${this.bkSupplierAccount}/${bizId}`
-                        : `inst/${this.bkSupplierAccount}/${this.objId}/${instId}`
-                    this.$axios.put(updateUrl, formData).then(res => {
+                if (this.attr.type === 'create' && this.attr.isMultipleUpdate) {
+                    let params = {
+                        update: []
+                    }
+                    this.table.chooseId.map(id => {
+                        params.update.push({
+                            datas: formData,
+                            inst_id: id
+                        })
+                    })
+                    this.$axios.put(`inst/${this.bkSupplierAccount}/${this.objId}/batch`, params).then(res => {
                         if (res.result) {
                             this.setTablePage(1)
                             this.closeObjectSlider()
-                            this.$alertMsg('修改成功', 'success')
+                            this.$alertMsg(this.$t("Common['修改成功']"), 'success')
+                        } else {
+                            this.$alertMsg(res['bk_error_msg'])
+                        }
+                    })
+                } else if (this.attr.type === 'update') {
+                    let updateUrl = this.objId === 'biz'
+                        ? `biz/${this.bkSupplierAccount}/${bizId}`
+                        : `inst/${this.bkSupplierAccount}/${this.objId}/${instId}`
+                    this.$axios.put(updateUrl, formData, {id: 'editAttr'}).then(res => {
+                        if (res.result) {
+                            this.setTablePage(1)
+                            this.closeObjectSlider()
+                            this.$alertMsg(this.$t("Common['修改成功']"), 'success')
                         } else {
                             this.$alertMsg(res['bk_error_msg'])
                         }
                     })
                 } else {
                     let createUrl = this.objId === 'biz' ? `biz/${this.bkSupplierAccount}` : `inst/${this.bkSupplierAccount}/${this.objId}`
-                    this.$axios.post(createUrl, formData).then(res => {
+                    this.$axios.post(createUrl, formData, {id: 'editAttr'}).then(res => {
                         if (res.result) {
                             this.setTablePage(1)
                             this.closeObjectSlider()
-                            this.$alertMsg('创建成功', 'success')
+                            this.$alertMsg(this.$t("Inst['创建成功']"), 'success')
                         } else {
                             this.$alertMsg(res['bk_error_msg'])
                         }
                     })
+                }
+            },
+            confirmBatchDel () {
+                this.$bkInfo({
+                    title: this.$tc("Inst['确定删除选中的实例']", this.table.chooseId.length, {number: this.table.chooseId.length}),
+                    confirmFn: () => {
+                        this.batchDeleteInst()
+                    }
+                })
+            },
+            async batchDeleteInst () {
+                try {
+                    const params = {
+                        delete: {
+                            inst_ids: this.table.chooseId
+                        }
+                    }
+                    const res = await this.$axios.delete(`inst/${this.bkSupplierAccount}/${this.objId}/batch`, {data: params})
+                    if (res.result) {
+                        this.table.chooseId = []
+                        this.setTablePage(1)
+                    } else {
+                        this.$alertMsg(res['bk_error_msg'])
+                    }
+                } catch (e) {
+                    this.$alertMsg(e.message || e.data['bk_error_msg'] || e.statusText)
                 }
             },
             // 删除模型实例前进行确认
@@ -549,28 +717,46 @@
                     bk_biz_name: bizName
                 } = data
                 this.$bkInfo({
-                    title: `确认要删除${this.objId === 'biz' ? bizName : instName}吗`,
+                    title: this.objId === 'biz' ? this.$t("Common['确认要归档']", {name: this.objId === 'biz' ? bizName : instName}) : this.$t("Common['确认要删除']", {name: this.objId === 'biz' ? bizName : instName}),
+                    content: this.objId === 'biz' ? this.$t("Inst['归档提示']") : '',
                     confirmFn: () => {
                         this.deleteObject(data)
                     }
                 })
             },
             // 删除模型实例
-            deleteObject ({bk_biz_id: bizId, bk_inst_id: instId}) {
-                let deleteUrl = this.objId === 'biz' ? `biz/${this.bkSupplierAccount}/${bizId}` : `inst/${this.bkSupplierAccount}/${this.objId}/${instId}`
-                this.$axios.delete(deleteUrl).then(res => {
+            async deleteObject ({bk_biz_id: bizId, bk_inst_id: instId}) {
+                let url = ''
+                let method = ''
+                if (this.objId === 'biz') {
+                    url = `biz/status/disabled/${this.bkSupplierAccount}/${bizId}`
+                    method = 'put'
+                } else {
+                    url = `inst/${this.bkSupplierAccount}/${this.objId}/${instId}`
+                    method = 'delete'
+                }
+                try {
+                    const res = await this.$axios({
+                        method: method,
+                        url: url,
+                        id: 'instDelete'
+                    })
                     if (res.result) {
                         this.setTablePage(1)
                         this.closeObjectSlider()
+                        this.table.chooseId = this.table.chooseId.filter(id => id !== (this.objId === 'biz' ? bizId : instId))
                     } else {
                         this.$alertMsg(res['bk_error_msg'])
                     }
-                })
+                } catch (e) {
+                    this.$alertMsg(e.message || e.data['bk_error_msg'] || e.statusText)
+                }
             },
             // 展示模型实例属性明细
             editObject (item) {
                 this.attr.formValues = Object.assign({}, item)
                 this.attr.type = 'update'
+                this.attr.isMultipleUpdate = false
                 this.openObjectSlider('update', item['bk_inst_name'])
             },
             // 打开侧滑界面
@@ -578,11 +764,13 @@
                 this.tab.activeName = 'attr'
                 this.attr.type = type
                 if (type === 'create') {
+                    this.attr.isMultipleUpdate = false
                     this.slider.title.icon = 'icon-cc-create-business'
-                    this.slider.title.text = `创建${this.objName}`
+                    this.slider.title.text = `${this.$t("Common['创建']")} ${this.objName}`
                 } else {
                     this.slider.title.icon = 'icon-cc-edit'
-                    this.slider.title.text = `编辑${this.objName}`
+                    let name = this.objId === 'biz' ? this.attr.formValues['bk_biz_name'] : this.attr.formValues['bk_inst_name']
+                    this.slider.title.text = `${this.$t("Common['编辑']")} ${this.objName} ${name}`
                 }
                 this.slider.isShow = true
             },
@@ -606,18 +794,35 @@
                     })
                 }
                 return label.join(',')
+            },
+            getEnumCell (data, property) {
+                let obj = property.option.find(({id}) => {
+                    return id === data
+                })
+                if (obj) {
+                    return obj.name
+                }
+            },
+            getEnumOptions () {
+                let selectedPropertyId = this.filter.selected
+                let property = this.attr.formFields.find(({bk_property_id: bkPropertyId}) => bkPropertyId === selectedPropertyId)
+                if (property) {
+                    return property.option || []
+                }
+                return []
+            },
+            updateHistoryCount (isShow) {
+                if (this.prevHistoryCount) {
+                    this.$store.commit('navigation/updateHistoryCount', isShow ? -1 : 1)
+                }
             }
+        },
+        created () {
+            this.prevHistoryCount = this.$store.state.navigation.historyCount
         },
         mounted () {
             this.initTable()
         },
-        // beforeRouteUpdate (to, from, next) {
-        //     this.isSelectShow = false
-        //     next()
-        //     this.$nextTick(() => {
-        //         this.isSelectShow = true
-        //     })
-        // },
         components: {
             vObjectTable,
             vObjectAttr,
@@ -626,7 +831,9 @@
             vImport,
             vSideslider,
             vConfigField,
-            vDeleteHistory
+            vDeleteHistory,
+            vAssociationList,
+            vNewAssociation
         }
     }
 </script>
@@ -643,23 +850,6 @@
             background: #4d597d;
         }
     }
-    .vice-btn{  //次要按钮 取消按钮
-        border: 1px solid #e6e9f2;
-        color:  $primaryHoverColor;
-        cursor: pointer;
-        &:hover{
-            border-color: $primaryHoverColor;
-        }
-    }
-    .icon-btn{  //单纯图标的按钮
-        background: #ffffff;
-        color: $primaryHoverColor;
-        cursor: pointer;
-        &:hover{
-            background: $primaryHoverColor;
-            color: $defaultColor;
-        }
-    }
     .no-border-btn{    //无边框按钮
         background: #fff;
         color: $primaryHoverColor;
@@ -671,9 +861,11 @@
     }
     .btn-group {
         font-size: 0;
+        .dropdown-btn {
+            width: 75px;
+        }
     }
     .bk-button{
-        margin-right: 10px;
         &.import,
         &.export,
         &.setting{
@@ -703,6 +895,7 @@
         }
         .icon-cc-derivation,
         .icon-cc-import,
+        .icon-cc-history,
         .icon-cc-setting{
             font-size: 16px;
             position: relative;
@@ -719,7 +912,7 @@
             margin: 0;
         }
         .bottom-contain{
-            padding:20px 20px 0 20px;
+            padding:20px 20px 0;
         }
     }
     .bk-button-componey{
@@ -732,7 +925,7 @@
         float:left;
         .slide-content{
             height: calc(100% - 120px);
-            padding: 10px 20px;
+            padding: 0 20px;
             overflow: auto;
             &::-webkit-scrollbar{
                 width: 6px;
@@ -862,6 +1055,9 @@
                 z-index: 2;
             }
         }
+        .search-options{
+            width: 320px;
+        }
         .icon-search{
             position: absolute;
             right: 10px;
@@ -905,9 +1101,6 @@
     .bk-form-item.is-required .bk-label:after {
         position: absolute !important;
     }
-</style>
-
-<style lang="scss">
     .host-resource-wrapper{
         .slide-content{
             .bk-tab2{
@@ -928,9 +1121,6 @@
             }
         }
     }
-</style>
-
-<style lang="scss">
     .business-wrapper{
         .bk-tab2{
             .bk-tab2-nav{

@@ -124,6 +124,18 @@ const (
 	// CCErrCommParams should be string
 	CCErrCommParamsShouldBeString = 1199032
 
+	// CCErrCommSearchPropertyFailed get object property fields error
+	CCErrCommSearchPropertyFailed = 1199033
+
+	// CCErrCommParamsShouldBeEnum set enum
+	CCErrCommParamsShouldBeEnum = 1199034
+
+	// CCErrCommXXExceedLimit  xx exceed limit number
+	CCErrCommXXExceedLimit = 1199035
+
+	CCErrProxyRequestFailed      = 1199036
+	CCErrRewriteRequestUriFailed = 1199037
+
 	// apiserver 1100XXX
 
 	// toposerver 1101XXX
@@ -223,23 +235,43 @@ const (
 	// CCErrTopoHasHost include host
 	CCErrTopoHasHost = 1101030
 
-	CCErrTopoAppDeleteFailed                = 1001031
-	CCErrTopoAppUpdateFailed                = 1001032
-	CCErrTopoAppSearchFailed                = 1001033
-	CCErrTopoAppCreateFailed                = 1001034
-	CCErrTopoForbiddenToDeleteModelFailed   = 1001035
-	CCErrTopoMainlineCreatFailed            = 1001037
-	CCErrTopoMainlineDeleteFailed           = 1001038
-	CCErrTopoMainlineSelectFailed           = 1001039
-	CCErrTopoTopoSelectFailed               = 1001040
-	CCErrTopoUserGroupCreateFailed          = 1001041
-	CCErrTopoUserGroupDeleteFailed          = 1001042
-	CCErrTopoUserGroupUpdateFailed          = 1001043
-	CCErrTopoUserGroupSelectFailed          = 1001044
-	CCErrTopoUserGroupPrivilegeUpdateFailed = 1001045
-	CCErrTopoUserGroupPrivilegeSelectFailed = 1001046
-	CCErrTopoUserPrivilegeSelectFailed      = 1001047
-	CCErrTopoRolePrivilegeCreateFailed      = 1001048
+	// CCErrTopoGetCloudErrStrFaild get cloud error
+	CCErrTopoGetCloudErrStrFaild = 1101031
+	// CCErrTopoCloudNotFound   cloud area not found
+	CCErrTopoCloudNotFound = 1101032
+
+	// CCErrTopoGetAppFaild search app err %s
+	CCErrTopoGetAppFaild = 1101033
+	// CCErrTopoGetModuleFailed search  module err %s
+	CCErrTopoGetModuleFailed = 1101034
+	// CCErrTopoBizTopoOverLevel the mainline topo level over limit
+	CCErrTopoBizTopoLevelOverLimit = 1101035
+	// CCErrTopoInstHasBeenAssociation the mainline topo level over limit
+	CCErrTopoInstHasBeenAssociation = 1101036
+	// it is forbidden to delete , that has some insts
+	CCErrTopoObjectHasSomeInstsForbiddenToDelete = 1101037
+
+	CCErrTopoAppDeleteFailed                       = 1001031
+	CCErrTopoAppUpdateFailed                       = 1001032
+	CCErrTopoAppSearchFailed                       = 1001033
+	CCErrTopoAppCreateFailed                       = 1001034
+	CCErrTopoForbiddenToDeleteModelFailed          = 1001035
+	CCErrTopoMainlineCreatFailed                   = 1001037
+	CCErrTopoMainlineDeleteFailed                  = 1001038
+	CCErrTopoMainlineSelectFailed                  = 1001039
+	CCErrTopoTopoSelectFailed                      = 1001040
+	CCErrTopoUserGroupCreateFailed                 = 1001041
+	CCErrTopoUserGroupDeleteFailed                 = 1001042
+	CCErrTopoUserGroupUpdateFailed                 = 1001043
+	CCErrTopoUserGroupSelectFailed                 = 1001044
+	CCErrTopoUserGroupPrivilegeUpdateFailed        = 1001045
+	CCErrTopoUserGroupPrivilegeSelectFailed        = 1001046
+	CCErrTopoUserPrivilegeSelectFailed             = 1001047
+	CCErrTopoRolePrivilegeCreateFailed             = 1001048
+	CCErrTopoDeleteMainLineObjectAndInstNameRepeat = 1001049
+	CCErrHostNotAllowedToMutiBiz                   = 1001050
+	CCErrTopoGraphicsSearchFailed                  = 1001051
+	CCErrTopoGraphicsUpdateFailed                  = 1001052
 
 	CCErrTopoMulueIDNotfoundFailed = 1101080
 	CCErrTopoBkAppNotAllowedDelete = 1101081
@@ -255,10 +287,11 @@ const (
 	// CCErrObjectPropertyGroupUpdateFailed failed to update the filed
 	CCErrObjectPropertyGroupUpdateFailed = 1102003
 
-	CCErrObjectCreateInstFailed = 1102004
-	CCErrObjectUpdateInstFailed = 1102005
-	CCErrObjectDeleteInstFailed = 1102006
-	CCErrObjectSelectInstFailed = 1102007
+	CCErrObjectCreateInstFailed       = 1102004
+	CCErrObjectUpdateInstFailed       = 1102005
+	CCErrObjectDeleteInstFailed       = 1102006
+	CCErrObjectSelectInstFailed       = 1102007
+	CCErrObjectSelectIdentifierFailed = 1102008
 
 	// CCErrObjectDBOpErrno failed to operation database
 	CCErrObjectDBOpErrno = 1102004
@@ -276,10 +309,12 @@ const (
 	// CCErrEventSubscribeUpdateFailed failed to update the filed
 	CCErrEventSubscribeUpdateFailed = 1103003
 
-	// CCErrEventSubscribePingFailed failed to ping the filed
+	// CCErrEventSubscribePingFailed failed to ping the target
 	CCErrEventSubscribePingFailed = 1103004
-	// CCErrEventSubscribePingFailed failed to telnet the filed
+	// CCErrEventSubscribePingFailed failed to telnet the target
 	CCErrEventSubscribeTelnetFailed = 1103005
+	// CCErrEventOperateSuccessBUtSentEventFailed failed to sent event
+	CCErrEventPushEventFailed = 1103006
 
 	// host 1104XXX
 	CCErrHostModuleRelationAddFailed = 1104000
@@ -306,11 +341,21 @@ const (
 	CCErrHostFavouriteCreateFail         = 1106015
 	CCErrHostFavouriteUpdateFail         = 1106016
 	CCErrHostFavouriteDeleteFail         = 1106017
+	CCErrHostFavouriteDupFail            = 1106018
+	CCErrHostGetSnapshotChannelEmpty     = 1106019
+	CCErrHostGetSnapshotChannelClose     = 1106020
 
 	// proccontroller 1107XXX
-	CCErrProcDeleteProc2Module = 1107001
-	CCErrProcCreateProc2Module = 1107002
-	CCErrProcSelectProc2Module = 1107003
+	CCErrProcDeleteProc2Module   = 1107001
+	CCErrProcCreateProc2Module   = 1107002
+	CCErrProcSelectProc2Module   = 1107003
+	CCErrProcCreateProcConf      = 1107004
+	CCErrProcDeleteProcConf      = 1107005
+	CCErrProcGetProcConf         = 1107006
+	CCErrProcUpdateProcConf      = 1107007
+	CCErrProcCreateInstanceModel = 1107008
+	CCErrProcGetInstanceModel    = 1107009
+	CCErrProcDeleteInstanceModel = 1107010
 
 	// procserver 1108XXX
 	CCErrProcSearchDetailFaile       = 1108001
@@ -321,8 +366,13 @@ const (
 	CCErrProcSearchProcessFaile      = 1108006
 	CCErrProcDeleteProcessFaile      = 1108007
 	CCErrProcCreateProcessFaile      = 1108008
+	CCErrProcFieldValidFaile         = 1108009
+	CCErrProcGetByApplicationIDFail  = 1108010
+	CCErrProcGetByIP                 = 1108011
+	CCErrProcOperateFaile            = 1108012
+	CCErrProcBindWithModule          = 1108013
 
-	// auditlog 11009XXX
+	// auditlog 1109XXX
 	CCErrAuditSaveLogFaile      = 1109001
 	CCErrAuditTakeSnapshotFaile = 1109001
 
@@ -356,6 +406,30 @@ const (
 	CCErrHostMoveResourcePoolFail = 1110027
 	CCErrHostEditRelationPoolFail = 1110028
 	CCErrAddHostToModule          = 1110029
+	CCErrAddHostToModuleFailStr   = 1110030
+
+	// hostserver api machinery new error code
+	CCErrAddUserCustomQueryFaild       = 1110040
+	CCErrUpdateUserCustomQueryFaild    = 1110041
+	CCErrDeleteUserCustomQueryFaild    = 1110042
+	CCErrSearchUserCustomQueryFaild    = 1110043
+	CCErrGetUserCustomQueryDetailFaild = 1110044
+	CCErrHostModuleConfigFaild         = 1110045
+	CCErrHostGetSetFaild               = 1110046
+	CCErrHostGetAPPFail                = 1110047
+	CCErrHostAPPNotFoundFail           = 1110048
+	CCErrHostGetModuleFail             = 1110049
+	CCErrHostAgentStatusFail           = 1110050
+
+	//web  1111XXX
+	CCErrWebFileNoFound      = 1111001
+	CCErrWebFileSaveFail     = 1111002
+	CCErrWebOpenFileFail     = 1111003
+	CCErrWebFileContentEmpty = 1111004
+	CCErrWebFileContentFail  = 1111005
+	CCErrWebGetHostFail      = 1111006
+	CCErrWebCreateEXCELFail  = 1111007
+	CCErrWebGetObjectFail    = 1111008
 
 	CC_Err_Comm_HOST_CREATE_FAIL          = 4300
 	CC_Err_Comm_HOST_CREATE_FAIL_STR      = "create host fail"

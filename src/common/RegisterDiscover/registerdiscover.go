@@ -1,15 +1,15 @@
 /*
  * Tencent is pleased to support the open source community by making 蓝鲸 available.
  * Copyright (C) 2017-2018 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except 
+ * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
  * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- * either express or implied. See the License for the specific language governing permissions and 
+ * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 package RegisterDiscover
 
 import (
@@ -51,6 +51,11 @@ func NewRegDiscoverEx(serv string, timeOut time.Duration) *RegDiscover {
 	return regDiscv
 }
 
+// Ping to ping server
+func (cc *RegDiscover) Ping() error {
+	return cc.rdServer.Ping()
+}
+
 //Start the register and discover service
 func (rd *RegDiscover) Start() error {
 	return rd.rdServer.Start()
@@ -61,19 +66,16 @@ func (rd *RegDiscover) Stop() error {
 	return rd.rdServer.Stop()
 }
 
-//RegisterService used to write service info into register and discover server
-// key is the index of registered service
-// data is the service information
-func (rd *RegDiscover) RegisterService(key string, data []byte) error {
-	return rd.rdServer.Register(key, data)
-}
-
 //RegisterAndWatchService register service info into register-discover platform
 // and then watch the service info, if not exist, then register again
 // key is the index of registered service
 // data is the service information
 func (rd *RegDiscover) RegisterAndWatchService(key string, data []byte) error {
 	return rd.rdServer.RegisterAndWatch(key, data)
+}
+
+func (rd *RegDiscover) GetServNodes(key string) ([]string, error) {
+    return rd.rdServer.GetServNodes(key)
 }
 
 //DiscoverService used to discover the service that registered in `key`

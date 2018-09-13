@@ -60,11 +60,20 @@ const (
 	// BKDefaultSupplierID the default owner id
 	BKDefaultSupplierID = 0
 
+	// BKSuperOwnerID the super owner value
+	BKSuperOwnerID = "supperowner"
+
 	// BKDefaultDirSubArea the default dir subarea
 	BKDefaultDirSubArea = 0
 
 	// BKTimeTypeParseFlag the time flag
 	BKTimeTypeParseFlag = "cc_time_type"
+
+	// BKTopoBusinessLevelLimit the mainline topo level limit
+	BKTopoBusinessLevelLimit = "level.businessTopoMax"
+
+	// BKTopoBusinessLevelDefault the mainline topo level default level
+	BKTopoBusinessLevelDefault = 7
 )
 
 const (
@@ -88,6 +97,21 @@ const (
 
 	// BKInnerObjIDPlat the inner object
 	BKInnerObjIDPlat = "plat"
+
+	// BKInnerObjIDSwitch the inner object
+	BKInnerObjIDSwitch = "bk_switch"
+	// BKInnerObjIDRouter the inner object
+	BKInnerObjIDRouter = "bk_router"
+	// BKInnerObjIDBlance the inner object
+	BKInnerObjIDBlance = "bk_load_balance"
+	// BKInnerObjIDFirewall the inner object
+	BKInnerObjIDFirewall = "bk_firewall"
+	// BKInnerObjIDWeblogic the inner object
+	BKInnerObjIDWeblogic = "bk_weblogic"
+	// BKInnerObjIDTomcat the inner object
+	BKInnerObjIDTomcat = "bk_tomcat"
+	// BKInnerObjIDApache the inner object
+	BKInnerObjIDApache = "bk_apache"
 )
 
 // Revision
@@ -112,6 +136,23 @@ const (
 
 	// BKDBNE the db operator
 	BKDBNE = "$ne"
+
+	// BKDBNIN the db oeprator
+	BKDBNIN = "$nin"
+
+	// BKDBLT the db operator
+	BKDBLT = "$lt"
+
+	// BKDBLTE the db operator
+	BKDBLTE = "$lte"
+
+	// BKDBGT the db operator
+	BKDBGT = "$gt"
+
+	// BKDBGTE the db opeartor
+	BKDBGTE = "$gte"
+	// BKDBSortFieldSep the db sort field split char
+	BKDBSortFieldSep = ","
 )
 
 const (
@@ -122,6 +163,9 @@ const (
 )
 
 const (
+	// BKFIeldID the id definition
+	BKFieldID = "id"
+
 	// BKDefaultField the default field
 	BKDefaultField = "default"
 
@@ -133,6 +177,9 @@ const (
 
 	// BKAppIDField the appid field
 	BKAppIDField = "bk_biz_id"
+
+	// BKIPAddr the ip address
+	BKIPArr = "ipArr"
 
 	// BKHostInnerIPField the host innerip field
 	BKHostInnerIPField = "bk_host_innerip"
@@ -163,6 +210,8 @@ const (
 
 	// BKSubscriptionIDField the subscription id field
 	BKSubscriptionIDField = "subscription_id"
+	// BKSubscriptionNameField the subscription name field
+	BKSubscriptionNameField = "subscription_name"
 
 	// BKOSTypeField the os type field
 	BKOSTypeField = "bk_os_type"
@@ -194,6 +243,9 @@ const (
 	// BKProcIDField the proc id field
 	BKProcIDField = "bk_process_id"
 
+	// BKConfTempId is the config template id field
+	BKConfTempIdField = "bk_conftemp_id"
+
 	// BKProcNameField the proc name field
 	BKProcNameField = "bk_process_name"
 
@@ -205,6 +257,8 @@ const (
 
 	// BKPropertyTypeField the property type field
 	BKPropertyTypeField = "bk_property_type"
+
+	BKPropertyGroupField = "bk_property_group"
 
 	// BKPropertyValueField the property value field
 	BKPropertyValueField = "bk_property_value"
@@ -232,6 +286,9 @@ const (
 
 	// BKAsstObjIDField the property obj id field
 	BKAsstObjIDField = "bk_asst_obj_id"
+
+	// BKAsstInstIDField the property inst id field
+	BKAsstInstIDField = "bk_asst_inst_id"
 
 	// BKOptionField the option field
 	BKOptionField = "option"
@@ -305,6 +362,9 @@ const (
 	// BKIsPre the ispre field
 	BKIsPre = "ispre"
 
+	// bkIsOnly the isonly field, is primary key
+	BKIsOnly = "isonly"
+
 	// BKIsIncrementField the isincrement field
 	BKIsIncrementField = "is_increment"
 
@@ -367,6 +427,23 @@ const (
 
 	// BKDescriptionField the description field
 	BKDescriptionField = "description"
+
+	// BKIsOnlyField the isonly name field
+	BKIsOnlyField = "isonly"
+	// BKGseTaskIdField the gse taskid
+	BKGseTaskIdField = "task_id"
+	// BKProcPidFile the process pid file
+	BKProcPidFile    = "pid_file"
+	BKProcStartCmd   = "start_cmd"
+	BKProcStopCmd    = "stop_cmd"
+	BKProcReloadCmd  = "reload_cmd"
+	BKProcRestartCmd = "restart_cmd"
+	BKProcTimeOut    = "timeout"
+	BKProcWorkPath   = "work_path"
+	BKProcInstNum    = "proc_num"
+
+	// BKInstKeyField the inst key field for metric discover
+	BKInstKeyField = "bk_inst_key"
 )
 
 // DefaultResSetName the inner module set
@@ -404,7 +481,7 @@ const (
 	ValidUpdate = "update"
 )
 
-// DefaultResSetFlat the default resource set flat
+// DefaultResSetFlag the default resource set flat
 const DefaultResSetFlag int = 1
 
 // DefaultAppFlag the default app flag
@@ -416,8 +493,9 @@ const DefaultAppName string = "资源池"
 // BKAppName the default app name
 const BKAppName string = "蓝鲸"
 
-const (
+const BKMainLine = "mainline"
 
+const (
 	// DefaultResModuleFlag the default resource module flag
 	DefaultResModuleFlag int = 1
 
@@ -425,30 +503,29 @@ const (
 	DefaultFaultModuleFlag int = 2
 )
 const (
+	// FieldTypeSingleChar the single char filed type
+	FieldTypeSingleChar string = "singlechar"
 
-	// FiledTypeSingleChar the single char filed type
-	FiledTypeSingleChar string = "singlechar"
+	// FieldTypeLongChar the long char field type
+	FieldTypeLongChar string = "longchar"
 
-	// FiledTypeLongChar the long char field type
-	FiledTypeLongChar string = "longchar"
+	// FieldTypeInt the int field type
+	FieldTypeInt string = "int"
 
-	// FiledTypeInt the int field type
-	FiledTypeInt string = "int"
+	// FieldTypeEnum the enum field type
+	FieldTypeEnum string = "enum"
 
-	// FiledTypeEnum the enum field type
-	FiledTypeEnum string = "enum"
+	// FieldTypeDate the date field type
+	FieldTypeDate string = "date"
 
-	// FiledTypeDate the date field type
-	FiledTypeDate string = "date"
+	// FieldTypeTime the time field type
+	FieldTypeTime string = "time"
 
-	// FiledTypeTime the time field type
-	FiledTypeTime string = "time"
+	// FieldTypeUser the user field type
+	FieldTypeUser string = "objuser"
 
-	// FiledTypeUser the user field type
-	FiledTypeUser string = "objuser"
-
-	// FiledTypeSingleAsst the single association
-	FiledTypeSingleAsst string = "singleasst"
+	// FieldTypeSingleAsst the single association
+	FieldTypeSingleAsst string = "singleasst"
 
 	// FieldTypeMultiAsst the multi association
 	FieldTypeMultiAsst string = "multiasst"
@@ -456,89 +533,73 @@ const (
 	// FieldTypeTimeZone the timezone field type
 	FieldTypeTimeZone string = "timezone"
 
-	// FiledTypeBool the bool type
-	FiledTypeBool string = "bool"
+	// FieldTypeBool the bool type
+	FieldTypeBool string = "bool"
 
-	// FiledTypeSingleCharName the single char data type name
-	FiledTypeSingleCharName string = "短字符"
+	// FieldTypeSingleLenChar the single char length limit
+	FieldTypeSingleLenChar int = 256
 
-	// FiledTypeLongCharName the long char data type name
-	FiledTypeLongCharName string = "长字符"
-
-	// FiledTypeIntName the int data type name
-	FiledTypeIntName string = "数字"
-
-	// FiledTypeEnumName the enum data type name
-	FiledTypeEnumName string = "枚举"
-
-	// FiledTypeDateName the date data type name
-	FiledTypeDateName string = "日期"
-
-	// FiledTypeTimeName the time data type name
-	FiledTypeTimeName string = "时间"
-
-	// FiledTypeUserName the user data type name
-	FiledTypeUserName string = "用户"
-
-	// FiledTypeSingleAsstName the single association data type name
-	FiledTypeSingleAsstName string = "单关联"
-
-	// FiledTypeMultiAsstName the multi association data type nme
-	FiledTypeMultiAsstName string = "多关联"
-
-	// FiledTypeTimeZoneName the time zone data type name
-	FiledTypeTimeZoneName string = "时区"
-
-	// FiledTypeBoolName the bool data type name
-	FiledTypeBoolName string = "布尔"
-
-	// FiledTypeSingleLenChar the single char length limit
-	FiledTypeSingleLenChar int = 48
-
-	// FiledTypeLongLenChar the long char length limit
-	FiledTypeLongLenChar int = 512
+	// FieldTypeLongLenChar the long char length limit
+	FieldTypeLongLenChar int = 2000
 )
 
 const (
-
 	// HostAddMethodExcel add a host method
-	HostAddMethodExcel = "excel"
+	HostAddMethodExcel = "1"
 
 	// HostAddMethodAgent add a  agent method
-	HostAddMethodAgent = "agent"
+	HostAddMethodAgent = "2"
 
 	// HostAddMethodAPI add api method
-	HostAddMethodAPI = "api"
+	HostAddMethodAPI = "3"
 
 	// HostAddMethodExcelIndexOffset the height of the table header
 	HostAddMethodExcelIndexOffset = 3
+
+	/*EXCEL color AARRGGBB :
+	AA means Alpha
+	RRGGBB means Red, in hex.
+	GG means Red, in hex.
+	BB means Red, in hex.
+	*/
+
+	// ExcelHeaderFirstRowColor cell bg color
+	ExcelHeaderFirstRowColor = "FF92D050"
+	// ExcelHeaderFirstRowFontColor  font color
+	ExcelHeaderFirstRowFontColor = "00000000"
+	// ExcelHeaderFirstRowRequireFontColor require font color
+	ExcelHeaderFirstRowRequireFontColor = "FFFF0000"
+	// ExcelHeaderOtherRowColor cell bg color
+	ExcelHeaderOtherRowColor = "FFC6EFCE"
+	// ExcelHeaderOtherRowFontColor font color
+	ExcelHeaderOtherRowFontColor = "FF000000"
+	// ExcelCellDefaultBorderColor black color
+	ExcelCellDefaultBorderColor = "FFD4D4D4"
+
+	// ExcelAsstPrimaryKeySplitChar split char
+	ExcelAsstPrimaryKeySplitChar = "##"
+	// ExcelAsstPrimaryKeyRowChar split char
+	ExcelAsstPrimaryKeyRowChar = "\n"
+
+	// ExcelDelAsstObjectRelation delete asst object relation
+	ExcelDelAsstObjectRelation = "/"
+
+	// ExcelDataValidationListLen excel dropdown list item count
+	ExcelDataValidationListLen = 50
+
+	// ExcelCommentSheetCotentLangPrefixKey excel comment sheet centent language prefixe key
+	ExcelCommentSheetCotentLangPrefixKey = "import_comment"
 )
 
-// table names
 const (
-	// BKTableNameProcModule the table name of the process module
-	BKTableNameProcModule = "cc_Proc2Module"
+	// InputTypeExcel  data from excel
+	InputTypeExcel = "excel"
 
-	// BKTableNamePrivilege the table name of the privilege module
-	BKTableNamePrivilege = "cc_Privilege"
+	// InputTypeApiHostSync data from api for synchronize new host
+	InputTypeApiNewHostSync = "api_sync_host"
 
-	// BKTableNameUserGroup the table name of the user group module
-	BKTableNameUserGroup = "cc_UserGroup"
-
-	// BKTableNameUserGroupPrivilege the table name of the user group privilege
-	BKTableNameUserGroupPrivilege = "cc_UserGroupPrivilege"
-
-	// BKTableNamePropertyGroup the table name of the property group
-	BKTableNamePropertyGroup = "cc_PropertyGroup"
-
-	// BKTableNameObjDes the table name of the object
-	BKTableNameObjDes = "cc_ObjDes"
-
-	// BKTableNameObjAttDes the table name of the object attribute
-	BKTableNameObjAttDes = "cc_ObjAttDes"
-
-	// BKTableNameObjClassifiction the table name of the object classification
-	BKTableNameObjClassifiction = "cc_ObjClassification"
+	// BatchHostAddMaxRow batch sync add host max row
+	BatchHostAddMaxRow = 128
 )
 
 const (
@@ -553,9 +614,9 @@ const (
 type KvMap map[string]interface{}
 
 const (
-
 	// CCSystemOperatorUserName the system user
-	CCSystemOperatorUserName = "cc_system"
+	CCSystemOperatorUserName  = "cc_system"
+	CCSystemCollectorUserName = "cc_collector"
 )
 
 // APIRsp the result the http requst
@@ -572,8 +633,14 @@ const (
 	BKCacheKeyV3Prefix = "cc:v3:"
 )
 
+// event cache keys
 const (
+	EventCacheEventIDKey    = BKCacheKeyV3Prefix + "event:inst_id"
+	EventCacheEventQueueKey = BKCacheKeyV3Prefix + "event:inst_queue"
+	RedisSnapKeyPrefix      = BKCacheKeyV3Prefix + "snapshot:"
+)
 
+const (
 	// LocalHostName the local host name definition
 	LocalHostName = "localhost"
 
@@ -582,11 +649,76 @@ const (
 )
 
 const (
-	// BKHTTPHeaderUser current request  lhttp request header fields name for login user
+	// BKHTTPHeaderUser current request http request header fields name for login user
 	BKHTTPHeaderUser = "BK_User"
 	// BKHTTPLanguage the language key word
 	BKHTTPLanguage = "HTTP_BLUEKING_LANGUAGE"
 	// BKHTTPOwnerID the owner id
 	BKHTTPOwnerID = "HTTP_BLUEKING_SUPPLIER_ID"
 	//BKHTTPOwnerID = "HTTP_BLUEKING_OWNERID"
+	BKHTTPCookieLanugageKey = "blueking_language"
+	BKSessionLanugageKey    = "language"
+
+	BKHTTPCCRequestID = "rid"
+)
+
+const (
+	// DefaultAppLifeCycleNormal  biz life cycle normal
+	DefaultAppLifeCycleNormal = "2"
+)
+
+// Host OS type enumeration value
+const (
+	HostOSTypeEnumLinux   = "1"
+	HostOSTypeEnumWindows = "2"
+)
+
+const (
+	// InstAsstIDSplit instance associated fields, separators between mulitple ids of associated objects
+	InstAsstIDSplit = ","
+)
+
+// integer const
+const (
+	MaxUint64 = ^uint64(0)
+	MinUint64 = 0
+	MaxInt64  = int64(MaxUint64 >> 1)
+	MinInt64  = -MaxInt64 - 1
+	MaxUint   = ^uint(0)
+	MinUint   = 0
+	MaxInt    = int(MaxUint >> 1)
+	MinInt    = -MaxInt - 1
+)
+
+//flag
+const HostCrossBizField = "hostcrossbiz"
+const HostCrossBizValue = "e76fd4d1683d163e4e7e79cef45a74c1"
+
+const (
+	BKHTTPMIMEJSON = "application/json"
+)
+
+const (
+	// APPConfigWaitTime application wait config from zookeeper time (unit sencend)
+	APPConfigWaitTime = 15
+)
+
+const (
+	// URLFilterWhiteList url filter white list not execute any filter
+	// multiple url separeted by commas
+	URLFilterWhiteListSuffix = "/healthz"
+
+	URLFilterWhiteListSepareteChar = ","
+)
+
+type DataStatusFlag string
+
+const (
+	DataStatusDisabled DataStatusFlag = "disabled"
+	DataStatusEnable   DataStatusFlag = "enable"
+)
+
+const (
+	BKDataStatusField   = "bk_data_status"
+	BKDataRecoverSuffix = "(recover)"
 )

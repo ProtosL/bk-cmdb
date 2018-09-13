@@ -12,9 +12,9 @@
     <div class="pop-wrapper" v-show="isShow">
         <div class="pop-master">
             <div class="pop-box">
-                <div class="title">推送测试</div>
+                <div class="title">{{$t('EventPush["推送测试"]')}}</div>
                 <div class="content">
-                    <p class="info">配置平台以POST方法推送以下示例数据到您配置的URL</p>
+                    <p class="info">{{$t('EventPush["配置平台以POST方法推送以下示例数据到您配置的URL"]')}}</p>
                     <div class="content-box">
                         <ul>
                             <li>{</li>
@@ -32,15 +32,15 @@
                         </ul>
                     </div>
                     <div class="btn-group">
-                        <bk-button type="primary" class="btn" @click="testTelnet" :disabled="resultLoading">只测试连通性</bk-button>
-                        <bk-button type="primary" class="btn" @click="testPing" :disabled="resultLoading">推送测试</bk-button>
-                        <bk-button type="default" class="btn vice-btn" @click="closePop">取消</bk-button>
+                        <bk-button type="primary" class="btn" @click="testTelnet" :loading="$loading('testPush')">{{$t('EventPush["只测试连通性"]')}}</bk-button>
+                        <bk-button type="primary" class="btn" @click="testPing" :loading="$loading('testPush')">{{$t('EventPush["推送测试"]')}}</bk-button>
+                        <bk-button type="default" class="btn vice-btn" @click="closePop">{{$t('Common["取消"]')}}</bk-button>
                     </div>
                 </div>
             </div>
-            <div class="result-info" v-show="isResultShow" v-bkloading="{isLoading: resultLoading}">
-                <p class="text-success" v-if="resultInfo.result"><i class="bk-icon icon-check-circle-shape"></i>推送成功</p>
-                <p class="text-danger" v-else><i class="bk-icon icon-close-circle-shape"></i>推送失败</p>
+            <div class="result-info" v-show="isResultShow" v-bkloading="{isLoading: $loading('testPush')}">
+                <p class="text-success" v-if="resultInfo.result"><i class="bk-icon icon-check-circle-shape"></i>{{$t('EventPush["推送成功"]')}}</p>
+                <p class="text-danger" v-else><i class="bk-icon icon-close-circle-shape"></i>{{$t('EventPush["推送失败"]')}}</p>
                 <template v-if="resultInfo.result">
                     <ul class="result-data" :class="{'close': !isResultOpen}" v-if="typeof(resultInfo.data)==='string'">
                         <li>{{resultInfo.data}}</li>
@@ -58,7 +58,7 @@
                     :class="{'close': !isResultOpen}"
                     v-if="resultInfo.result" 
                     @click="isResultOpen=!isResultOpen">
-                    {{isResultOpen ? "收起" : "展开"}}
+                    {{isResultOpen ? $t('EventPush["收起"]') : $t('EventPush["展开"]')}}
                 </a>
             </div>
         </div>
@@ -80,7 +80,6 @@
             return {
                 isResultOpen: false,
                 isResultShow: false,
-                resultLoading: false,
                 resultInfo: {
                     result: true,
                     bk_error_msg: '',
@@ -101,14 +100,10 @@
             */
             testPing () {
                 this.isResultShow = true
-                this.resultLoading = true
                 this.$axios.post(`event/subscribe/ping`, {
                     callback_url: this.callbackURL
-                }).then(res => {
+                }, {id: 'testPush'}).then(res => {
                     this.resultInfo = res
-                    this.resultLoading = false
-                }).catch(() => {
-                    this.resultLoading = false
                 })
             },
             /*
@@ -116,14 +111,10 @@
             */
             testTelnet () {
                 this.isResultShow = true
-                this.resultLoading = true
                 this.$axios.post(`event/subscribe/telnet`, {
                     callback_url: this.callbackURL
-                }).then(res => {
+                }, {id: 'testPush'}).then(res => {
                     this.resultInfo = res
-                    this.resultLoading = false
-                }).catch(() => {
-                    this.resultLoading = false
                 })
             },
             closePop () {

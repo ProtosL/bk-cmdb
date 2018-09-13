@@ -1,22 +1,21 @@
 /*
  * Tencent is pleased to support the open source community by making 蓝鲸 available.
  * Copyright (C) 2017-2018 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except 
+ * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
  * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- * either express or implied. See the License for the specific language governing permissions and 
+ * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 package params
 
 import (
 	"configcenter/src/common"
+	"configcenter/src/common/metadata"
 	"configcenter/src/common/util"
-	"errors"
-	"fmt"
 )
 
 //type Flag string
@@ -57,52 +56,47 @@ type SearchCondition struct {
 	ObjectID  string        `json:"bk_obj_id"`
 }
 
-func ParseHostParams(input []interface{}, output map[string]interface{}) error {
-	fmt.Println(input)
+func ParseHostParams(input []metadata.ConditionItem, output map[string]interface{}) error {
 	for _, i := range input {
-		j, ok := i.(map[string]interface{})
-		if false == ok {
-			return errors.New("condition error")
-		}
-		field, ok := j["field"].(string)
-		if false == ok {
-			return errors.New("condition error")
-		}
-		operator, ok := j["operator"].(string)
-		if false == ok {
-			return errors.New("condition error")
-		}
-		value := j["value"]
-
-		switch operator {
+		switch i.Operator {
 		case common.BKDBEQ:
-			output[field] = value
+			output[i.Field] = i.Value
 		case common.BKDBIN:
-			d := make(map[string]interface{})
-			d[operator] = value
-			output[field] = d
-		default:
-			d := make(map[string]interface{})
-			switch value.(type) {
-			case string:
-
-				valStr := value.(string)
-				if util.IsTime(valStr) {
-
-					value = util.Str2Time(valStr)
-				}
-
+			queryCondItem := make(map[string]interface{})
+			queryCondItem[i.Operator] = i.Value
+			output[i.Field] = queryCondItem
+		case common.BKDBLIKE:
+			//d := make(map[string]interface{})
+			queryCondItem, ok := output[i.Field].(map[string]interface{})
+			if !ok {
+				queryCondItem = make(map[string]interface{})
 			}
-			d[operator] = value
-			output[field] = d
+			valStr, ok := i.Value.(string)
+			if ok {
+				queryCondItem[i.Operator] = SpeceialCharChange(valStr)
+			} else {
+				queryCondItem[i.Operator] = i.Value
+			}
+			output[i.Field] = queryCondItem
+		default:
+			queryCondItem, ok := output[i.Field].(map[string]interface{})
+			if !ok {
+				queryCondItem = make(map[string]interface{})
+			}
+			switch rawVal := i.Value.(type) {
+			case string:
+				if util.IsTime(rawVal) {
+					i.Value = util.Str2Time(rawVal)
+				}
+			}
+			queryCondItem[i.Operator] = i.Value
+			output[i.Field] = queryCondItem
 		}
-
 	}
-	fmt.Println(output)
 	return nil
 }
 
-func ParseHostIPParams(ipCond IPInfo, output map[string]interface{}) error {
+func ParseHostIPParams(ipCond metadata.IPInfo, output map[string]interface{}) error {
 	ipArr := ipCond.Data
 	exact := ipCond.Exact
 	flag := ipCond.Flag
@@ -137,7 +131,7 @@ func ParseHostIPParams(ipCond IPInfo, output map[string]interface{}) error {
 		orCond := make([]map[string]map[string]interface{}, 0)
 		for _, ip := range ipArr {
 			c := make(map[string]interface{})
-			c[common.BKDBLIKE] = ip
+			c[common.BKDBLIKE] = SpeceialCharChange(ip)
 			if INNERONLY == flag {
 				ipCon := make(map[string]map[string]interface{})
 				ipCon[common.BKHostInnerIPField] = c

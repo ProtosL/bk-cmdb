@@ -7,9 +7,10 @@
                         <label class="attribute-item-label fl" :class="{'required': property['isrequired']}">
                             {{property['bk_property_name']}}
                         </label>
-                        <div class="attribute-item-field fl" :style="{zIndex: attribute[bkObjId].length - index}">
+                        <i class="icon-tooltips" v-if="property['placeholder']" v-tooltip="htmlEncode(property['placeholder'])"></i>
+                        <div class="attribute-item-field fl" :style="{zIndex: property['bk_asst_obj_id'] === 'host' && isHostShow ? 998 : attribute[bkObjId].length - index}">
                             <input v-if="property['bk_property_type'] === 'int'" 
-                                type="number" class="bk-form-input"
+                                type="text" maxlength="11" class="bk-form-input"
                                 :disabled="!property['editable']"
                                 v-model.number="localValues[property['bk_property_id']]">
                             <v-member-selector v-else-if="property['bk_property_type'] === 'objuser'"
@@ -29,12 +30,18 @@
                                 :init-date="localValues[property['bk_property_id']]"
                                 @date-selected="setDate(...arguments, property['bk_property_id'])">
                             </bk-datepicker>
-                            <v-association v-else-if="property['bk_property_type'] === 'singleasst' || property['bk_property_type'] === 'multiasst'"
-                                :asstObjId="property['bk_asst_obj_id']"
-                                :multiple="property['bk_property_type'] === 'multiasst'"
-                                :disabled="!property['editable']"
-                                :selected.sync="localValues[property['bk_property_id']]">
-                            </v-association>
+                            <template v-else-if="property['bk_property_type'] === 'singleasst' || property['bk_property_type'] === 'multiasst'">
+                                <v-host :isSelectBoxShow.sync="isHostShow" v-if="property['bk_asst_obj_id'] === 'host'"
+                                    :multiple="property['bk_property_type'] === 'multiasst'"
+                                    :selected.sync="localValues[property['bk_property_id']]">
+                                </v-host>
+                                <v-association v-else
+                                    :multiple="property['bk_property_type'] === 'multiasst'"
+                                    :selected.sync="localValues[property['bk_property_id']]"
+                                    :disabled="!property['editable']"
+                                    :asstObjId="property['bk_asst_obj_id']">
+                                </v-association>
+                            </template>
                             <v-enumeration v-else-if="property['bk_property_type'] === 'enum'"
                                 :disabled="!property['editable']"
                                 :selected.sync="localValues[property['bk_property_id']]"
@@ -67,8 +74,11 @@
                             <template v-if="property['bk_property_type'] === 'singleasst' || property['bk_property_type'] === 'multiasst'">
                                 {{getAsstLabel(formValues[property['bk_property_id']])}}
                             </template>
+                            <template v-else-if="property['bk_property_type'] === 'enum'">
+                                {{getEnumLabel(formValues[property['bk_property_id']], property)}}
+                            </template>
                             <template v-else>
-                                {{localValues[property['bk_property_id']]}}
+                                {{localValues[property['bk_property_id']] === '' ? '--' : localValues[property['bk_property_id']]}}
                             </template>
                         </div>
                     </div>
@@ -76,11 +86,18 @@
             </template>
         </ul>
         <div class="attribute-btn">
-            <bk-button type="primary" class="bk-button main-btn" @click="doSubmit" :disabled="errors.any()" v-if="displayType === 'form'">保存</bk-button>
-            <bk-button type="primary" class="bk-button main-btn" @click="toggleDisplayType('form')" v-if="displayType === 'list'">编辑</bk-button>
-            <bk-button type="default" class="bk-button vice-btn cancel-btn" @click="toggleDisplayType('list')" v-if="type === 'update' && displayType === 'form'">取消</bk-button>
-            <bk-button type="default" class="bk-button vice-btn cancel-btn" @click="cancelCreate" v-if="type === 'create'">取消</bk-button>
-            <button class="del-btn" @click="doDelete" v-if="type === 'update' && displayType === 'form'">删除</button>
+            <bk-button type="primary" class="bk-button main-btn" @click="doSubmit" :loading="$loading('editAttr')" :disabled="errors.any()" v-if="displayType === 'form'">{{$t('Common[\'保存\']')}}</bk-button>
+            <template v-if="!editable">
+                <span class="tooltip-wrapper" v-tooltip="{content: $t('Common[\'关键业务不能够修改\']'), classes: 'topo-tip'}">
+                    <bk-button type="primary" class="bk-button main-btn" disabled v-if="displayType === 'list'">{{$t('Common[\'编辑\']')}}</bk-button>
+                </span>
+            </template>
+            <template v-else>
+                <bk-button type="primary" class="bk-button main-btn" @click="toggleDisplayType('form')" v-if="displayType === 'list'">{{$t('Common[\'编辑\']')}}</bk-button>
+            </template>
+            <bk-button type="default" class="bk-button vice-btn cancel-btn" @click="toggleDisplayType('list')" v-if="type === 'update' && displayType === 'form'">{{$t('Common[\'取消\']')}}</bk-button>
+            <bk-button type="default" class="bk-button vice-btn cancel-btn" @click="cancelCreate" v-if="type === 'create'">{{$t('Common[\'取消\']')}}</bk-button>
+            <bk-button class="del-btn" @click="doDelete" :loading="$loading('deleteAttr')" v-if="type === 'update' && displayType === 'form'">{{$t('Common[\'删除\']')}}</bk-button>
         </div>
     </div>
 </template>
@@ -88,6 +105,7 @@
     import vMemberSelector from '@/components/common/selector/member'
     import vEnumeration from '@/components/common/selector/enumeration'
     import vAssociation from '@/components/common/selector/association'
+    import vHost from '@/components/common/hostAssociation/host'
     import vValidate from '@/components/common/validator/validate'
     import { mapGetters } from 'vuex'
     const vTimezone = () => import('@/components/timezone/timezone')
@@ -97,6 +115,10 @@
             bkBizId: Number,
             activeNode: Object,
             activeParentNode: Object,
+            editable: {
+                type: Boolean,
+                default: true
+            },
             type: {
                 type: String,
                 default: 'create'
@@ -121,7 +143,8 @@
                 attribute: {},
                 localValues: {},
                 displayType: 'list',
-                attributeLoading: false
+                attributeLoading: false,
+                isHostShow: false
             }
         },
         computed: {
@@ -156,6 +179,9 @@
                 this.displayType = 'list'
             },
             formValues () {
+                this.$validator.validateAll().then(() => {
+                    this.errors.clear()
+                })
                 this.initLocalValues()
             },
             active (active) {
@@ -231,7 +257,18 @@
                 if (Array.isArray(value)) {
                     return value.map(({bk_inst_name: bkInstName}) => bkInstName).join(',')
                 }
-                return value
+                return (value === '' || value === undefined) ? '--' : value
+            },
+            getEnumLabel (value, property) {
+                if (value) {
+                    let obj = property.option.find(({id}) => {
+                        return id === value
+                    })
+                    if (obj) {
+                        return obj.name
+                    }
+                }
+                return '--'
             },
             setDate (date, bkPropertyId) {
                 if (this.localValues.hasOwnProperty(bkPropertyId)) {
@@ -261,19 +298,24 @@
                 }
                 if (property.hasOwnProperty('option')) {
                     if (bkPropertyType === 'int') {
-                        option = JSON.parse(option)
                         if (option.hasOwnProperty('min')) {
                             rules['min_value'] = option.min
                         }
                         if (option.hasOwnProperty('max')) {
                             rules['max_value'] = option.max
                         }
-                    } else if (bkPropertyType === 'singlechar' || bkPropertyType === 'longchar') {
+                    } else if ((bkPropertyType === 'singlechar' || bkPropertyType === 'longchar') && option !== null) {
                         rules['regex'] = option
                     }
                 }
-                if (bkPropertyType === 'singlechar' || bkPropertyType === 'longchar') {
-                    rules['char'] = true
+                if (bkPropertyType === 'singlechar') {
+                    rules['singlechar'] = true
+                }
+                if (bkPropertyType === 'longchar') {
+                    rules['longchar'] = true
+                }
+                if (bkPropertyType === 'int') {
+                    rules['regex'] = '^(0|[1-9][0-9]*|-[1-9][0-9]*)$'
                 }
                 return rules
             },
@@ -329,6 +371,13 @@
             },
             cancelCreate () {
                 this.$emit('cancel')
+            },
+            htmlEncode (str) {
+                let c = document.createElement('div')
+                c.innerHTML = str
+                let output = c.innerText
+                c = null
+                return output
             }
         },
         components: {
@@ -336,7 +385,8 @@
             vValidate,
             vTimezone,
             vEnumeration,
-            vAssociation
+            vAssociation,
+            vHost
         }
     }
 </script>
@@ -370,9 +420,16 @@
                     top: 0;
                 }
             }
+            .icon-tooltips{
+                display: inline-block;
+                vertical-align: middle;
+                width: 16px;
+                height: 16px;
+                margin: 10px 0 0 10px;
+                background: url('../../../common/images/icon/icon-info-tips.png') no-repeat;
+            }
             .attribute-item-field{
                 width: 460px;
-                height: 36px;
                 line-height: 36px;
                 position: relative;
                 &.list{
@@ -391,14 +448,16 @@
         .bk-button,
         .del-btn{
             vertical-align: middle;
-            // width: 124px;
             font-size: 14px;
             height: 36px;
             line-height: 34px;
             margin: 0 15px 0 0;
         }
-        .cancel-btn {
-            // width: 124px;
+        .tooltip-wrapper{
+            display: inline-block;
+            .bk-button{
+                margin: 0;
+            }
         }
     }
     .bk-form-input{

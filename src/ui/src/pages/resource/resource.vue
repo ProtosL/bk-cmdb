@@ -10,18 +10,20 @@
 
 <template>
    <div class="host-resource-wrapper">
-        <v-index 
-            ref="index"
+        <v-hosts 
+            ref="hosts"
             :isShowBiz="false" 
             :isShowCollect="false" 
-            :isShowHistory="false" 
-            :outerParams="index.searchParams"
+            :isShowHistory="false"
+            :isShowTransfer="false"
+            :isShowScope="true"
+            :outerParams="hosts.searchParams"
             @choose="setSelectedHost" 
             @attrLoaded="search">
             <div class="button-contain clearfix" slot="btnGroup">
-                <bk-select class="biz-selector fl mr10" placeholder='分配到业务空闲机池'
+                <bk-select class="biz-selector fl mr10" :placeholder="$t('HostResourcePool[\'分配到业务空闲机池\']')"
                     :disabled="!hasSelectedHost"
-                    :selected.sync="index.bkBizId" 
+                    :selected.sync="hosts.bkBizId" 
                     :filterable="true"
                     @on-selected="confirmTransfer">
                     <bk-select-option v-for="(bkBiz, index) in bkBizList"
@@ -30,46 +32,51 @@
                         :label="bkBiz['bk_biz_name']">
                     </bk-select-option>
                 </bk-select>
-                <form ref="exportForm" :action="exportUrl" method="POST" class="fl mr10">
-                    <input type="hidden" name="bk_host_id" :value="index.selectedHost">
-                    <input type="hidden" name="bk_biz_id" value="-1">
-                    <button class="bk-button"
-                        :disabled="!hasSelectedHost"
-                        @click.prevent="exportChoose">
-                        <i class="icon-cc-derivation"></i>
-                        <span>导出选中</span>
-                    </button>
-                </form>
-                <button class="bk-button del-button fl mr10" :disabled="!hasSelectedHost" @click="confirmDel">
-                    <i class="icon-cc-del"></i>
-                </button>
+                <div class="fl bk-group bk-button-group">
+                    <div class="btn-tooltip-wrapper" v-tooltip="$t('HostResourcePool[\'导出选中\']')">
+                        <form ref="exportForm" :action="exportUrl" method="POST" class="fl">
+                            <input type="hidden" name="bk_host_id" :value="hosts.selectedHost">
+                            <input type="hidden" name="bk_biz_id" value="-1">
+                            <bk-button type="default" class="first"
+                                :disabled="!hasSelectedHost"
+                                @click.prevent="exportChoose">
+                                <i class="icon-cc-derivation"></i>
+                            </bk-button>
+                        </form>
+                    </div>
+                    <div class="btn-tooltip-wrapper" v-tooltip="$t('Common[\'删除\']')">
+                        <bk-button type="default" class="delete-button fl" :class="{'disabled': !hasSelectedHost || $loading('deleteHosts')}" :disabled="!hasSelectedHost || $loading('deleteHosts')" @click="confirmDel">
+                            <i class="icon-cc-del"></i>
+                        </bk-button>
+                    </div>
+                </div>
                 <div class="fr">
-                    <bk-button type="primary" class="fl" @click="importHostShow">导入主机</bk-button>
-                    <button class="bk-button del-button fl ml10" @click="showFiling" title="查看删除历史">
+                    <bk-button type="primary" class="fl" @click="importHostShow">{{$t('HostResourcePool[\'导入主机\']')}}</bk-button>
+                    <bk-button class="icon-btn icon-history fl ml10" @click="showFiling" v-tooltip="$t('Common[\'查看删除历史\']')">
                         <i class="icon-cc-history"></i>
-                    </button>
+                    </bk-button>
                 </div>
             </div>
-        </v-index>
+        </v-hosts>
         <v-sideslider 
             :title="slider.title"
             :isShow.sync="slider.isShow">
             <bk-tab :active-name="slider.tab.active" @tab-changed="tabChanged" slot="content" style="border: none;padding: 0 20px;">
-                <bk-tabpanel name="import" title="批量导入">
-                    <v-import 
+                <bk-tabpanel name="import" :title="$t('HostResourcePool[\'批量导入\']')">
+                    <v-import v-if="slider.isShow"
                         :templateUrl="slider.import.templateUrl"
                         :importUrl="slider.import.importUrl"
                         @success="search()"
                         @partialSuccess="search()">
-                        <span slot="download-desc" style="display: inline-block;vertical-align: top;">说明：内网IP为必填列；</span>
+                        <span slot="download-desc" style="display: inline-block;vertical-align: top;">{{$t('HostResourcePool[\'说明：内网IP为必填列\']')}}</span>
                     </v-import>
                 </bk-tabpanel>
-                <bk-tabpanel name="agent" title="自动导入">
+                <bk-tabpanel name="agent" :title="$t('HostResourcePool[\'自动导入\']')">
                     <div class="automatic-import">
-                        <p>说明： 当主机安装了蓝鲸Agent后，会自动录入到“主机资源池”中</p>
+                        <p>{{$t("HostResourcePool['agent安装说明']")}}</p>
                         <div class="back-contain">
                             <i class="icon-cc-skip"></i>
-                            <a href="javascript:void(0)" @click="openAgentApp">点此进入Agent安装APP</a>
+                            <a href="javascript:void(0)" @click="openAgentApp">{{$t("HostResourcePool['点此进入节点管理']")}}</a>
                         </div>
                     </div>
                 </bk-tabpanel>
@@ -78,49 +85,31 @@
         <v-delete-history
             :isShow.sync="filing.isShow"
             :objId="'host'"
-            :objTableHeader="index.table.header"
+            :objTableHeader="hosts.table.header"
         ></v-delete-history>
    </div>
 </template>
 
 <script type="text/javascript">
-    import vIndex from '@/pages/index/index'
+    import vHosts from '@/pages/hosts/hosts'
     import vImport from '@/components/import/import'
     import vSideslider from '@/components/slider/sideslider'
-    import vDeleteHistory from '@/components/deleteHistory/deleteHistory'
+    import vDeleteHistory from '@/components/history/delete'
     import { mapGetters, mapActions } from 'vuex'
     export default {
         data () {
             return {
+                isDropdownShow: false,
+                selectedList: [],
+                forSelectedList: [],
                 filing: {
                     isShow: false
                 },
-                index: {
+                hosts: {
                     bkBizId: '',
                     selectedHost: [],
                     searchParams: {
-                        'bk_biz_id': -1,
-                        condition: [{
-                            'bk_obj_id': 'biz',
-                            fields: [],
-                            condition: [{
-                                field: 'default',
-                                operator: '$eq',
-                                value: 1
-                            }]
-                        }, {
-                            'bk_obj_id': 'host',
-                            fields: [],
-                            condition: []
-                        }, {
-                            'bk_obj_id': 'module',
-                            fields: [],
-                            condition: []
-                        }, {
-                            'bk_obj_id': 'set',
-                            fields: [],
-                            condition: []
-                        }]
+                        'bk_biz_id': -1
                     },
                     table: {
                         header: [],
@@ -129,7 +118,7 @@
                 },
                 slider: {
                     title: {
-                        text: '导入主机',
+                        text: this.$t("HostResourcePool['导入主机']"),
                         icon: 'icon-cc-import'
                     },
                     isShow: false,
@@ -141,13 +130,18 @@
                         importUrl: `${window.siteUrl}hosts/import`
                     }
                 },
-                isShowimportHost: false
+                isShowimportHost: false,
+                prevHistoryCount: 0
             }
         },
         computed: {
-            ...mapGetters(['bkBizList', 'bkSupplierAccount']),
+            ...mapGetters([
+                'bkBizList',
+                'bkSupplierAccount',
+                'language'
+            ]),
             hasSelectedHost () {
-                return this.index.selectedHost.length
+                return this.hosts.selectedHost.length
             },
             exportUrl () {
                 return `${window.siteUrl}hosts/export`
@@ -158,6 +152,9 @@
                 if (!isShow) {
                     this.slider.tab.active = 'import'
                 }
+            },
+            'filing.isShow' (isShow) {
+                this.updateHistoryCount(isShow)
             }
         },
         methods: {
@@ -165,17 +162,42 @@
             tabChanged (active) {
                 this.slider.tab.active = active
             },
+            hasAssignedHosts () {
+                return this.$refs.hosts.selectedList.find(host => !!host['biz'].find(biz => biz['default'] !== 1))
+            },
             confirmTransfer (selected, index) {
+                if (this.hasAssignedHosts()) {
+                    this.$alertMsg(this.$t('Hosts["请勿选择已分配主机"]'))
+                    this.$nextTick(() => {
+                        this.hosts.bkBizId = ''
+                    })
+                    return
+                }
                 let h = this.$createElement
-                this.$bkInfo({
-                    title: '请确认是否转移',
-                    content: h('p', [
+                let content = ''
+                if (this.language === 'en') {
+                    content = h('p', [
+                        h('span', 'Selected '),
+                        h('span', {
+                            style: {
+                                color: '#3c96ff'
+                            }
+                        }, this.hosts.selectedHost.length),
+                        h('span', ' Hosts Transfer to Idle machine under '),
+                        h('span', {
+                            style: {
+                                color: '#3c96ff'
+                            }
+                        }, selected.label)
+                    ])
+                } else {
+                    content = h('p', [
                         h('span', '选中的 '),
                         h('span', {
                             style: {
                                 color: '#3c96ff'
                             }
-                        }, this.index.selectedHost.length),
+                        }, this.hosts.selectedHost.length),
                         h('span', ' 个主机转移到 '),
                         h('span', {
                             style: {
@@ -183,22 +205,29 @@
                             }
                         }, selected.label),
                         h('span', ' 下的空闲机模块')
-                    ]),
+                    ])
+                }
+                this.$bkInfo({
+                    title: this.$t("HostResourcePool['请确认是否转移']"),
+                    content,
                     confirmFn: () => {
                         this.transferHost()
+                    },
+                    cancelFn: () => {
+                        this.hosts.bkBizId = ''
                     }
                 })
             },
             transferHost () {
                 this.$axios.post('hosts/modules/resource/idle', {
-                    'bk_biz_id': this.index.bkBizId,
-                    'bk_host_id': this.index.selectedHost
+                    'bk_biz_id': this.hosts.bkBizId,
+                    'bk_host_id': this.hosts.selectedHost
                 }).then(res => {
                     if (res.result) {
-                        this.$alertMsg('分配成功', 'success')
-                        this.index.selectedHost = []
-                        this.$refs.index.transferSuccess()
-                        this.index.bkBizId = ''
+                        this.$alertMsg(this.$t("HostResourcePool['分配成功']"), 'success')
+                        this.hosts.selectedHost = []
+                        this.$refs.hosts.transferSuccess()
+                        this.hosts.bkBizId = ''
                         this.search()
                     } else {
                         this.$alertMsg(res['bk_error_msg'])
@@ -207,24 +236,25 @@
             },
             confirmDel () {
                 this.$bkInfo({
-                    title: '确定删除选中的主机？',
+                    title: `${this.$t("HostResourcePool['确定删除选中的主机']")}？`,
                     confirmFn: () => {
                         this.$axios.delete('hosts/batch', {
                             data: JSON.stringify({
-                                'bk_host_id': this.index.selectedHost.join(','),
+                                'bk_host_id': this.hosts.selectedHost.join(','),
                                 'bk_supplier_account': this.bkSupplierAccount
-                            })
+                            }),
+                            id: 'deleteHosts'
                         }).then(res => {
                             if (res.result) {
                                 this.$bkInfo({
                                     statusOpts: {
-                                        title: '成功删除选中的主机',
+                                        title: this.$t("HostResourcePool['成功删除选中的主机']"),
                                         subtitle: false
                                     },
                                     type: 'success'
                                 })
                                 this.search()
-                                this.$refs.index.clearChooseId()
+                                this.$refs.hosts.clearChooseId()
                             } else {
                                 this.$alertMsg(res['bk_error_msg'])
                             }
@@ -234,10 +264,10 @@
             },
             search () {
                 // 构造新对象，触发v-index中watch outerParams
-                this.index.searchParams = Object.assign({}, this.index.searchParams)
+                this.hosts.searchParams = Object.assign({}, this.hosts.searchParams)
             },
             setSelectedHost (chooseId) {
-                this.index.selectedHost = chooseId
+                this.hosts.selectedHost = chooseId
             },
             exportChoose () {
                 this.$refs.exportForm.submit()
@@ -249,28 +279,38 @@
                 let agentAppUrl = window.agentAppUrl
                 if (agentAppUrl) {
                     if (window.agentAppUrl.indexOf('paasee-g.o.qcloud.com') !== -1) {
-                        window.top.postMessage(JSON.stringify({action: 'open_other_app', app_code: 'bk_agent_setup'}), '*')
+                        window.top.postMessage(JSON.stringify({action: 'open_other_app', app_code: 'bk_nodeman'}), '*')
                     } else {
                         window.open(agentAppUrl)
                     }
                 } else {
-                    this.$alertMsg('未配置Agent安装APP地址')
+                    this.$alertMsg(this.$t("HostResourcePool['未配置Agent安装APP地址']"))
                 }
             },
             showFiling () {
-                this.index.table.header = this.$refs.index.table.tableHeader
-                this.index.table.allAttr = this.$refs.index.attribute
+                this.hosts.table.header = this.$refs.hosts.table.tableHeader
+                this.hosts.table.allAttr = this.$refs.hosts.attribute
                 this.filing.isShow = true
+            },
+            updateHistoryCount (isShow) {
+                if (this.prevHistoryCount) {
+                    this.$store.commit('navigation/updateHistoryCount', isShow ? -1 : 1)
+                }
             }
         },
         created () {
+            this.prevHistoryCount = this.$store.state.navigation.historyCount
             if (!this.bkBizList.length) {
                 this.getBkBizList()
             }
         },
+        beforeRouteLeave (to, from, next) {
+            this.$store.commit('resetHostSearch')
+            next()
+        },
         components: {
             vImport,
-            vIndex,
+            vHosts,
             vSideslider,
             vDeleteHistory
         }
@@ -280,18 +320,37 @@
     .host-resource-wrapper{
         position: relative;
         height: 100%;
+        .button-contain{
+            display: inline-block;
+            width: calc(100% - 195px);
+            vertical-align: middle;
+        }
     }
     .biz-selector {
         display: inline-block;
         vertical-align: middle;
         width: 200px;
     }
-    .del-button{
+    .icon-cc-history{
+        position: relative;
+        top: -1px;
+        font-size: 16px;
+    }
+    .icon-btn{
         width: 36px;
         padding: 0;
-        &:hover{
-                .icon-cc-del{
+        &:not(:disabled):hover{
+            border-color: #ef4c4c;
+            &.icon-history {
+                border-color: #c3cdd7;
+            }
+            .icon-cc-del{
                 color: #ef4c4c;
+            }
+        }
+        &.disabled{
+            .icon-cc-del{
+                color: #ccc;
             }
         }
     }
@@ -301,7 +360,6 @@
             // color:#6b7baa;
         }
         .back-contain{
-            margin-left:45px;
             cursor:pointer;
             color: #3c96ff;
             img{

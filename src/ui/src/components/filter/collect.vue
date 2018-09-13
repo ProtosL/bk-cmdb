@@ -12,7 +12,7 @@
     <div class="collect-wrapper">
         <div class="collect-filter clearfix">
             <div class="filter-group filter-group-search fl">
-                <input class="bk-form-input" type="text" placeholder="快速查询..." v-model.trim="filter.text">
+                <input class="bk-form-input" type="text" :placeholder="`${$t('Common[\'快速查询\']')}...`" v-model.trim="filter.text">
                 <i class="bk-icon icon-search"></i>
             </div>
             <div class="filter-group filter-group-sort fr">
@@ -27,6 +27,7 @@
             <ul class="collect-list">
                 <li ref="collectItem" class="collect-item"
                     v-for="(item, index) in localFavoriteList"
+                    v-if="item.isShow"
                     :key="index"
                     :class="{'editing': item.edit || item.isShowDeleteConfirm}"
                     @click="apply(item)">
@@ -34,15 +35,16 @@
                     <input ref="collectNameInput" class="bk-form-input" type="text"
                         :itemId="item['id']"
                         v-show="item['edit']"
-                        v-model.trim="item['name']" 
+                        v-model.trim="item['name']"
+                        @click.stop
                         @blur="updateCollectName(item)">
                     <i class="icon-cc-edit" @click.stop="editCollectName(item)"></i>
                     <i class="icon-cc-del" @click.stop="item.isShowDeleteConfirm = true"></i>
                     <div class="collect-delete-pop" v-if="item.isShowDeleteConfirm">
                         <div class="btn-content">
-                            <p>确认删除</p>
-                            <button class="main-btn" @click.stop="deleteCollect(item, index)">确认</button>
-                            <button class="vice-btn" @click.stop="item.isShowDeleteConfirm = false">取消</button>
+                            <p>{{$t('Hosts[\'确认删除\']')}}</p>
+                            <button class="main-btn" @click.stop="deleteCollect(item, index)">{{$t('Hosts[\'确认\']')}}</button>
+                            <button class="vice-btn" @click.stop="item.isShowDeleteConfirm = false">{{$t('Common[\'取消\']')}}</button>
                         </div>
                         <div class="collect-delete-mask" @click.stop="item.isShowDeleteConfirm = false">
                         </div>
@@ -59,7 +61,8 @@
             favoriteList: {
                 type: Array,
                 required: true
-            }
+            },
+            active: Boolean
         },
         data () {
             return {
@@ -72,10 +75,10 @@
                 },
                 sortOptions: [{
                     id: 'name',
-                    name: '名称'
+                    name: this.$t('Hosts[\'名称\']')
                 }, {
                     id: 'frequency',
-                    name: '频率'
+                    name: this.$t('Hosts[\'频率\']')
                 }],
                 localFavoriteList: []
             }
@@ -84,22 +87,21 @@
             ...mapGetters(['bkBizList'])
         },
         watch: {
-            favoriteList (favoriteList) {
+            active () {
                 this.filter.text = ''
+            },
+            favoriteList (favoriteList) {
                 this.localFavoriteList = this.favoriteList.map(favorite => {
                     return Object.assign({
                         edit: false,
+                        isShow: favorite.name.toLowerCase().indexOf(this.filter.text.toLowerCase()) !== -1,
                         isShowDeleteConfirm: false
                     }, favorite)
                 })
             },
             'filter.text' (filterText) {
-                this.localFavoriteList.map(({name}, index) => {
-                    if (name.indexOf(filterText) === -1) {
-                        this.$refs.collectItem[index].style.display = 'none'
-                    } else {
-                        this.$refs.collectItem[index].style.display = 'block'
-                    }
+                this.localFavoriteList.map((item, index) => {
+                    item.isShow = item.name.toLowerCase().indexOf(filterText.toLowerCase()) !== -1
                 })
             },
             'filter.sort' (sort) {
@@ -119,6 +121,7 @@
                 this.localFavoriteList = favoriteList.map(favorite => {
                     return Object.assign({
                         edit: false,
+                        isShow: true,
                         isShowDeleteConfirm: false
                     }, favorite)
                 })
@@ -143,11 +146,13 @@
             },
             updateCollectName (item) {
                 let updateItem = Object.assign({}, item)
+                delete updateItem.isShow
                 delete updateItem.edit
                 delete updateItem.isShowDeleteConfirm
                 this.$axios.put(`hosts/favorites/${updateItem['id']}`, updateItem).then(res => {
                     if (res.result) {
                         item.edit = false
+                        this.$emit('update', updateItem)
                     } else {
                         this.$alertMsg(res['bk_error_msg'])
                     }
@@ -157,7 +162,7 @@
                 this.$axios.delete(`hosts/favorites/${item['id']}`).then(res => {
                     if (res.result) {
                         this.localFavoriteList.splice(index, 1)
-                        this.$alertMsg('删除成功', 'success')
+                        this.$alertMsg(this.$t('Common[\'删除成功\']'), 'success')
                         this.$emit('delete', item, index)
                     } else {
                         this.$alertMsg(res['bk_error_msg'])
@@ -175,7 +180,7 @@
                 if (isAppExist) {
                     this.$emit('apply', collect)
                 } else {
-                    this.$alertMsg('该查询条件对应的业务不存在')
+                    this.$alertMsg(this.$t('Common[\'该查询条件对应的业务不存在\']'))
                 }
             }
         }
@@ -190,7 +195,7 @@
         .filter-group{
             position: relative;
             &.filter-group-search{
-                width: 200px;
+                width: 175px;
                 .bk-form-input{
                     padding: 0 10px 0 28px;
                     height: 30px;

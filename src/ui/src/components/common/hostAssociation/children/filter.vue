@@ -1,17 +1,19 @@
 <template>
     <div class="host-filter-list clearfix">
         <div class="screening-group">
-            <label class="screening-group-label">选择业务</label>
+            <label class="screening-group-label">{{$t('Hosts[\'选择业务\']')}}</label>
             <div class="screening-group-item screening-group-item-app">
-                <v-application-selector
-                    :filterable="true"
-                    @on-selected="bkBizSelected"
-                    :selected.sync="bkBizId">
-                </v-application-selector>
+                <bk-select :filterable="true" :selected.sync="bkBizId" @on-selected="bkBizSelected">
+                    <bk-select-option v-for="biz in bkBizList"
+                        :key="biz['bk_biz_id']"
+                        :value="biz['bk_biz_id']"
+                        :label="biz['bk_biz_name']">
+                    </bk-select-option>
+                </bk-select>
             </div>
         </div>
         <div class="screening-group">
-            <label class="screening-group-label">内网IP</label>
+            <label class="screening-group-label">{{$t("Common['内网IP']")}}</label>
             <div class="screening-group-item screening-group-item-ip">
                 <input class="bk-form-input" v-model.trim="ip.text"></input>
             </div>
@@ -33,7 +35,7 @@
                     <template v-else>
                         <!-- 判断条件选择 -->
                         <div class="operation-type">
-                            <template v-if="typeOfChar.indexOf(column['bk_property_type']) !== -1">
+                            <template v-if="typeOfChar.indexOf(column['bk_property_type']) !== -1 || typeOfAsst.indexOf(column['bk_property_type']) !== -1">
                                 <bk-select class="screening-group-item-operator" :selected.sync="localQueryColumnData[column['bk_property_id']]['operator']">
                                     <bk-select-option v-for="(operator, index) in operators['char']"
                                         :key="index"
@@ -55,7 +57,7 @@
                         <!-- 判断输入类型 -->
                         <div class="operation-value">
                             <template v-if="column['bk_property_type'] === 'int'">
-                                <input type="number" class="bk-form-input screening-group-item-value" v-model.number="localQueryColumnData[column['bk_property_id']]['value']">
+                                <input type="text" maxlength="11" class="bk-form-input screening-group-item-value" v-model.number="localQueryColumnData[column['bk_property_id']]['value']">
                             </template>
                             <template v-else-if="column['bk_property_type'] === 'objuser'">
                                 <v-member-selector class="screening-group-item-value"
@@ -66,9 +68,9 @@
                             </template>
                             <template v-else-if="column['bk_property_type'] === 'enum'">
                                 <bk-select class="screening-group-item-value" :selected.sync="localQueryColumnData[column['bk_property_id']]['value']">
-                                    <bk-select-option v-for="(option, index) in JSON.parse(column['bk_option'])"
+                                    <bk-select-option v-for="(option, index) in column['bk_option']"
                                         :key="index"
-                                        :value="option.name"
+                                        :value="option.id"
                                         :label="option.name">
                                     </bk-select-option>
                                 </bk-select>
@@ -110,31 +112,33 @@
                 operators: {
                     'default': [{
                         value: '$eq',
-                        label: '等于'
+                        label: this.$t("Common['等于']")
                     }, {
                         value: '$ne',
-                        label: '不等于'
+                        label: this.$t("Common['不等于']")
                     }],
                     'char': [{
                         value: '$regex',
-                        label: '包含'
+                        label: this.$t("Common['包含']")
                     }, {
                         value: '$eq',
-                        label: '等于'
+                        label: this.$t("Common['等于']")
                     }, {
                         value: '$ne',
-                        label: '不等于'
+                        label: this.$t("Common['不等于']")
                     }],
                     'date': [{
                         value: '$in',
-                        label: '包含'
+                        label: this.$t("Common['包含']")
                     }]
                 },
                 typeOfChar: ['singlechar', 'longchar'],
-                typeOfDate: ['date', 'time']
+                typeOfDate: ['date', 'time'],
+                typeOfAsst: ['singleasst', 'multiasst']
             }
         },
         computed: {
+            ...mapGetters(['bkBizList']),
             ipData () {
                 let ipData = []
                 this['ip']['text'].split(/\n|;|；|,|，/).map(ip => {
@@ -178,22 +182,36 @@
                     this.attribute.map(({bk_obj_id: bkObjId, properties}) => {
                         properties.map(property => {
                             if (columnPropertyId === property['bk_property_id']) {
-                                filter.condition.map(({bk_obj_id: filterBkObjId, condition}) => {
-                                    if (filterBkObjId === bkObjId) {
-                                        let isEmptyValue = false
-                                        let value = this.localQueryColumnData[columnPropertyId]['value']
-                                        if (value === '' || (Array.isArray(value) && !value.length)) {
-                                            isEmptyValue = true
-                                        }
-                                        if (!isEmptyValue) {
-                                            condition.push({
-                                                field: columnPropertyId,
+                                let value = this.localQueryColumnData[columnPropertyId]['value']
+                                if (this.typeOfAsst.indexOf(property['bk_property_type']) !== -1) {
+                                    if (value) {
+                                        filter.condition.push({
+                                            'bk_obj_id': property['bk_asst_obj_id'],
+                                            fields: [],
+                                            condition: [{
+                                                field: 'bk_inst_name',
                                                 operator: this.localQueryColumnData[columnPropertyId]['operator'],
                                                 value: value
-                                            })
-                                        }
+                                            }]
+                                        })
                                     }
-                                })
+                                } else {
+                                    filter.condition.map(({bk_obj_id: filterBkObjId, condition}) => {
+                                        if (filterBkObjId === bkObjId) {
+                                            let isEmptyValue = false
+                                            if (value === '' || (Array.isArray(value) && !value.length)) {
+                                                isEmptyValue = true
+                                            }
+                                            if (!isEmptyValue) {
+                                                condition.push({
+                                                    field: columnPropertyId,
+                                                    operator: this.localQueryColumnData[columnPropertyId]['operator'],
+                                                    value: value
+                                                })
+                                            }
+                                        }
+                                    })
+                                }
                             }
                         })
                     })
@@ -211,6 +229,9 @@
         },
         created () {
             this.initLocalQuery()
+            if (this.bkBizList.length) {
+                this.bkBizId = this.bkBizList[0]['bk_biz_id']
+            }
         },
         methods: {
             initLocalQuery () {
@@ -324,24 +345,19 @@
                 width: 240px;
             }
             .operation-type{
+                position: relative;
                 float: left;
                 width: 65px;
+                &:hover{
+                    z-index: 2;
+                }
             }
             .operation-value{
+                position: relative;
                 float: left;
                 width: 175px;
-            }
-        }
-    }
-</style>
-
-<style lang="scss">
-    .host-filter-list{
-        .screening-group-item{
-            .operation-type{
-                .bk-select-input{
-                    border-right: 0;
-                }
+                margin-left: -1px;
+                z-index: 1;
             }
         }
     }

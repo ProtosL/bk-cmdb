@@ -11,38 +11,38 @@
 <template lang="html">
     <div class="tab-content other-content">
         <div class="other-list">
-            <h3>模型停用</h3>
-            <p><span v-if="!item['bk_ispaused']">保留模型和相应实例，隐藏关联关系</span></p>
+            <h3>{{$t('ModelManagement["模型停用"]')}}</h3>
+            <p><span v-if="!item['bk_ispaused']">{{$t('ModelManagement["保留模型和相应实例，隐藏关联关系"]')}}</span></p>
             <div class="bottom-contain">
-                <bk-button type="primary" v-if="isReadOnly" class="bk-button main-btn mr10 button-on" @click="restartModelConfirm">
-                    启用模型
+                <bk-button type="primary" :loading="$loading('restartModel')" :disabled="$loading('restartModel')" :title="$t('ModelManagement[\'启用模型\']')" v-if="isReadOnly" class="bk-button main-btn mr10 button-on" @click="restartModelConfirm">
+                    {{$t('ModelManagement["启用模型"]')}}
                 </bk-button>
-                <bk-button type="primary" v-else class="mr10" title="停用模型" @click="showConfirmDialog('stop')" :class="['bk-button bk-default', {'is-disabled': item['ispre'] || parentClassificationId === 'bk_biz_topo'}]" :disabled="item['ispre'] || parentClassificationId === 'bk_biz_topo'">
-                    停用模型
+                <bk-button type="primary" :loading="$loading('stopModel')" v-else class="mr10" :title="$t('ModelManagement[\'停用模型\']')" @click="showConfirmDialog('stop')" :class="['bk-button bk-default', {'is-disabled': item['ispre'] || parentClassificationId === 'bk_biz_topo'}]" :disabled="item['ispre'] || parentClassificationId === 'bk_biz_topo'">
+                    {{$t('ModelManagement["停用模型"]')}}
                 </bk-button>
                 <span class="btn-tip-content" v-show="isShowTipStop=item['ispre']">
                     <i class="icon-cc-attribute"></i>
-                    <span class="btn-tip">
+                    <span class="btn-tip" :class="{'en': language === 'en'}">
                         <i class="right-triangle"></i>
                         <i class="left-triangle"></i>
-                        系统内建模型不可停用
+                        {{$t('ModelManagement["系统内建模型不可停用"]')}}
                     </span>
                 </span>
             </div>
         </div>
         <div class="other-list mt50">
-            <h3>模型删除</h3>
-            <p>删除模型和其下所有实例，此动作不可逆，请慎重操作。</p>
+            <h3>{{$t('ModelManagement["模型删除"]')}}</h3>
+            <p>{{$t('ModelManagement["删除模型和其下所有实例，此动作不可逆，请谨慎操作"]')}}</p>
             <div class="bottom-contain">
-                <bk-button type="primary" class="mr10" title="确认删除模型" @click="showConfirmDialog('delete')" :class="['bk-button bk-default', {'is-disabled':item['ispre']}]" :disabled="item['ispre']">
-                    <span>删除模型</span>
+                <bk-button type="primary" :loading="$loading('deleteModel')" class="mr10" :title="$t('ModelManagement[\'删除模型\']')" @click="showConfirmDialog('delete')" :class="['bk-button bk-default', {'is-disabled':item['ispre']}]" :disabled="item['ispre']">
+                    <span>{{$t('ModelManagement["删除模型"]')}}</span>
                 </bk-button>
                 <span class="btn-tip-content" v-show="isShowTipStop=item['ispre']">
                     <i class="icon-cc-attribute"></i>
-                    <span class="btn-tip">
+                    <span class="btn-tip" :class="{'en': language === 'en'}">
                         <i class="right-triangle"></i>
                         <i class="left-triangle"></i>
-                        系统内建模型不可删除
+                        {{$t('ModelManagement["系统内建模型不可删除"]')}}
                     </span>
                 </span>
             </div>
@@ -79,7 +79,8 @@
         },
         computed: {
             ...mapGetters([
-                'bkSupplierAccount'
+                'bkSupplierAccount',
+                'language'
             ])
         },
         methods: {
@@ -89,7 +90,7 @@
             restartModelConfirm () {
                 let self = this
                 this.$bkInfo({
-                    title: '确认要启用该模型？',
+                    title: this.$t('ModelManagement["确认要启用该模型？"]'),
                     confirmFn () {
                         self.restartModel()
                     }
@@ -102,9 +103,10 @@
                 let params = {
                     bk_ispaused: false
                 }
-                this.$axios.put(`object/${this.id}`, params).then(res => {
+                this.$axios.put(`object/${this.id}`, params, {id: 'restartModel'}).then(res => {
                     if (res.result) {
                         this.$emit('closeSideSlider')
+                        this.$store.dispatch('navigation/getClassifications', true)
                     } else {
                         this.$alertMsg(res['bk_error_msg'])
                     }
@@ -117,9 +119,10 @@
                 let params = {
                     bk_ispaused: true
                 }
-                this.$axios.put(`object/${this.id}`, params).then(res => {
+                this.$axios.put(`object/${this.id}`, params, {id: 'stopModel'}).then(res => {
                     if (res.result) {
                         this.$emit('stopModel')
+                        this.$store.dispatch('navigation/getClassifications', true)
                     } else {
                         this.$alertMsg(res['bk_error_msg'])
                     }
@@ -130,17 +133,18 @@
             */
             deleteModel () {
                 if (this.isMainLine) {
-                    this.$axios.delete(`topo/model/mainline/owners/${this.bkSupplierAccount}/objectids/${this.item['bk_obj_id']}`).then(res => {
+                    this.$axios.delete(`topo/model/mainline/owners/${this.bkSupplierAccount}/objectids/${this.item['bk_obj_id']}`, {id: 'deleteModel'}).then(res => {
                         if (res.result) {
                             this.$emit('deleteModel', this.item)
                         } else {
-                            this.$alertMsg('删除模型失败')
+                            this.$alertMsg(res['bk_error_msg'])
                         }
                     })
                 } else {
-                    this.$axios.delete(`object/${this.id}`).then(res => {
+                    this.$axios.delete(`object/${this.id}`, {id: 'deleteModel'}).then(res => {
                         if (res.result) {
                             this.$emit('deleteModel', this.item)
+                            this.$store.dispatch('navigation/getClassifications', true)
                         } else {
                             this.$alertMsg(res['bk_error_msg'])
                         }
@@ -153,10 +157,10 @@
             dialogConfirm () {
                 this.confirmInfo.isConfirmShow = false
                 if (this.confirmInfo.confirmType === 'stop') {
-                    this.confirmInfo.text = '确定停用模型?'
+                    this.confirmInfo.text = this.$t('ModelManagement["确认要停用该模型？"]')
                     this.stopModel()
                 } else if (this.confirmInfo.confirmType === 'delete') {
-                    this.confirmInfo.text = '确定删除模型?'
+                    this.confirmInfo.text = this.$t('ModelManagement["确认要删除该模型？"]')
                     this.deleteModel()
                 }
             },
@@ -169,7 +173,7 @@
                 switch (type) {
                     case 'stop':
                         this.$bkInfo({
-                            title: '确定停用模型？',
+                            title: this.$t('ModelManagement["确认要停用该模型？"]'),
                             confirmFn () {
                                 self.stopModel()
                             }
@@ -177,7 +181,7 @@
                         break
                     case 'delete':
                         this.$bkInfo({
-                            title: '确定删除模型？',
+                            title: this.$t('ModelManagement["确认要删除该模型？"]'),
                             confirmFn () {
                                 self.deleteModel()
                             }
@@ -225,7 +229,7 @@
                 }
                 .btn-tip{
                     display:inline-block;
-                    width:170px;
+                    min-width:170px;
                     height:33px;
                     line-height:33px;
                     text-align:center;
@@ -236,6 +240,9 @@
                     color: #fff;
                     border-radius: 2px;
                     font-size: 12px;
+                    &.en{
+                        min-width: 300px;
+                    }
                     .left-triangle{
                         width: 0;
                         height: 0;

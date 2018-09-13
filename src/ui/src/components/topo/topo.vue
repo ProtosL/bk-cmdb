@@ -9,13 +9,13 @@
  */
 
 <template>
-    <div class="topo-wrapper model" id="topo-wrapper">
+    <div class="topo-wrapper model" :class="{'no-edit': curClassify === 'bk_host_manage'}" id="topo-wrapper">
         <div id="topo" class="topo"></div>
-        <button class="bk-button vis-button vis-setup" @click="editModel">
+        <button v-if="curClassify !== 'bk_host_manage'" class="bk-button vis-button vis-setup" @click="editModel" :title="$t('Common[\'编辑\']')">
             <i class="icon icon-cc-edit"></i>
         </button>
         <bk-button type="primary" class="bk-button vis-button vis-create" v-if="addModelAvailable && curClassify && modelNodes.length" @click="createModel">
-            <span class="vis-button-text">新增</span>
+            <span class="vis-button-text">{{$t('ModelManagement["新增"]')}}</span>
         </bk-button>
         <button class="bk-button vis-button vis-enable" v-if="addModelAvailable" @click="isShowDisableList = true">
             <i class="bk-icon icon-minus-circle-shape"></i>
@@ -24,7 +24,7 @@
         <transition name="topo-disable-list">
             <div class="topo-disable" v-show="isShowDisableList">
                 <label class="disable-title">
-                    <span>已禁用模型</span>
+                    <span>{{$t('ModelManagement["已停用模型"]')}}</span>
                     <i class="bk-icon icon-arrows-right" @click="isShowDisableList = false"></i>
                 </label>
                 <ul class="disable-list" ref="disableList">
@@ -34,7 +34,7 @@
                 </ul>
             </div>
         </transition>
-        <bk-button type="danger" class="bk-button vis-button vis-del" title="删除" v-if="!isInnerType" @click="deleteClass">
+        <bk-button type="danger" class="bk-button vis-button vis-del" :title="$t('ModelManagement[\'删除\']')" v-if="!isInnerType" @click="deleteClass">
             <i class="icon icon-cc-del"></i>
         </bk-button>
     </div>
@@ -110,9 +110,9 @@
                     },
                     edges: {
                         color: {
-                            color: '#6b7baa',
-                            highlight: '#6b7baa',
-                            hover: '#6b7baa'
+                            color: '#c3cdd7',
+                            highlight: '#3c96ff',
+                            hover: '#3c96ff'
                         },
                         smooth: {           // 线的动画
                             type: 'curvedCW',
@@ -229,7 +229,7 @@
                 canvas.width = img.width
                 canvas.height = img.height
                 let ctx = canvas.getContext('2d')
-
+                
                 ctx.drawImage(img, 0, 0, img.width, img.height)
 
                 let dataL = ctx.getImageData(0, 0, canvas.width, canvas.height)
@@ -273,18 +273,18 @@
                         curTypeNum++
                         let svgForUser = {
                             bgColor: '#fff',
-                            iconColor: '#498fe0',
-                            color: '#6b7baa'
+                            iconColor: '#868b97',
+                            color: '#868b97'
                         }
                         let svgForPre = {
-                            bgColor: '#6b7baa',
-                            iconColor: '#fff',
-                            color: '#fff'
+                            bgColor: '#fff',
+                            iconColor: '#6894c8',
+                            color: '#6894c8'
                         }
                         let svgForOther = {
                             bgColor: '#fff',
-                            iconColor: '#d6d8df',
-                            color: '#d6d8df'
+                            iconColor: '#c3cdd7',
+                            color: '#c3cdd7'
                         }
                         let svgColor = {}
                         if (node['ispre']) {
@@ -292,22 +292,36 @@
                         } else {
                             svgColor = svgForUser
                         }
-                        if (!this.isBelongtoCurclassify(node['bk_obj_id'])) {
+                        if (!this.isBelongtoCurclassify(node['bk_obj_id']) || node['bk_obj_id'] === 'plat') {
                             svgColor = svgForOther
                         }
                         // 没有图标的话就设置一个默认图标
-                        if (!node.hasOwnProperty('bk_obj_icon')) {
+                        if (!node.hasOwnProperty('bk_obj_icon') || node['bk_obj_icon'] === '') {
                             node['bk_obj_icon'] = 'icon-cc-business'
                         }
-                        
+
                         let img = `./static/svg/${this.getIconByClass(node['bk_obj_icon'])}.svg`
                         let image = new Image()
                         image.onload = () => {
                             var base64 = this.getBase64Img(image, this.parseColor(svgColor.iconColor))
-                            let svg = `<svg xmlns="http://www.w3.org/2000/svg" stroke="rgba(0, 0, 0, .1)" xmlns:xlink="http://www.w3.org/1999/xlink" width="100" height="100">
+                            let svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100" height="100">
                             <circle cx="50" cy="50" r="49" fill="${svgColor.bgColor}"/>
                                 <svg xmlns="http://www.w3.org/2000/svg" stroke="rgba(0, 0, 0, 0)" viewBox="0 0 18 18" x="35" y="-12" fill="${svgColor.iconColor}" width="35" >
                                 <image width="15" xlink:href="${base64}"></image>
+                                </svg>
+                                <foreignObject x="0" y="58" width="100%" height="100%">
+                                    <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px">
+                                        <div style="color:${svgColor.color};text-align: center;width: 60px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;margin:0 auto">${node['bk_obj_name']}</div>
+                                    </div>
+                                </foreignObject>
+                            </svg>`
+                            this.initImage(svg, node)
+                            status++
+                        }
+                        image.onerror = () => {
+                            let svg = `<svg xmlns="http://www.w3.org/2000/svg" stroke="rgba(0, 0, 0, .1)" xmlns:xlink="http://www.w3.org/1999/xlink" width="100" height="100">
+                            <circle cx="50" cy="50" r="49" fill="${svgColor.bgColor}"/>
+                                <svg xmlns="http://www.w3.org/2000/svg" stroke="rgba(0, 0, 0, 0)" viewBox="0 0 18 18" x="35" y="-12" fill="${svgColor.iconColor}" width="35" >
                                 </svg>
                                 <foreignObject x="0" y="58" width="100%" height="100%">
                                     <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px">
@@ -315,22 +329,7 @@
                                     </div>
                                 </foreignObject>
                             </svg>`
-                            let url = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
-                            let temp = {
-                                id: node['bk_obj_id'],
-                                size: 55,
-                                physics: false,
-                                image: url,
-                                shape: 'image'
-                            }
-                            if (node.hasOwnProperty('position') && node['position'] !== '') {
-                                let position = JSON.parse(node['position'])
-                                if (position.hasOwnProperty(this.curClassify)) {
-                                    temp.x = position[this.curClassify].x
-                                    temp.y = position[this.curClassify].y
-                                }
-                            }
-                            this.nodes.push(temp)
+                            this.initImage(svg, node)
                             status++
                         }
                         image.src = img
@@ -342,6 +341,24 @@
                         this.init()
                     }
                 }, 200)
+            },
+            initImage (svg, node) {
+                let url = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+                let temp = {
+                    id: node['bk_obj_id'],
+                    size: 55,
+                    physics: false,
+                    image: url,
+                    shape: 'image'
+                }
+                if (node.hasOwnProperty('position') && node['position'] !== '') {
+                    let position = JSON.parse(node['position'])
+                    if (position.hasOwnProperty(this.curClassify)) {
+                        temp.x = position[this.curClassify].x
+                        temp.y = position[this.curClassify].y
+                    }
+                }
+                this.nodes.push(temp)
             },
             /*
                 获取当前模型item
@@ -387,7 +404,7 @@
                     if (res.result) {
                         this.$set(this.modelNodes[index], 'position', params['position'])
                     } else {
-                        this.$alertMsg('更新位置信息失败')
+                        this.$alertMsg(this.$t('["更新位置信息失败"]'))
                     }
                 })
             },
@@ -411,13 +428,13 @@
 
                 // 设置按钮title
                 let visBtnSetting = [{
-                    'title': '放大',
+                    'title': this.$t('ModelManagement["放大"]'),
                     'icon': 'icon-plus'
                 }, {
-                    'title': '缩小',
+                    'title': this.$t('ModelManagement["缩小"]'),
                     'icon': 'icon-minus'
                 }, {
-                    'title': '还原',
+                    'title': this.$t('ModelManagement["还原"]'),
                     'icon': 'icon-full-screen'
                 }]
                 document.querySelectorAll('.vis-zoomIn,.vis-zoomOut,.vis-zoomExtends').forEach((visBtn, index) => {
@@ -446,7 +463,7 @@
                     // 点击了具体某个节点
                     if (params.nodes.length) {
                         let id = params.nodes[0]
-                        if (this.isBelongtoCurclassify(id)) {
+                        if (this.isBelongtoCurclassify(id) && id !== 'plat') {
                             self.$emit('nodeClick', self.getModelById(id))
                         }
                     }
@@ -524,6 +541,17 @@
         .vis-up,.vis-down,.vis-left,.vis-right{
             display: none;
         }
+        &.no-edit {
+            .vis-zoomIn{
+                left: 54px;
+            }
+            .vis-zoomOut{
+                left: 92px;
+            }
+            .vis-zoomExtends{
+                left: 15px;
+            }
+        }
         .vis-zoomIn{
             left: 92px;
         }
@@ -559,10 +587,11 @@
             border-radius: 15px;
             font-weight: normal;
             text-align: left;
-            // font-size: 0;
+            font-size: 0;
             .bk-icon{
                 font-weight: normal;
                 vertical-align: middle;
+                font-size: 14px;
             }
         }
         .vis-del{
